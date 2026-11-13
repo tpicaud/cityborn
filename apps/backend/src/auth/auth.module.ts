@@ -8,6 +8,7 @@ import { WsHandshakeModule } from '../ws-handshake/ws-handshake.module';
 import { AuthController } from './controllers/auth.controller';
 import { AuthCookieController } from './controllers/auth-cookie.controller';
 import { GoogleClientProvider } from './identity-providers/google-client.provider';
+import { GoogleEmailVerificationService } from './identity-providers/google-email-verification.service';
 import { IdentityTokenService } from './identity-providers/identity-token.service';
 import { PASSWORD_RESET_REPOSITORY } from './repositories/password-reset.repository';
 import { PrismaPasswordResetRepository } from './repositories/prisma-password-reset.repository';
@@ -37,6 +38,7 @@ import { PasswordResetService } from './services/password-reset.service';
     AuthTokenService,
     AuthCookieService,
     IdentityTokenService,
+    GoogleEmailVerificationService,
     GoogleClientProvider,
   ],
   exports: [AuthTokenService, AuthCookieService],

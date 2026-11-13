@@ -32,6 +32,10 @@ export const SignInSchema = z.object({
 
 export const SignInWithGoogleSchema = z.object({
   idToken: z.string(),
+  emailVerificationCode: z
+    .string()
+    .regex(/^\d{8}$/)
+    .optional(),
 });
 
 export const SignInWithAppleSchema = z.object({

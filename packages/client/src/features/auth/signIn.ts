@@ -6,10 +6,11 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  UserFacingError,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { setCurrentUser } from '../../domains/auth/authQueries';
@@ -48,6 +49,10 @@ export type SignUpFlow = {
 };
 
 export type IdentityProviderSignIn = {
+  googleEmailVerificationRequired: boolean;
+  confirmGoogleEmail: (code: string) => Promise<void>;
+  cancelGoogleEmailVerification: () => void;
+  resendGoogleEmailVerification: () => Promise<void>;
   signInWithGoogle: (data: SignInWithGoogle) => Promise<void>;
   signInWithApple: (data: SignInWithApple) => Promise<void>;
 };
@@ -126,13 +131,66 @@ export function useIdentityProviderSignIn({
   const { authApi }: DomainApis = useDomainApis();
   const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
 
+  const [pendingGoogleIdToken, setPendingGoogleIdToken] = useState<
+    string | null
+  >(null);
+  const { reportError }: ErrorReporter = useErrorReporter();
+
   return useMemo(
     () => ({
-      signInWithGoogle: (data: SignInWithGoogle) =>
-        completeSignIn(authApi.signInWithGoogle(data)),
+      googleEmailVerificationRequired: pendingGoogleIdToken !== null,
+      cancelGoogleEmailVerification: () => setPendingGoogleIdToken(null),
+      confirmGoogleEmail: async (code: string): Promise<void> => {
+        if (!pendingGoogleIdToken) return;
+        if (!/^\d{8}$/.test(code)) {
+          reportError(
+            new UserFacingError(
+              'Saisissez le code à 8 chiffres reçu par e-mail.',
+            ),
+          );
+          return;
+        }
+        await completeSignIn(
+          authApi
+            .signInWithGoogle({
+              idToken: pendingGoogleIdToken,
+              emailVerificationCode: code,
+            })
+            .then((user: User) => {
+              setPendingGoogleIdToken(null);
+              return user;
+            }),
+        );
+      },
+      resendGoogleEmailVerification: async (): Promise<void> => {
+        if (!pendingGoogleIdToken) return;
+        try {
+          await authApi.requestGoogleEmailVerification({
+            idToken: pendingGoogleIdToken,
+          });
+        } catch (error: unknown) {
+          reportError(error);
+        }
+      },
+      signInWithGoogle: async (data: SignInWithGoogle): Promise<void> => {
+        try {
+          setPendingGoogleIdToken(null);
+          const verification: { required: boolean } =
+            await authApi.requestGoogleEmailVerification({
+              idToken: data.idToken,
+            });
+          if (verification.required) {
+            setPendingGoogleIdToken(data.idToken);
+            return;
+          }
+          await completeSignIn(authApi.signInWithGoogle(data));
+        } catch (error: unknown) {
+          reportError(error);
+        }
+      },
       signInWithApple: (data: SignInWithApple) =>
         completeSignIn(authApi.signInWithApple(data)),
     }),
-    [authApi, completeSignIn],
+    [authApi, completeSignIn, pendingGoogleIdToken, reportError],
   );
 }

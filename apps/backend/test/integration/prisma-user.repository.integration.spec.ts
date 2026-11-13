@@ -531,4 +531,138 @@ describe('PrismaUserRepository', () => {
       ).rejects.toThrow('User_admin_requires_verified_email');
     });
   });
+  describe('findGoogleAccountByEmail', () => {
+    it('matches email case-insensitively without selecting a username', async () => {
+      const data: User = buildUser({ email: 'Alice@Example.com' });
+      const user: User = await userRepository.create({
+        email: data.email,
+        username: data.username,
+        type: 'google',
+      });
+
+      expect(
+        await userRepository.findGoogleAccountByEmail('alice@example.com'),
+      ).toEqual({ user, googleId: null });
+      expect(
+        await userRepository.findGoogleAccountByEmail(user.username),
+      ).toBeNull();
+    });
+
+    it('rejects ambiguous emails instead of selecting either account', async () => {
+      const data: User = buildUser();
+      await userRepository.create({
+        email: 'Alice@Example.com',
+        username: data.username,
+        type: 'google',
+      });
+      await userRepository.create({
+        email: 'alice@example.com',
+        username: UsernameSchema.parse('other'),
+        type: 'email',
+      });
+
+      await expect(
+        userRepository.findGoogleAccountByEmail('ALICE@example.com'),
+      ).rejects.toMatchObject({ status: 409 });
+    });
+  });
+
+  describe('linkGoogleAccount', () => {
+    it('preserves a verified account and its other login methods', async () => {
+      const data: User = buildUser();
+      const user: User = await userRepository.create({
+        email: data.email,
+        username: data.username,
+        type: 'apple',
+        appleId: 'apple-1',
+        password: 'password-hash',
+        isVerified: true,
+      });
+
+      const session: AuthSession | null =
+        await userRepository.linkGoogleAccount({ user, googleId: 'google-1' });
+
+      expect(session).toMatchObject({
+        user: { id: user.id, type: 'apple' },
+        authVersion: 0,
+      });
+      expect(
+        await infrastructure.prisma.user.findUniqueOrThrow({
+          where: { id: user.id },
+        }),
+      ).toMatchObject({
+        googleId: 'google-1',
+        appleId: 'apple-1',
+        password: 'password-hash',
+      });
+      expect((await userRepository.findByGoogleId('google-1'))?.id).toBe(
+        user.id,
+      );
+    });
+
+    it('revokes previous sessions and credentials when reclaiming an unverified account', async () => {
+      const data: User = buildUser();
+      const user: User = await userRepository.create({
+        email: data.email,
+        username: data.username,
+        type: 'email',
+        password: 'attacker-password',
+        appleId: 'attacker-apple',
+        isVerified: false,
+      });
+
+      const session: AuthSession | null =
+        await userRepository.linkGoogleAccount({ user, googleId: 'google-1' });
+
+      expect(session).toMatchObject({
+        user: { id: user.id, type: 'google', isVerified: true },
+        authVersion: 1,
+      });
+      expect(
+        await infrastructure.prisma.user.findUniqueOrThrow({
+          where: { id: user.id },
+        }),
+      ).toMatchObject({ password: null, appleId: null, googleId: 'google-1' });
+    });
+
+    it('does not overwrite a linked subject or a changed account', async () => {
+      const data: User = buildUser();
+      const user: User = await userRepository.create({
+        email: data.email,
+        username: data.username,
+        type: 'google',
+        isVerified: true,
+      });
+      await userRepository.linkGoogleAccount({ user, googleId: 'google-1' });
+
+      expect(
+        await userRepository.linkGoogleAccount({ user, googleId: 'google-2' }),
+      ).toBeNull();
+      expect(await userRepository.findByGoogleId('google-2')).toBeNull();
+    });
+
+    it('enforces Google subject uniqueness across accounts', async () => {
+      const data: User = buildUser();
+      const user: User = await userRepository.create({
+        email: data.email,
+        username: data.username,
+        type: 'google',
+        googleId: 'google-1',
+        isVerified: true,
+      });
+      const other: User = await userRepository.create({
+        email: 'other@example.com',
+        username: UsernameSchema.parse('other'),
+        type: 'email',
+        isVerified: true,
+      });
+
+      await expect(
+        userRepository.linkGoogleAccount({ user: other, googleId: 'google-1' }),
+      ).rejects.toMatchObject({ code: 'P2002' });
+      expect((await userRepository.findByGoogleId('google-1'))?.id).toBe(
+        user.id,
+      );
+    });
+  });
 });

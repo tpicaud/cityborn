@@ -1,10 +1,11 @@
 import {
+  ErrorCode,
   type User,
   type UserId,
   type Username,
   UsernameSchema,
 } from '@cityborn/api';
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { User as PrismaUser } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
@@ -12,6 +13,8 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
+  GoogleAccount,
+  GoogleAccountLink,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -26,6 +29,55 @@ export class PrismaUserRepository implements UserRepository {
   async create(data: CreateUserData): Promise<User> {
     const user = await this.txHost.tx.user.create({ data });
     return UserMapper.toUser(user);
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { googleId },
+    });
+    return user ? UserMapper.toUser(user) : null;
+  }
+
+  async findGoogleAccountByEmail(email: string): Promise<GoogleAccount | null> {
+    const matches: PrismaUser[] = await this.txHost.tx.user.findMany({
+      where: { email: { equals: email, mode: 'insensitive' } },
+      take: 2,
+    });
+    if (matches.length > 1)
+      throw new ConflictException({
+        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        message: 'Ambiguous email ownership',
+      });
+    const user: PrismaUser | undefined = matches[0];
+    return user
+      ? { user: UserMapper.toUser(user), googleId: user.googleId }
+      : null;
+  }
+
+  async linkGoogleAccount({
+    user,
+    googleId,
+  }: GoogleAccountLink): Promise<AuthSession | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: {
+        id: user.id,
+        email: user.email,
+        googleId: null,
+        isVerified: user.isVerified,
+      },
+      data: user.isVerified
+        ? { googleId }
+        : {
+            googleId,
+            isVerified: true,
+            password: null,
+            type: 'google',
+            appleId: null,
+            authVersion: { increment: 1 },
+          },
+    });
+    if (updated.count === 0) return null;
+    return this.findAuthSessionById(user.id);
   }
 
   async delete(user_id: UserId): Promise<void> {

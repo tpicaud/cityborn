@@ -21,6 +21,7 @@ function unexpectedCall(): never {
 function createFakeAuthApi(getCurrentUser: AuthApi['getCurrentUser']): AuthApi {
   return {
     getCurrentUser,
+    requestGoogleEmailVerification: unexpectedCall,
     requestPasswordReset: unexpectedCall,
     resetPassword: unexpectedCall,
     signIn: unexpectedCall,

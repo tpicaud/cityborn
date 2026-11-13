@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { SignInWithAppleButton } from './AppleSignIn';
-import { SignInWithGoogleButton } from './GoogleSignIn';
+import { SignInWithGoogleButton } from './google-sign-in/GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInForm = () => {

@@ -22,6 +22,8 @@ import {
 } from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
+  type GoogleAccount,
+  type GoogleAccountLink,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -46,6 +48,32 @@ export class UserService {
 
   async createUser(data: CreateUserData): Promise<User> {
     return this.userRepository.create(data);
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userRepository.findByGoogleId(googleId);
+  }
+
+  async findGoogleAccountByEmail(email: string): Promise<GoogleAccount | null> {
+    return this.userRepository.findGoogleAccountByEmail(email);
+  }
+
+  @Transactional()
+  async linkGoogleAccount(link: GoogleAccountLink): Promise<AuthSession> {
+    const session: AuthSession | null =
+      await this.userRepository.linkGoogleAccount(link);
+    if (!session)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'Account ownership changed; restart sign-in',
+      });
+    if (!link.user.isVerified) {
+      await this.userRepository.deletePasswordResetTokensByUserId(link.user.id);
+      await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+        link.user.id,
+      );
+    }
+    return session;
   }
 
   async deleteUser(user_id: UserId): Promise<void> {

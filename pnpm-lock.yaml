@@ -511,9 +511,6 @@ importers:
       '@react-native-community/datetimepicker':
         specifier: ^9.1.0
         version: 9.1.0(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
-      '@react-native-google-signin/google-signin':
-        specifier: ^16.1.2
-        version: 16.1.2(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       '@react-navigation/bottom-tabs':
         specifier: ^7.15.10
         version: 7.18.14(2d4f7075ab6e528039e905cd3ac8ecc1)
@@ -625,6 +622,12 @@ importers:
       react-native-maps:
         specifier: 1.27.2
         version: 1.27.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      react-native-nitro-google-signin:
+        specifier: ^2.3.1
+        version: 2.3.1(expo@57.0.8)(react-native-nitro-modules@0.37.2(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+      react-native-nitro-modules:
+        specifier: ^0.37.2
+        version: 0.37.2(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       react-native-reanimated:
         specifier: ~4.5.0
         version: 4.5.3(react-native-worklets@0.10.0(@babel/core@7.29.13)(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
@@ -3388,16 +3391,6 @@ packages:
       expo:
         optional: true
       react-native-windows:
-        optional: true
-
-  '@react-native-google-signin/google-signin@16.1.2':
-    resolution: {integrity: sha512-1hf4pRmpnS5t0dHtqU72Q1FmWzsCZR2Sm3uVQbbfMKeNPl5TKjpAsP6F8QTZ9L+Q6Cnn9tL9BXpDCb1nyutdCQ==}
-    peerDependencies:
-      expo: '>=52.0.40'
-      react: '*'
-      react-native: '*'
-    peerDependenciesMeta:
-      expo:
         optional: true
 
   '@react-native-masked-view/masked-view@0.3.2':
@@ -7964,6 +7957,9 @@ packages:
       sass:
         optional: true
 
+  nitro-core@0.37.2:
+    resolution: {integrity: sha512-dhagikz9VXXzfidRH/vPNJfYWPmTBArDOo9wE/wEqeERU9C8uRWz9YccOyNUOvADccPAZq319yzhDMoJ9excSQ==}
+
   nocache@3.0.4:
     resolution: {integrity: sha512-WDD0bdg9mbq6F4mRxEYcPWwfA1vxd0mrvKOyxI7Xj/atfRHVeutzuWByG//jfm4uPzp0y4Kj051EORCBSQMycw==}
     engines: {node: '>=12.0.0'}
@@ -8683,6 +8679,23 @@ packages:
     peerDependenciesMeta:
       react-native-web:
         optional: true
+
+  react-native-nitro-google-signin@2.3.1:
+    resolution: {integrity: sha512-txDdR3KtJR83WY50OpMj9ndPHmhNJPzX6LE5yqvMOBk5O8NzAaV5OUmrUx0Lm2FdqP+s/Q3Q1lTqdYhe3u1SNA==}
+    peerDependencies:
+      expo: '>=49.0.0'
+      react: '*'
+      react-native: '>=0.76'
+      react-native-nitro-modules: '>=0.36.0'
+    peerDependenciesMeta:
+      expo:
+        optional: true
+
+  react-native-nitro-modules@0.37.2:
+    resolution: {integrity: sha512-Odnrq/p6/q0R01qZlkqeXu9VHHMuGEnZZmyxMvehEu6QiACNHhBCmAHgyBDqOSo9Lb3G0TscFAT+HG0uxsR/GA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   react-native-reanimated@4.5.3:
     resolution: {integrity: sha512-+owIckpD4sA13XKHaLrr8V1RP4paqoxKvz/jy2wl/ULjMsfcRlfIJdKJxR1kcQr4McBZ6hAoPo01NyLnmy2ycQ==}
@@ -13015,13 +13028,6 @@ snapshots:
   '@react-native-community/datetimepicker@9.1.0(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
     dependencies:
       invariant: 2.2.4
-      react: 19.2.3
-      react-native: 0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3)
-    optionalDependencies:
-      expo: 57.0.8(@babel/core@7.29.13)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.7)(expo-router@57.0.8)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-worklets@0.10.0(@babel/core@7.29.13)(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
-
-  '@react-native-google-signin/google-signin@16.1.2(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
-    dependencies:
       react: 19.2.3
       react-native: 0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3)
     optionalDependencies:
@@ -19326,6 +19332,8 @@ snapshots:
       - '@types/node'
       - babel-plugin-macros
 
+  nitro-core@0.37.2: {}
+
   nocache@3.0.4: {}
 
   node-abort-controller@3.1.1: {}
@@ -20044,6 +20052,24 @@ snapshots:
       react-native: 0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3)
     optionalDependencies:
       react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+
+  react-native-nitro-google-signin@2.3.1(expo@57.0.8)(react-native-nitro-modules@0.37.2(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3):
+    dependencies:
+      '@expo/config-plugins': 57.0.6(typescript@6.0.3)
+      react: 19.2.3
+      react-native: 0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3)
+      react-native-nitro-modules: 0.37.2(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+    optionalDependencies:
+      expo: 57.0.8(@babel/core@7.29.13)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.7)(expo-router@57.0.8)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-worklets@0.10.0(@babel/core@7.29.13)(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  react-native-nitro-modules@0.37.2(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      nitro-core: 0.37.2
+      react: 19.2.3
+      react-native: 0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3)
 
   react-native-reanimated@4.5.3(react-native-worklets@0.10.0(@babel/core@7.29.13)(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.13)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.13))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3):
     dependencies:

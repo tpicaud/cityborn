@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Script from 'next/script';
 import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
@@ -24,10 +23,6 @@ export default function RootLayout({
         <meta
           name="google-site-verification"
           content="gFNaiS_8H0_ADBty1p6PsNfeYmrO2Z9Cf2pZQOj6Pqs"
-        />
-        <Script
-          src="https://accounts.google.com/gsi/client"
-          strategy="beforeInteractive"
         />
       </head>
       <body className="h-full antialiased font-sans">

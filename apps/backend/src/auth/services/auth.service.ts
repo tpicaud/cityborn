@@ -31,11 +31,13 @@ import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type {
+  GoogleAccount,
   UnverifiedAccountReclaim,
   UserCredentials,
 } from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
+import { GoogleEmailVerificationService } from '../identity-providers/google-email-verification.service';
 import {
   type AppleIdentity,
   type GoogleIdentity,
@@ -62,6 +64,7 @@ export class AuthService {
     private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly identityTokenService: IdentityTokenService,
     private readonly rateLimitService: RateLimitService,
+    private readonly googleEmailVerificationService: GoogleEmailVerificationService,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
@@ -143,57 +146,114 @@ export class AuthService {
     return this.createAuthResponse(credentials.authSession);
   }
 
+  async requestGoogleEmailVerification(
+    dto: SignInWithGoogle,
+  ): Promise<{ required: boolean }> {
+    const identity: GoogleIdentity =
+      await this.identityTokenService.verifyGoogleIdToken(dto.idToken);
+    const linkedUser: User | null = await this.userService.findByGoogleId(
+      identity.googleId,
+    );
+    if (linkedUser) return { required: false };
+    const account: GoogleAccount | null =
+      await this.userService.findGoogleAccountByEmail(identity.email);
+    this.assertGoogleAccountCanBeLinked(account);
+    const required: boolean =
+      account !== null || !identity.emailIsAuthoritative;
+    if (required)
+      await this.googleEmailVerificationService.request({
+        googleId: identity.googleId,
+        email: identity.email,
+        userId: account?.user.id ?? null,
+      });
+    return { required };
+  }
+
   async signInWithGoogle(
     dto: SignInWithGoogle,
     visitorId?: string,
   ): Promise<AuthResponse> {
-    const { idToken } = dto;
-
-    const { email, name }: GoogleIdentity =
-      await this.identityTokenService.verifyGoogleIdToken(idToken);
-
-    let user = await this.userService.findByIdentifier(email);
-
-    if (user && visitorId) {
+    const identity: GoogleIdentity =
+      await this.identityTokenService.verifyGoogleIdToken(dto.idToken);
+    const {
+      authSession,
+      created,
+    }: { authSession: AuthSession; created: boolean } =
+      await this.openGoogleIdentitySession({
+        identity,
+        code: dto.emailVerificationCode,
+      });
+    if (visitorId)
       await this.eventService.trackEvent(
         createEvent({
-          name: 'user_signed_in',
+          name: created ? 'user_signed_up' : 'user_signed_in',
           visitorId,
-          properties: {
-            method: 'google',
-          },
+          properties: { method: 'google' },
         }),
       );
-    }
-
-    if (!user) {
-      const uniqueUsername = await this.generateUniqueUsername(name);
-
-      user = await this.userService.createUser({
-        email,
-        username: uniqueUsername,
-        type: 'google',
-        isVerified: true,
-      });
-
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'user_signed_up',
-            visitorId,
-            properties: {
-              method: 'google',
-            },
-          }),
-        );
-      }
-    }
-
-    const authSession: AuthSession = await this.openIdentityProviderSession({
-      user,
-      type: 'google',
-    });
     return this.createAuthResponse(authSession);
+  }
+
+  private async openGoogleIdentitySession({
+    identity,
+    code,
+  }: {
+    identity: GoogleIdentity;
+    code: string | undefined;
+  }): Promise<{ authSession: AuthSession; created: boolean }> {
+    const linkedUser: User | null = await this.userService.findByGoogleId(
+      identity.googleId,
+    );
+    if (linkedUser)
+      return {
+        authSession: await this.requireAuthSession(linkedUser.id),
+        created: false,
+      };
+    const account: GoogleAccount | null =
+      await this.userService.findGoogleAccountByEmail(identity.email);
+    this.assertGoogleAccountCanBeLinked(account);
+    if (account || !identity.emailIsAuthoritative)
+      await this.googleEmailVerificationService.verify({
+        ownership: {
+          googleId: identity.googleId,
+          email: identity.email,
+          userId: account?.user.id ?? null,
+        },
+        code,
+      });
+    if (account) {
+      const authSession: AuthSession = await this.userService.linkGoogleAccount(
+        { user: account.user, googleId: identity.googleId },
+      );
+      if (!account.user.isVerified)
+        this.authenticatedSocketService.disconnectOlderSessions(
+          account.user.id,
+          authSession.authVersion,
+        );
+      return { authSession, created: false };
+    }
+    const username: Username = await this.generateUniqueUsername(
+      identity.name ?? 'joueur',
+    );
+    const user: User = await this.userService.createUser({
+      email: identity.email,
+      username,
+      googleId: identity.googleId,
+      type: 'google',
+      isVerified: true,
+    });
+    return {
+      authSession: await this.requireAuthSession(user.id),
+      created: true,
+    };
+  }
+
+  private assertGoogleAccountCanBeLinked(account: GoogleAccount | null): void {
+    if (account?.googleId)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'This account is already linked to another Google identity',
+      });
   }
 
   async signInWithApple(
@@ -428,18 +488,19 @@ export class AuthService {
   }
 
   private async generateUniqueUsername(base: string): Promise<Username> {
-    const sanitized = base.replace(/\s+/g, '').toLowerCase();
-
-    let username: string = sanitized;
-    let exists = true;
-
-    while (exists) {
-      const suffix = Math.floor(1000 + Math.random() * 9000);
-      username = `${sanitized}${suffix}`;
-
-      exists = await this.userService.existsByUsername(username);
-    }
-
-    return UsernameSchema.parse(username);
+    const sanitized: string =
+      base
+        .normalize('NFKD')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toLowerCase()
+        .slice(0, 16) || 'joueur';
+    const findAvailableUsername: () => Promise<Username> = async () => {
+      const suffix: number = Math.floor(1000 + Math.random() * 9000);
+      const username: string = `${sanitized}${suffix}`;
+      if (await this.userService.existsByUsername(username))
+        return findAvailableUsername();
+      return UsernameSchema.parse(username);
+    };
+    return findAvailableUsername();
   }
 }

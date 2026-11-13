@@ -18,6 +18,7 @@ import { PasswordResetService } from '../services/password-reset.service';
 const c = initContract();
 
 const publicAuthRoutes = c.router({
+  requestGoogleEmailVerification: contract.auth.requestGoogleEmailVerification,
   requestPasswordReset: contract.auth.requestPasswordReset,
   resetPassword: contract.auth.resetPassword,
   signUp: contract.auth.signUp,
@@ -49,6 +50,12 @@ export class AuthController {
   @TsRestHandler(publicAuthRoutes)
   async handler(@Req() request: Request, @VisitorId() visitorId?: string) {
     return tsRestHandler(publicAuthRoutes, {
+      requestGoogleEmailVerification: async ({
+        body,
+      }): Promise<{ status: 200; body: { required: boolean } }> => ({
+        status: 200,
+        body: await this.authService.requestGoogleEmailVerification(body),
+      }),
       requestPasswordReset: async ({ body }) => {
         await this.passwordResetService.request({
           email: body.email,

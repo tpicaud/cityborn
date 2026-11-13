@@ -24,7 +24,7 @@ export default {
     name: getAppName(),
     slug: 'cityborn',
     scheme: 'cityborn',
-    version: '0.4.1',
+    version: '0.4.2',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
     icon: './assets/stores/icons/universal_icon.png',
@@ -118,10 +118,12 @@ export default {
         },
       ],
       [
-        '@react-native-google-signin/google-signin',
+        'react-native-nitro-google-signin',
         {
-          iosUrlScheme:
-            'com.googleusercontent.apps.871572964929-iajpene5iktr5isun4sg6dqnjri8po0p',
+          iosUrlScheme: mobileBuildConfig.googleOAuthIosClientId
+            .split('.')
+            .reverse()
+            .join('.'),
         },
       ],
       [

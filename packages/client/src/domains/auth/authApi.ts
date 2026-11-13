@@ -20,6 +20,9 @@ import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
 export interface AuthApi {
+  requestGoogleEmailVerification(
+    data: Pick<SignInWithGoogle, 'idToken'>,
+  ): Promise<{ required: boolean }>;
   requestPasswordReset(
     data: RequestPasswordReset,
   ): Promise<PasswordResetRequestResponse>;
@@ -56,6 +59,13 @@ function buildAuthApi(
   credentialsStrategy: AuthCredentialsStrategy,
 ): AuthApi {
   return {
+    async requestGoogleEmailVerification(data) {
+      return unwrapApiResponse(
+        await contractClient.auth.requestGoogleEmailVerification({
+          body: data,
+        }),
+      );
+    },
     async requestPasswordReset(data) {
       return unwrapApiResponse(
         await contractClient.auth.requestPasswordReset({ body: data }),

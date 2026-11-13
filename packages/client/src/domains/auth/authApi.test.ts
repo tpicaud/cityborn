@@ -61,6 +61,7 @@ function createFakeClient({
   return {
     auth: {
       me: unexpectedCall,
+      requestGoogleEmailVerification: unexpectedCall,
       requestPasswordReset: unexpectedCall,
       resetPassword: unexpectedCall,
       refresh: unexpectedCall,

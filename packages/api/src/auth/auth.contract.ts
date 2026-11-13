@@ -1,4 +1,5 @@
 import { initContract } from '@ts-rest/core';
+import { z } from 'zod';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -64,6 +65,12 @@ const cookieAuthContract = c.router(
 
 export const authContract = c.router(
   {
+    requestGoogleEmailVerification: {
+      method: 'POST',
+      path: '/google/email-verification',
+      body: SignInWithGoogleSchema.pick({ idToken: true }),
+      responses: { 200: z.object({ required: z.boolean() }) },
+    },
     requestPasswordReset: {
       method: 'POST',
       path: '/request-password-reset',

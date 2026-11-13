@@ -12,6 +12,7 @@ export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   Partial<Pick<User, 'isVerified'>> & {
     password?: string;
     appleId?: string;
+    googleId?: string;
   };
 
 export type UnverifiedAccountReclaim = {
@@ -20,7 +21,14 @@ export type UnverifiedAccountReclaim = {
   appleId?: string;
 };
 
+export type GoogleAccount = { user: User; googleId: string | null };
+
+export type GoogleAccountLink = { user: User; googleId: string };
+
 export interface UserRepository {
+  findByGoogleId(googleId: string): Promise<User | null>;
+  findGoogleAccountByEmail(email: string): Promise<GoogleAccount | null>;
+  linkGoogleAccount(link: GoogleAccountLink): Promise<AuthSession | null>;
   create(data: CreateUserData): Promise<User>;
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;

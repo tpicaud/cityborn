@@ -10,7 +10,9 @@ import {
 
 export type GoogleIdentity = {
   email: string;
-  name: string;
+  googleId: string;
+  name?: string;
+  emailIsAuthoritative: boolean;
 };
 
 export type AppleIdentity = {
@@ -45,15 +47,24 @@ export class IdentityTokenService {
         message: 'Google account not verified',
       });
 
-    if (!payload.email || !payload.name)
+    if (
+      !payload.email ||
+      !payload.sub ||
+      !payload.exp ||
+      payload.exp <= Date.now() / 1000
+    )
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Missing name or email',
+        message: 'Invalid Google identity claims',
       });
 
     return {
       email: payload.email,
+      googleId: payload.sub,
       name: payload.name,
+      emailIsAuthoritative:
+        payload.email.toLowerCase().endsWith('@gmail.com') ||
+        Boolean(payload.hd),
     };
   }
 
