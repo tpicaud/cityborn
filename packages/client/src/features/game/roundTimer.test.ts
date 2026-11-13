@@ -12,7 +12,35 @@ describe('createRoundTimeLeft', () => {
     assert.deepEqual(roundTimeLeft, {
       secondsLeft: 25,
       remainingShare: 0.605,
+      urgency: 'calm',
     });
+  });
+
+  it('warns from the last twelve seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 12,
+      totalTimeInSeconds: 30,
+    });
+
+    assert.equal(roundTimeLeft.urgency, 'warning');
+  });
+
+  it('stays calm just above twelve seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 12.01,
+      totalTimeInSeconds: 30,
+    });
+
+    assert.equal(roundTimeLeft.urgency, 'calm');
+  });
+
+  it('becomes critical from the last six seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 6,
+      totalTimeInSeconds: 30,
+    });
+
+    assert.equal(roundTimeLeft.urgency, 'critical');
   });
 
   it('reports no time left once the round is over', () => {
@@ -24,6 +52,7 @@ describe('createRoundTimeLeft', () => {
     assert.deepEqual(roundTimeLeft, {
       secondsLeft: 0,
       remainingShare: 0,
+      urgency: 'critical',
     });
   });
 });
