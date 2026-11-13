@@ -10,6 +10,7 @@ export type ImageAsset =
   | `navigation/${TabIcon}-pressed`
   | 'backgrounds/phone'
   | 'backgrounds/tablet'
+  | 'decorations/globe'
   | 'logo'
   | 'monogram'
   | 'providers/google'

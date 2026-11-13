@@ -1,5 +1,7 @@
 const ctaHighlight: string = 'inset 0 2px 0 0 rgba(255, 255, 255, 0.5)';
 
+const slimCtaHighlight: string = 'inset 0 1px 0 0 rgba(255, 255, 255, 0.5)';
+
 const tabletCtaHighlight: string = 'inset 0 3px 0 0 rgba(255, 255, 255, 0.5)';
 
 export const shadows = {
@@ -8,6 +10,8 @@ export const shadows = {
   'relief-yellow': `0 3px 0 0 #EB8900, ${ctaHighlight}`,
   'relief-green': `0 4px 0 0 #00AF00, ${ctaHighlight}`,
   'relief-pressed': ctaHighlight,
+  'relief-blue-slim': `0 2px 0 0 #00549C, ${slimCtaHighlight}`,
+  'relief-pressed-slim': slimCtaHighlight,
   'relief-orange-tablet': `0 6px 0 0 #FE4002, ${tabletCtaHighlight}`,
   'relief-blue-tablet': `0 5px 0 0 #00549C, ${tabletCtaHighlight}`,
   'relief-yellow-tablet': `0 5px 0 0 #EB8900, ${tabletCtaHighlight}`,
