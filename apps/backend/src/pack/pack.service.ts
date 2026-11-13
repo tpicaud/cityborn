@@ -95,6 +95,14 @@ export class PackService {
     await this.ensureUpdatedPackHasImageIfPublished({ packId, data });
     if (data.themeId !== undefined) {
       await this.themeService.findById(data.themeId);
+      await this.packRepository.lock(packId);
+      const currentPack: Pack = await this.findById(packId);
+      if (currentPack.themeId !== data.themeId) {
+        await this.packRepository.removeFromThemeSections({
+          packId,
+          themeId: currentPack.themeId,
+        });
+      }
     }
     if (!data.disconnectIds?.length) {
       return this.packRepository.update(packId, data);

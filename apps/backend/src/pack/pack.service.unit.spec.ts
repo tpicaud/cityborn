@@ -47,6 +47,7 @@ const guessObjectId: (value: string) => GuessObjectId = (value: string) =>
 function buildPackService() {
   const packRepository: DeepMocked<PackRepository> =
     createMock<PackRepository>();
+  packRepository.findBy.mockResolvedValue([buildPack()]);
   const guessObjectService: DeepMocked<GuessObjectService> =
     createMock<GuessObjectService>();
   const themeService: DeepMocked<ThemeService> = createMock<ThemeService>();
@@ -283,7 +284,7 @@ describe('PackService.update', () => {
     expect(guessObjectService.delete).toHaveBeenCalledWith(orphanId);
   });
 
-  it('checks that the requested theme exists before updating the pack', async () => {
+  it('removes the previous theme memberships before saving a theme change', async () => {
     const {
       packRepository,
       packService,
@@ -300,10 +301,32 @@ describe('PackService.update', () => {
     await packService.update(packId('pack-1'), payload);
 
     expect(themeService.findById).toHaveBeenCalledWith(theme.id);
+    expect(packRepository.lock).toHaveBeenCalledWith(packId('pack-1'));
+    expect(packRepository.removeFromThemeSections).toHaveBeenCalledWith({
+      packId: packId('pack-1'),
+      themeId: buildPack().themeId,
+    });
+    expect(packRepository.lock.mock.invocationCallOrder[0]).toBeLessThan(
+      packRepository.removeFromThemeSections.mock.invocationCallOrder[0],
+    );
+    expect(
+      packRepository.removeFromThemeSections.mock.invocationCallOrder[0],
+    ).toBeLessThan(packRepository.update.mock.invocationCallOrder[0]);
     expect(packRepository.update).toHaveBeenCalledWith(
       packId('pack-1'),
       payload,
     );
+  });
+
+  it('preserves theme section memberships when saving the same theme', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const payload: UpdatePack = buildUpdatePack();
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(packRepository.lock).toHaveBeenCalledWith(packId('pack-1'));
+    expect(packRepository.removeFromThemeSections).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown theme without updating the pack', async () => {
@@ -382,7 +405,6 @@ describe('PackService.update', () => {
 
     await packService.update(packId('pack-1'), payload);
 
-    expect(packRepository.findBy).not.toHaveBeenCalled();
     expect(packRepository.update).toHaveBeenCalledWith(
       packId('pack-1'),
       payload,

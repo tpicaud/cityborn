@@ -4,6 +4,7 @@ import type {
   GuessObjectId,
   Pack,
   PackId,
+  ThemeId,
   UpdatePack,
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
@@ -56,15 +57,25 @@ export class PrismaPackRepository implements PackRepository {
     return PackMapper.toPack(pack);
   }
 
+  async lock(id: PackId): Promise<void> {
+    await this.txHost.tx
+      .$queryRaw`SELECT id FROM "Pack" WHERE id = ${id}::uuid FOR UPDATE`;
+  }
+
+  async removeFromThemeSections({
+    packId,
+    themeId,
+  }: {
+    packId: PackId;
+    themeId: ThemeId;
+  }): Promise<void> {
+    await this.txHost.tx.catalogSectionPack.deleteMany({
+      where: { packId, section: { themeId } },
+    });
+  }
+
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
     const { connectIds, disconnectIds, id, parentId, ...packData } = data;
-    if (data.themeId !== undefined) {
-      await this.txHost.tx
-        .$queryRaw`SELECT id FROM "Pack" WHERE id = ${packId}::uuid FOR UPDATE`;
-      await this.txHost.tx.catalogSectionPack.deleteMany({
-        where: { packId, section: { themeId: { not: data.themeId } } },
-      });
-    }
 
     const relationUpdate: {
       connect?: { id: GuessObjectId }[];

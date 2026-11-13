@@ -9,13 +9,25 @@ import {
   type Theme,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { TransactionHost } from '@nestjs-cls/transactional';
 import { CatalogSectionService } from '../../src/catalog-section/catalog-section.service';
 import { CATALOG_SECTION_REPOSITORY } from '../../src/catalog-section/repositories/catalog-section.repository';
 import { PrismaCatalogSectionRepository } from '../../src/catalog-section/repositories/prisma-catalog-section.repository';
+import { GuessObjectService } from '../../src/guess-object/guess-object.service';
+import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
+import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
+import { IconService } from '../../src/icon/icon.service';
+import { ICON_PROVIDER } from '../../src/icon/providers/icon.provider';
+import { IconifyIconProvider } from '../../src/icon/providers/iconify-icon.provider';
+import { PackService } from '../../src/pack/pack.service';
+import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
 import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
-import type { PrismaTransactionHost } from '../../src/prisma/prisma-cls.module';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
+import { THEME_REPOSITORY } from '../../src/theme/repositories/theme.repository';
+import { ThemeService } from '../../src/theme/theme.service';
+import { PrismaWorldLocationRepository } from '../../src/world-location/repositories/prisma-world-location.repository';
+import { WORLD_LOCATION_REPOSITORY } from '../../src/world-location/repositories/world-location.repository';
+import { WorldLocationService } from '../../src/world-location/world-location.service';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 const up: CatalogSectionMoveDirection = CatalogSectionMoveDirection.UP;
@@ -47,8 +59,7 @@ describe('CatalogSectionService', () => {
   const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let service: CatalogSectionService;
-  let packRepository: PrismaPackRepository;
-  let txHost: PrismaTransactionHost;
+  let packService: PackService;
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [PrismaClsModule],
@@ -58,13 +69,27 @@ describe('CatalogSectionService', () => {
           provide: CATALOG_SECTION_REPOSITORY,
           useClass: PrismaCatalogSectionRepository,
         },
-        PrismaPackRepository,
+        PackService,
+        GuessObjectService,
+        ThemeService,
+        IconService,
+        WorldLocationService,
+        { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
+        {
+          provide: GUESS_OBJECT_REPOSITORY,
+          useClass: PrismaGuessObjectRepository,
+        },
+        { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
+        {
+          provide: WORLD_LOCATION_REPOSITORY,
+          useClass: PrismaWorldLocationRepository,
+        },
+        { provide: ICON_PROVIDER, useClass: IconifyIconProvider },
       ],
     }).compile();
     await module.init();
     service = module.get(CatalogSectionService);
-    packRepository = module.get(PrismaPackRepository);
-    txHost = module.get(TransactionHost);
+    packService = module.get(PackService);
   });
   beforeEach(async () => {
     await prisma.theme.createMany({ data: [sport, music] });
@@ -283,12 +308,8 @@ describe('CatalogSectionService', () => {
       await service.addPack({ id: all.id, packId: tennis.id });
       await service.addPack({ id: sports.id, packId: tennis.id });
 
-      await txHost.withTransaction(() =>
-        packRepository.update(tennis.id, { ...tennis, themeId: music.id }),
-      );
-      await txHost.withTransaction(() =>
-        packRepository.update(tennis.id, { ...tennis, themeId: sport.id }),
-      );
+      await packService.update(tennis.id, { ...tennis, themeId: music.id });
+      await packService.update(tennis.id, { ...tennis, themeId: sport.id });
 
       expect(
         (await service.findAll(false)).find(({ id }) => id === sports.id),
@@ -305,15 +326,13 @@ describe('CatalogSectionService', () => {
       await service.addPack({ id: section.id, packId: tennis.id });
 
       await expect(
-        txHost.withTransaction(() =>
-          packRepository.update(tennis.id, {
-            ...tennis,
-            themeId: music.id,
-            connectIds: [
-              GuessObjectIdSchema.parse('00000000-0000-4000-8000-000000000099'),
-            ],
-          }),
-        ),
+        packService.update(tennis.id, {
+          ...tennis,
+          themeId: music.id,
+          connectIds: [
+            GuessObjectIdSchema.parse('00000000-0000-4000-8000-000000000099'),
+          ],
+        }),
       ).rejects.toThrow();
 
       expect(
