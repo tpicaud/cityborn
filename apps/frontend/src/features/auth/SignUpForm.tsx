@@ -8,6 +8,7 @@ import {
   TextField,
 } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
+import { KeyboardSubmit } from '@/components/KeyboardSubmit';
 
 export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   const {
@@ -96,7 +97,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
             loading={isSubmitting}
           />
         </FormFields>
-        <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+        <KeyboardSubmit />
       </form>
       <TextButton label="Déjà un compte ? Se connecter" onPress={onSignIn} />
     </>
