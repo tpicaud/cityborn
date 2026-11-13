@@ -1,8 +1,8 @@
 import { styled, View, type ViewProps } from 'tamagui';
 
 export const Chevron = styled(View, {
-  borderTopWidth: '1.5px md:2.5px',
-  borderRightWidth: '1.5px md:2.5px',
+  borderTopWidth: '1.5 md:2.5',
+  borderRightWidth: '1.5 md:2.5',
   borderColor: 'white',
   rotate: '45deg',
   variants: {
@@ -16,8 +16,8 @@ export const Chevron = styled(View, {
         w: '2 md:4',
         h: '2 md:4',
         mr: '1 md:1.5',
-        borderTopWidth: '2px md:3px',
-        borderRightWidth: '2px md:3px',
+        borderTopWidth: '2 md:3',
+        borderRightWidth: '2 md:3',
       },
     },
   } satisfies Record<string, Record<string, ViewProps>>,
