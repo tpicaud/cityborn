@@ -26,6 +26,7 @@ const publicCookieAuthRoutes = c.router({
   signIn: contract.auth.cookie.signIn,
   signInWithGoogle: contract.auth.cookie.signInWithGoogle,
   signInWithApple: contract.auth.cookie.signInWithApple,
+  confirmGoogleEmail: contract.auth.cookie.confirmGoogleEmail,
   signOut: contract.auth.signOut,
 });
 
@@ -71,6 +72,16 @@ export class AuthCookieController {
         body: this.authCookieService.establishSession(
           response,
           await this.authService.signInWithGoogle(body, visitorId),
+        ),
+      }),
+      confirmGoogleEmail: async ({ body }) => ({
+        status: 200 as const,
+        body: this.authCookieService.establishSession(
+          response,
+          await this.authService.confirmGoogleEmail({
+            confirmation: body,
+            visitorId,
+          }),
         ),
       }),
       signInWithApple: async ({ body }) => ({

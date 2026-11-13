@@ -1,16 +1,29 @@
 import { ErrorCode } from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { z } from 'zod';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { type AppleIdTokenClaims, verifyAppleIdToken } from './apple-id-token';
 import {
   GOOGLE_IDENTITY_CLIENT,
   type GoogleIdentityClient,
-  type GoogleIdentityPayload,
+  type GoogleIdentityTicket,
 } from './google-client.provider';
 
+const GoogleIdTokenClaimsSchema = z.object({
+  sub: z.string().min(1),
+  email: z.string().trim().email(),
+  email_verified: z.boolean(),
+  name: z.string().optional(),
+  hd: z.string().optional(),
+});
+
+type GoogleIdTokenClaims = z.infer<typeof GoogleIdTokenClaimsSchema>;
+
 export type GoogleIdentity = {
+  subject: string;
   email: string;
   name: string;
+  isEmailAuthoritative: boolean;
 };
 
 export type AppleIdentity = {
@@ -27,33 +40,31 @@ export class IdentityTokenService {
   ) {}
 
   async verifyGoogleIdToken(idToken: string): Promise<GoogleIdentity> {
-    const payload: GoogleIdentityPayload | undefined = (
+    const ticket: GoogleIdentityTicket =
       await this.googleIdentityClient.verifyIdToken({
         idToken,
         audience: this.authConfig.googleClientId,
-      })
-    ).getPayload();
-    if (!payload)
+      });
+    const claims: z.SafeParseReturnType<unknown, GoogleIdTokenClaims> =
+      GoogleIdTokenClaimsSchema.safeParse(ticket.getPayload());
+    if (!claims.success)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Invalid credentials',
+        message: 'Jeton Google incomplet ou invalide',
       });
-
+    const payload: GoogleIdTokenClaims = claims.data;
     if (!payload.email_verified)
       throw new UnauthorizedException({
         code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED,
-        message: 'Google account not verified',
+        message: 'Le compte Google n’est pas vérifié',
       });
-
-    if (!payload.email || !payload.name)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Missing name or email',
-      });
-
+    const email: string = payload.email.toLowerCase();
     return {
-      email: payload.email,
-      name: payload.name,
+      subject: payload.sub,
+      email,
+      name: payload.name?.trim() || 'joueur',
+      isEmailAuthoritative:
+        email.endsWith('@gmail.com') || Boolean(payload.hd?.trim()),
     };
   }
 

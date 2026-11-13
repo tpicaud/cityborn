@@ -6,9 +6,13 @@ import {
 import { PublicUserSchema, UserSchema } from '../user/user.schema';
 import {
   AuthResponseSchema,
+  ConfirmGoogleEmailSchema,
   CreateUserSchema,
+  GoogleEmailChallengeSchema,
   PasswordResetRequestResponseSchema,
+  RequestGoogleEmailSchema,
   RequestPasswordResetSchema,
+  ResendGoogleEmailSchema,
   ResetPasswordSchema,
   SignInSchema,
   SignInWithAppleSchema,
@@ -46,6 +50,12 @@ const cookieAuthContract = c.router(
       body: SignInWithGoogleSchema,
       responses: { 200: UserSchema },
     },
+    confirmGoogleEmail: {
+      method: 'POST',
+      path: '/google/confirm-email',
+      body: ConfirmGoogleEmailSchema,
+      responses: { 200: UserSchema },
+    },
     signInWithApple: {
       method: 'POST',
       path: '/sign-in-with-apple',
@@ -64,6 +74,18 @@ const cookieAuthContract = c.router(
 
 export const authContract = c.router(
   {
+    requestGoogleEmail: {
+      method: 'POST',
+      path: '/google/request-email',
+      body: RequestGoogleEmailSchema,
+      responses: { 200: GoogleEmailChallengeSchema },
+    },
+    resendGoogleEmail: {
+      method: 'POST',
+      path: '/google/resend-email',
+      body: ResendGoogleEmailSchema,
+      responses: { 200: GoogleEmailChallengeSchema },
+    },
     requestPasswordReset: {
       method: 'POST',
       path: '/request-password-reset',
@@ -103,6 +125,12 @@ export const authContract = c.router(
       method: 'POST',
       path: '/sign-in-with-google',
       body: SignInWithGoogleSchema,
+      responses: { 200: AuthResponseSchema },
+    },
+    confirmGoogleEmail: {
+      method: 'POST',
+      path: '/google/confirm-email',
+      body: ConfirmGoogleEmailSchema,
       responses: { 200: AuthResponseSchema },
     },
     signInWithApple: {
