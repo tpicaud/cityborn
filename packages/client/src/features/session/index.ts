@@ -1,3 +1,4 @@
+export type { PackCatalogSection } from './catalogSections';
 export {
   type PackImageFallback,
   type PackImageFallbackOptions,

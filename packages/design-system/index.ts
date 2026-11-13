@@ -10,6 +10,7 @@ export { BodyText } from './src/BodyText';
 export { BrandedButton } from './src/BrandedButton';
 export * from './src/Button';
 export { CardGrid } from './src/CardGrid';
+export { CardRow } from './src/CardRow';
 export * from './src/colors';
 export { FilterBar } from './src/FilterBar';
 export * from './src/FilterTag';

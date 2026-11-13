@@ -7,15 +7,16 @@ import {
 } from '@cityborn/client/session';
 import {
   BodyText,
-  CardGrid,
+  CardRow,
   FilterBar,
   FilterTag,
   ImageCard,
   LoadingScreen,
   Screen,
+  TextButton,
 } from '@cityborn/design-system';
 import { SvgXml } from 'react-native-svg';
-import { View } from 'tamagui';
+import { ScrollView, View } from 'tamagui';
 
 type PackCatalogProps = {
   onPlay: (pack: Pack) => Promise<void>;
@@ -58,7 +59,10 @@ export function PackCatalog({
     themes,
     selectedTheme,
     selectTheme,
-    packs,
+    sections,
+    hasSectionsError,
+    isReloadingSections,
+    reloadSections,
   }: ThemeFilteredPacks = useThemeFilteredPacks({ isScreenFocused });
 
   if (isLoading) return <LoadingScreen />;
@@ -82,14 +86,33 @@ export function PackCatalog({
             />
           ))}
         </FilterBar>
-        {packs.length === 0 ? (
+        {hasSectionsError && (
+          <View role="alert">
+            <BodyText>
+              Les sections n’ont pas pu être chargées. Tous les packs restent
+              accessibles.
+            </BodyText>
+            <TextButton
+              label="Réessayer"
+              onPress={reloadSections}
+              disabled={isReloadingSections}
+            />
+          </View>
+        )}
+        {sections.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardGrid>
-            {packs.map((pack: Pack) => (
-              <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
-            ))}
-          </CardGrid>
+          <ScrollView flex={1} minH="0" showsVerticalScrollIndicator>
+            <View gap="5 md:8" pb="4 md:6">
+              {sections.map((section) => (
+                <CardRow key={section.id} title={section.name}>
+                  {section.packs.map((pack: Pack) => (
+                    <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
+                  ))}
+                </CardRow>
+              ))}
+            </View>
+          </ScrollView>
         )}
       </View>
     </Screen>

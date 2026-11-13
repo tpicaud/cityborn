@@ -4,13 +4,15 @@ import { usePathname } from 'next/navigation';
 export function DashboardNavigation() {
   const pathname: string = usePathname();
   const isThemes: boolean = pathname.startsWith('/dashboard/themes');
+  const isSections: boolean = pathname.startsWith('/dashboard/sections');
+  const isPacks: boolean = !isThemes && !isSections;
   return (
     <nav aria-label="Administration" className="flex items-center gap-4">
       <Link
         href="/dashboard"
-        aria-current={!isThemes ? 'page' : undefined}
+        aria-current={isPacks ? 'page' : undefined}
         className={
-          !isThemes
+          isPacks
             ? 'font-bold text-white underline underline-offset-8'
             : 'text-zinc-400 hover:text-white'
         }
@@ -27,6 +29,17 @@ export function DashboardNavigation() {
         }
       >
         Thèmes
+      </Link>
+      <Link
+        href="/dashboard/sections"
+        aria-current={isSections ? 'page' : undefined}
+        className={
+          isSections
+            ? 'font-bold text-white underline underline-offset-8'
+            : 'text-zinc-400 hover:text-white'
+        }
+      >
+        Sections
       </Link>
     </nav>
   );

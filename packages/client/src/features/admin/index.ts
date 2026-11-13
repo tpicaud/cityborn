@@ -21,6 +21,18 @@ export {
   type WorldLocationSearch,
   type WorldLocationSearchOptions,
 } from './search';
+export {
+  selectSectionPackCandidates,
+  selectSectionPacks,
+} from './sections-editor/sectionPacks';
+export {
+  type CatalogSectionGroup,
+  type SectionNameForm,
+  type SectionNameFormOptions,
+  type SectionsManagement,
+  useSectionNameForm,
+  useSectionsManagement,
+} from './sections-editor/sectionsManagement';
 export { findThemeName } from './themeName';
 export {
   type ThemesManagement,
