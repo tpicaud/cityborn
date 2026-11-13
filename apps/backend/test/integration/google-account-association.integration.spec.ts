@@ -5,14 +5,19 @@ import {
   type User,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import type { AuthSession } from '../../src/common/types/auth-session';
-import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import {
+  PrismaClsModule,
+  type PrismaTransactionHost,
+} from '../../src/prisma/prisma-cls.module';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import {
   type CreateUserData,
   USER_REPOSITORY,
+  type UserCredentials,
 } from '../../src/user/repositories/user.repository';
 import { UserService } from '../../src/user/user.service';
 import { createTestInfrastructure } from '../support/infrastructure';
@@ -119,6 +124,82 @@ describe('UserService.createUser', () => {
       outcomes.filter((outcome) => outcome.status === 'fulfilled'),
     ).toHaveLength(1);
     expect(await infrastructure.prisma.user.count()).toBe(1);
+  });
+});
+
+describe('UserService.updatePassword', () => {
+  it('rejects an earlier password change waiting for a Google reclaim to commit', async () => {
+    const user: User = await createUser({
+      isVerified: false,
+      password: 'old-hash',
+    });
+    const credentials: UserCredentials | null =
+      await userService.findCredentialsById(user.id);
+    if (!credentials?.passwordHash) throw new Error('Missing credentials');
+    const txHost: PrismaTransactionHost = testingModule.get(TransactionHost);
+    let confirmAssociation: () => void = () => {};
+    const associated: Promise<void> = new Promise((resolve) => {
+      confirmAssociation = resolve;
+    });
+    let releaseAssociation: () => void = () => {};
+    const released: Promise<void> = new Promise((resolve) => {
+      releaseAssociation = resolve;
+    });
+    const association: Promise<AuthSession> = txHost.withTransaction(
+      async () => {
+        const session: AuthSession = await userService.associateGoogleAccount({
+          userId: user.id,
+          email: user.email,
+          isVerified: false,
+          subject: 'google-subject',
+        });
+        confirmAssociation();
+        await released;
+        return session;
+      },
+    );
+    await associated;
+
+    const passwordUpdate: Promise<void> = expect(
+      userService.updatePassword({
+        userId: user.id,
+        passwordHash: 'attacker-hash',
+        expectedPasswordHash: credentials.passwordHash,
+        authVersion: credentials.authSession.authVersion,
+      }),
+    ).rejects.toMatchObject({
+      status: 401,
+      response: { code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT },
+    });
+    async function waitForBlockedUpdate(
+      remainingAttempts: number,
+    ): Promise<void> {
+      const waiting: { count: bigint }[] = await infrastructure.prisma
+        .$queryRaw`
+        SELECT count(*) AS count FROM pg_stat_activity
+        WHERE datname = current_database() AND usename = current_user
+          AND wait_event_type = 'Lock' AND query LIKE 'UPDATE%User%'
+      `;
+      if (waiting[0]?.count === 1n) return;
+      if (remainingAttempts === 0)
+        throw new Error('Password update did not wait for the Google reclaim');
+      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+      await waitForBlockedUpdate(remainingAttempts - 1);
+    }
+    try {
+      await waitForBlockedUpdate(100);
+    } finally {
+      releaseAssociation();
+      await Promise.all([association, passwordUpdate]);
+    }
+
+    expect(await userService.findCredentialsById(user.id)).toMatchObject({
+      passwordHash: null,
+      authSession: {
+        authVersion: 1,
+        user: { id: user.id, type: 'google', isVerified: true },
+      },
+    });
   });
 });
 

@@ -303,10 +303,12 @@ export class AuthService {
       });
 
     const passwordHash: string = await hashPassword(data.newPassword);
-    const authVersion: AuthVersion = await this.userService.updatePassword(
-      user.id,
+    const authVersion: AuthVersion = await this.userService.updatePassword({
+      userId: user.id,
       passwordHash,
-    );
+      expectedPasswordHash: credentials.passwordHash,
+      authVersion: credentials.authSession.authVersion,
+    });
     this.authenticatedSocketService.disconnectOlderSessions(
       user.id,
       authVersion,

@@ -529,10 +529,12 @@ describe('AuthService account operations', () => {
         updatePasswordData,
       );
 
-      expect(userService.updatePassword).toHaveBeenCalledWith(
-        persistedUser.id,
-        'hashed-password',
-      );
+      expect(userService.updatePassword).toHaveBeenCalledWith({
+        userId: persistedUser.id,
+        passwordHash: 'hashed-password',
+        expectedPasswordHash: 'hashed-password',
+        authVersion: 0,
+      });
       expect(
         authenticatedSocketService.disconnectOlderSessions,
       ).toHaveBeenCalledWith(persistedUser.id, 1);

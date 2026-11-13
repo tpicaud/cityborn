@@ -396,6 +396,44 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('updatePassword', () => {
+    it.each([
+      { expectedPasswordHash: 'stale-hash', authVersion: 0 },
+      { expectedPasswordHash: 'old-hash', authVersion: 1 },
+    ])(
+      'preserves credentials and reset tokens for stale credentials %j',
+      async (expectedCredentials) => {
+        const userData: User = buildUser();
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          password: 'old-hash',
+        });
+        await infrastructure.prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: 'reset-hash',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+
+        const updated: boolean = await userRepository.updatePassword({
+          userId: user.id,
+          passwordHash: 'new-hash',
+          ...expectedCredentials,
+        });
+
+        expect(updated).toBe(false);
+        expect(await userRepository.findCredentialsById(user.id)).toMatchObject(
+          {
+            passwordHash: 'old-hash',
+            authSession: { authVersion: 0 },
+          },
+        );
+        expect(await infrastructure.prisma.passwordResetToken.count()).toBe(1);
+      },
+    );
+
     it('persists the new password hash', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
@@ -405,7 +443,12 @@ describe('PrismaUserRepository', () => {
         password: 'old-hash',
       });
 
-      await userRepository.updatePassword(user.id, 'new-hash');
+      await userRepository.updatePassword({
+        userId: user.id,
+        passwordHash: 'new-hash',
+        expectedPasswordHash: 'old-hash',
+        authVersion: 0,
+      });
       const credentials: UserCredentials | null =
         await userRepository.findCredentialsById(user.id);
 

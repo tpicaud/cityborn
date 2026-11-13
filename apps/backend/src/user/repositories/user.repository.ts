@@ -8,6 +8,13 @@ export type UserCredentials = {
   passwordHash: string | null;
 };
 
+export type PasswordUpdate = {
+  userId: UserId;
+  passwordHash: string;
+  expectedPasswordHash: string;
+  authVersion: AuthVersion;
+};
+
 export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   Partial<Pick<User, 'isVerified'>> & {
     password?: string;
@@ -61,7 +68,7 @@ export interface UserRepository {
     email: string;
   }): Promise<User | null>;
   deletePasswordResetTokensByUserId(userId: UserId): Promise<void>;
-  updatePassword(userId: UserId, passwordHash: string): Promise<void>;
+  updatePassword(update: PasswordUpdate): Promise<boolean>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
   reclaimUnverifiedAccount(
     reclaim: UnverifiedAccountReclaim,

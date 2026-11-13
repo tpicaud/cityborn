@@ -13,6 +13,7 @@ import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
   GoogleAccountAssociation,
+  PasswordUpdate,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -200,12 +201,19 @@ export class PrismaUserRepository implements UserRepository {
     await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
   }
 
-  async updatePassword(userId: UserId, passwordHash: string): Promise<void> {
-    await this.txHost.tx.user.update({
-      where: { id: userId },
+  async updatePassword({
+    userId,
+    passwordHash,
+    expectedPasswordHash,
+    authVersion,
+  }: PasswordUpdate): Promise<boolean> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: { id: userId, password: expectedPasswordHash, authVersion },
       data: { password: passwordHash },
     });
+    if (updated.count === 0) return false;
     await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
+    return true;
   }
 
   async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {

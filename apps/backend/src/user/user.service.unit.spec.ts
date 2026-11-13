@@ -242,15 +242,23 @@ describe('UserService.updatePassword', () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =
       buildUserService();
     const user: User = buildUser();
+    userRepository.updatePassword.mockResolvedValue(true);
     userRepository.incrementAuthVersion.mockResolvedValue(1);
 
-    await expect(userService.updatePassword(user.id, 'new-hash')).resolves.toBe(
-      1,
-    );
-    expect(userRepository.updatePassword).toHaveBeenCalledWith(
-      user.id,
-      'new-hash',
-    );
+    await expect(
+      userService.updatePassword({
+        userId: user.id,
+        passwordHash: 'new-hash',
+        expectedPasswordHash: 'old-hash',
+        authVersion: 0,
+      }),
+    ).resolves.toBe(1);
+    expect(userRepository.updatePassword).toHaveBeenCalledWith({
+      userId: user.id,
+      passwordHash: 'new-hash',
+      expectedPasswordHash: 'old-hash',
+      authVersion: 0,
+    });
     expect(userRepository.incrementAuthVersion).toHaveBeenCalledWith(user.id);
   });
 });
