@@ -4,13 +4,14 @@ import {
   isApiVersionOutdated,
 } from '@cityborn/api';
 import { type ApiVersionSupport, useApiVersionSupport } from '@cityborn/client';
-import { colors } from '@cityborn/design-system';
+import { BodyText, Button, Popup } from '@cityborn/design-system';
 import Constants from 'expo-constants';
-import { Linking, Platform } from 'react-native';
-import Button from '@/components/ui/Button';
-import Dialog from '@/components/ui/Dialog';
-import { Icon } from '@/components/ui/Icon';
-import { Text, View } from '@/components/ui/native/NativeComponents';
+import { Platform } from 'react-native';
+import { View } from 'tamagui';
+import {
+  type ExternalLinkOpener,
+  useExternalLinkOpener,
+} from '@/lib/externalLink';
 
 const localApiVersionInfo: ApiVersionInfo = getApiVersionInfo();
 
@@ -25,6 +26,7 @@ function getStoreUrl(): string {
 
 function ForceUpdateDialog() {
   const { minSupportedApiVersion }: ApiVersionSupport = useApiVersionSupport();
+  const openExternalLink: ExternalLinkOpener = useExternalLinkOpener();
   const isForceUpdateRequired: boolean =
     minSupportedApiVersion !== null &&
     isApiVersionOutdated(
@@ -33,23 +35,19 @@ function ForceUpdateDialog() {
     );
 
   return (
-    <Dialog
-      visible={isForceUpdateRequired}
-      onClose={() => {}}
-      className="h-auto py-8 px-6"
-    >
-      <View className="flex justify-center items-center gap-4">
-        <Icon name="alert_fill" size={40} color={colors.destructive[500]} />
-        <Text className="text-lg text-center">
-          Oops ! Tu es en retard... Mets à jour l'application mettre à jour
-          Cityborn.
-        </Text>
+    <Popup open={isForceUpdateRequired} title="Mise à jour">
+      <View gap="4">
+        <BodyText>
+          Une nouvelle version de Cityborn t’attend. Mets à jour l’app pour
+          continuer à jouer.
+        </BodyText>
         <Button
+          compact
           label="Mettre à jour"
-          onPress={() => Linking.openURL(getStoreUrl())}
+          onPress={() => openExternalLink(getStoreUrl())}
         />
       </View>
-    </Dialog>
+    </Popup>
   );
 }
 
