@@ -35,7 +35,16 @@ export class GoogleEmailVerificationService {
     });
     if (!reserved) return;
     const code: string = randomInt(10000000, 100000000).toString();
-    await this.redisService.set(key, hashCode(code), 600);
+    await this.redisService.redisClient.eval(
+      `
+      redis.call('SET', KEYS[1], ARGV[1], 'EX', 600)
+      redis.call('DEL', KEYS[2])
+      `,
+      2,
+      key,
+      `${key}:attempts`,
+      hashCode(code),
+    );
     try {
       await this.mailService.sendMail({
         to: ownership.email,

@@ -26,6 +26,7 @@ const service: GoogleEmailVerificationService =
   new GoogleEmailVerificationService(redis, mail);
 
 beforeEach(() => {
+  mail.sendMail.mockReset();
   mail.sendMail.mockImplementation(
     async (options: SendMailOptions): Promise<void> => {
       const match: RegExpMatchArray | null =
@@ -41,6 +42,30 @@ afterAll(async () => {
 });
 
 describe('GoogleEmailVerificationService.request', () => {
+  it('renews the attempt budget when resending after exhausted attempts', async () => {
+    await service.request(ownership);
+    await Promise.allSettled(
+      Array.from({ length: 5 }, () =>
+        service.verify({ ownership, code: '00000000' }),
+      ),
+    );
+    await expect(service.verify({ ownership, code })).rejects.toMatchObject({
+      status: 401,
+    });
+    const cooldownKey: string = `auth:google:email-cooldown:${createHash('sha256').update(ownership.email.toLowerCase()).digest('hex')}`;
+    await redis.del(cooldownKey);
+
+    await service.request(ownership);
+
+    expect(mail.sendMail).toHaveBeenCalledTimes(2);
+    await Promise.allSettled(
+      Array.from({ length: 4 }, () =>
+        service.verify({ ownership, code: '00000000' }),
+      ),
+    );
+    await expect(service.verify({ ownership, code })).resolves.toBeUndefined();
+  });
+
   it('limits email delivery and stores only a hashed code', async () => {
     await service.request(ownership);
     await service.request(ownership);
