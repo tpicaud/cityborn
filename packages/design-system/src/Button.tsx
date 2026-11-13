@@ -200,6 +200,7 @@ const GlowHalo = styled(View, {
   borderColor: 'cta-orange',
   bg: 'glow-cta-halo',
   boxShadow: 'glow-cta-halo md:glow-cta-halo-tablet',
+  mixBlendMode: 'plus-lighter',
   pointerEvents: 'none',
 });
 
