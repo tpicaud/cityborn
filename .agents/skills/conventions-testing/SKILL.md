@@ -9,6 +9,7 @@ description: "Conventions de tests Cityborn. À utiliser pour écrire, modifier 
 
 - Un comportement est testé une seule fois, au niveau le plus bas qui permet de l'observer.
 - Pour un test de `apps/backend`, lire [la référence backend](references/backend.md) : niveaux unitaire, intégration et e2e, doubles et infrastructure de test.
+- Les hooks montés et composants React/React Native restent hors couverture automatisée ; ajouter leur infrastructure de test uniquement sur demande explicite.
 
 ## Structure et nommage
 

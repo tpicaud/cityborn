@@ -239,14 +239,42 @@ jobs:
       - name: Build static back-office
         run: pnpm build:back-office
 
+  test-selection:
+    name: Select affected test suites
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.plan.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Install pnpm
+        run: npm install -g pnpm@10.33.2
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Plan affected tests
+        id: plan
+        env:
+          TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
+          TURBO_SCM_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pnpm exec turbo run test --affected --dry=json > test-plan.json
+          packages=$(jq -c '[.tasks[] | select(.task == "test" and .command != "<NONEXISTENT>") | .package] | unique' test-plan.json)
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
   package-tests:
     name: Tests (${{ matrix.package }})
-    if: github.event.pull_request.draft == false
+    needs: test-selection
+    if: github.event.pull_request.draft == false && needs.test-selection.outputs.packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        package: ["@cityborn/api", "@cityborn/core", "@cityborn/client", "cityborn-backend"]
+        package: ${{ fromJSON(needs.test-selection.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -263,7 +291,8 @@ jobs:
 
   backend-integration:
     name: Backend integration tests
-    if: github.event.pull_request.draft == false
+    needs: test-selection
+    if: github.event.pull_request.draft == false && contains(fromJSON(needs.test-selection.outputs.packages), 'cityborn-backend')
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
@@ -318,7 +347,8 @@ jobs:
 
   backend-e2e:
     name: Backend e2e tests
-    if: github.event.pull_request.draft == false
+    needs: test-selection
+    if: github.event.pull_request.draft == false && contains(fromJSON(needs.test-selection.outputs.packages), 'cityborn-backend')
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
