@@ -16,8 +16,9 @@ import {
   TextButton,
 } from '@cityborn/design-system';
 import Constants from 'expo-constants';
-import { type ImperativeRouter, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { type ImperativeRouter, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { BackHandler, type NativeEventSubscription } from 'react-native';
 import { View } from 'tamagui';
 import { EmailVerificationNotice } from '@/features/auth/EmailVerificationNotice';
 import { LegalDocumentLinks } from '@/features/legal-information/LegalDocumentLinks';
@@ -46,6 +47,18 @@ export function Profile({ user }: ProfileProps) {
   }: AccountDeletion = useAccountDeletion({
     onAccountDeleted: () => router.navigate('/'),
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isEditing) return undefined;
+      const subscription: NativeEventSubscription =
+        BackHandler.addEventListener('hardwareBackPress', () => {
+          setIsEditing(false);
+          return true;
+        });
+      return () => subscription.remove();
+    }, [isEditing]),
+  );
 
   if (isEditing) {
     return <EditProfile user={user} onBack={() => setIsEditing(false)} />;
