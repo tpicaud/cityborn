@@ -92,6 +92,7 @@ export function SignInWithGoogleButton() {
     <View items="center" justify="center" minH="11" aria-busy={isSigningIn}>
       <div
         ref={googleButtonContainer}
+        inert={!isGoogleButtonReady}
         style={{ opacity: isGoogleButtonReady ? 1 : 0 }}
       />
       {isSigningIn && (
