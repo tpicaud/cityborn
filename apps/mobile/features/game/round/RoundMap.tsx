@@ -204,12 +204,28 @@ function CurrentRoundMap({
     handlePreGuess({ lat: latitude, lng: longitude });
   };
 
-  useEffect(() => {
-    if (!isShowingResults || !mapRef.current || !answer) return;
+  const answerLat: number | undefined = answer?.lat;
+  const answerLng: number | undefined = answer?.lng;
+  const guessLat: number | undefined = placedLocalGuess?.coordinates.lat;
+  const guessLng: number | undefined = placedLocalGuess?.coordinates.lng;
 
-    if (placedLocalGuess) {
+  useEffect(() => {
+    if (
+      !isShowingResults ||
+      !mapRef.current ||
+      answerLat === undefined ||
+      answerLng === undefined
+    ) {
+      return;
+    }
+    const answerCoordinate: LatLng = toLatLng({
+      lat: answerLat,
+      lng: answerLng,
+    });
+
+    if (guessLat !== undefined && guessLng !== undefined) {
       mapRef.current.fitToCoordinates(
-        [toLatLng(answer), toLatLng(placedLocalGuess.coordinates)],
+        [answerCoordinate, toLatLng({ lat: guessLat, lng: guessLng })],
         { edgePadding: zoomPadding, animated: true },
       );
       return;
@@ -217,13 +233,13 @@ function CurrentRoundMap({
 
     mapRef.current.animateToRegion(
       {
-        ...toLatLng(answer),
+        ...answerCoordinate,
         latitudeDelta: 0.3,
         longitudeDelta: 0.3,
       },
       100,
     );
-  }, [answer, isShowingResults, placedLocalGuess]);
+  }, [answerLat, answerLng, guessLat, guessLng, isShowingResults]);
 
   const otherPlayersGuesses: [string, Guess][] = Object.entries(
     currentRound.playersGuesses ?? {},
