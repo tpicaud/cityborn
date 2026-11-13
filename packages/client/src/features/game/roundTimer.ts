@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 
 const roundTimerTickInMilliseconds: number = 10;
 const countdownTickInMilliseconds: number = 1000;
-const warningThresholdInSeconds: number = 10;
-const criticalThresholdInSeconds: number = 5;
 
 export type RoundTimeLeftOptions = {
   totalTimeInSeconds: number;
@@ -14,12 +12,9 @@ export type RoundTimeLeftOptions = {
   onTimeUp: () => void;
 };
 
-export type TimeLeftUrgency = 'calm' | 'warning' | 'critical';
-
 export type RoundTimeLeft = {
   secondsLeft: number;
   remainingShare: number;
-  urgency: TimeLeftUrgency;
 };
 
 export function createRoundTimeLeft({
@@ -29,19 +24,10 @@ export function createRoundTimeLeft({
   timeLeftInSeconds: number;
   totalTimeInSeconds: number;
 }): RoundTimeLeft {
-  const secondsLeft: number = Math.ceil(timeLeftInSeconds);
-  const urgency: TimeLeftUrgency =
-    secondsLeft <= criticalThresholdInSeconds
-      ? 'critical'
-      : secondsLeft <= warningThresholdInSeconds
-        ? 'warning'
-        : 'calm';
-
   return {
-    secondsLeft,
+    secondsLeft: Math.ceil(timeLeftInSeconds),
     remainingShare:
       totalTimeInSeconds > 0 ? timeLeftInSeconds / totalTimeInSeconds : 0,
-    urgency,
   };
 }
 
