@@ -49,17 +49,22 @@ const TopBar = styled(View, {
   flexDirection: 'row',
   justify: 'space-between',
   items: 'flex-start',
-  pt: '4 md:7',
+  pt: '2 md:4',
   pl: '4 md:8',
   pr: '3 md:9',
   pointerEvents: 'box-none',
 });
 
 const TopEnd = styled(View, {
-  items: 'flex-end',
+  flexDirection: 'row',
+  items: 'flex-start',
   gap: '3 md:4',
-  mt: '4 md:7',
   pointerEvents: 'box-none',
+});
+
+const OptionsSlot = styled(View, {
+  mt: '4 md:7',
+  pointerEvents: 'auto',
 });
 
 const BottomBar = styled(View, {
@@ -97,13 +102,13 @@ export function MapHudScreen({
             <View pointerEvents="none">{gauge}</View>
             <TopEnd>
               {onOpenOptions && (
-                <View pointerEvents="auto">
+                <OptionsSlot>
                   <IconButton
                     icon="options"
                     label="Options"
                     onPress={onOpenOptions}
                   />
-                </View>
+                </OptionsSlot>
               )}
               <View pointerEvents="none">{card}</View>
             </TopEnd>
