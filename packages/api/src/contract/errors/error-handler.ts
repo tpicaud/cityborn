@@ -4,6 +4,11 @@ import { type ApiError, isApiError } from './api-error.schema';
 import { ErrorCode } from './error-codes';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
+  [ErrorCode.CATALOG_SECTION_NOT_FOUND]: 'Cette section n’existe plus.',
+  [ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS]:
+    'Une section porte déjà ce nom dans ce filtre.',
+  [ErrorCode.CATALOG_SECTION_PACK_THEME_MISMATCH]:
+    'Ce pack n’appartient pas au thème de la section.',
   // User
   [ErrorCode.USER_NOT_FOUND]: "L'utilisateur n'existe pas.",
   [ErrorCode.USER_INVALID_CREDENTIALS]: 'Identifiant ou mot de passe incorrect',

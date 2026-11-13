@@ -58,6 +58,13 @@ export class PrismaPackRepository implements PackRepository {
 
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
     const { connectIds, disconnectIds, id, parentId, ...packData } = data;
+    if (data.themeId !== undefined) {
+      await this.txHost.tx
+        .$queryRaw`SELECT id FROM "Pack" WHERE id = ${packId}::uuid FOR UPDATE`;
+      await this.txHost.tx.catalogSectionPack.deleteMany({
+        where: { packId, section: { themeId: { not: data.themeId } } },
+      });
+    }
 
     const relationUpdate: {
       connect?: { id: GuessObjectId }[];

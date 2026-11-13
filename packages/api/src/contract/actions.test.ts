@@ -31,6 +31,14 @@ describe('httpActionRoutes', () => {
       .sort();
 
     assert.deepEqual(actions, [
+      'admin.catalog-section.addPack',
+      'admin.catalog-section.createSection',
+      'admin.catalog-section.deleteSection',
+      'admin.catalog-section.getSections',
+      'admin.catalog-section.movePack',
+      'admin.catalog-section.moveSection',
+      'admin.catalog-section.removePack',
+      'admin.catalog-section.renameSection',
       'admin.guess-object.createGuessObject',
       'admin.guess-object.deleteGuessObject',
       'admin.guess-object.getFullGuessObject',
@@ -74,6 +82,7 @@ describe('httpActionRoutes', () => {
       'auth.updateEmail',
       'auth.updatePassword',
       'auth.verifyEmail',
+      'catalog-section.getPublishedSections',
       'category.getCategories',
       'category.getCategory',
       'category.getCategoryTrees',

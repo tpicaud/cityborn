@@ -1,5 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { authContract } from '../auth/auth.contract';
+import { catalogSectionAdminContract } from '../catalog-section/catalog-section.admin.contract';
+import { catalogSectionContract } from '../catalog-section/catalog-section.contract';
 import { gameRecordContract } from '../game-record/game-record.contract';
 import { deprecatedUserGameRecordContract } from '../game-record/game-record.deprecated.contract';
 import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
@@ -29,6 +31,7 @@ type ApiDomainRouters = Readonly<Record<string, ApiDomainRouter>>;
 const c = initContract();
 
 const publicRouters = {
+  catalogSection: catalogSectionContract,
   auth: authContract,
   health: healthContract,
   user: { ...deprecatedUserGameRecordContract, ...userContract },
@@ -42,6 +45,7 @@ const publicRouters = {
 } satisfies ApiDomainRouters;
 
 const adminRouters = {
+  catalogSection: catalogSectionAdminContract,
   guessObjects: guessObjectAdminContract,
   pack: packAdminContract,
   search: searchAdminContract,

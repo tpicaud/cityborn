@@ -126,6 +126,7 @@ model Theme {
   position Int    @default(0)
 
   packs Pack[]
+  catalogSections CatalogSection[]
 }
 
 model Pack {
@@ -138,6 +139,8 @@ model Pack {
 
   theme        Theme         @relation(fields: [themeId], references: [id])
   guessObjects GuessObject[] @relation("PackGuessObjects")
+
+  catalogSections CatalogSectionPack[]
 
   @@index([themeId])
 }
@@ -167,4 +170,24 @@ model Event {
   visitorId  String
   properties Json
   createdAt  DateTime @default(now()) @db.Timestamp(6)
+}
+
+model CatalogSection {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  themeId String? @db.Uuid
+  position Int
+  theme Theme? @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  packs CatalogSectionPack[]
+  @@index([themeId, position])
+}
+
+model CatalogSectionPack {
+  sectionId String @db.Uuid
+  packId String @db.Uuid
+  position Int
+  section CatalogSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  pack Pack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  @@id([sectionId, packId])
+  @@index([packId])
 }

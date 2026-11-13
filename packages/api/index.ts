@@ -1,5 +1,7 @@
 export * from './openapi/http/generate-openapi';
 export * from './src/auth/auth.schema';
+export * from './src/catalog-section/catalog-section.builder';
+export * from './src/catalog-section/catalog-section.schema';
 export * from './src/contract/actions';
 export * from './src/contract/api-domain';
 export * from './src/contract/api-response';

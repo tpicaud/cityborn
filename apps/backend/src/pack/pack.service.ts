@@ -90,6 +90,7 @@ export class PackService {
     return this.packRepository.create(data);
   }
 
+  @Transactional()
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
     await this.ensureUpdatedPackHasImageIfPublished({ packId, data });
     if (data.themeId !== undefined) {
