@@ -2,6 +2,8 @@ import { styled } from 'tamagui';
 import { BodyText } from './BodyText';
 import { PressableFrame } from './PressableFrame';
 
+type TextButtonTone = 'default' | 'danger';
+
 const TextButtonFrame = styled(PressableFrame, {
   bg: 'transparent',
   minH: '11',
@@ -10,16 +12,33 @@ const TextButtonFrame = styled(PressableFrame, {
   p: '2',
 });
 
+const TextButtonLabel = styled(BodyText, {
+  textDecorationLine: 'underline',
+  variants: {
+    tone: {
+      default: {},
+      danger: {
+        fontSize: '4 md:8',
+        lineHeight: '6 md:10',
+        fontWeight: '400',
+        color: 'common-red',
+      },
+    },
+  } as const,
+});
+
 type TextButtonProps = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  tone?: TextButtonTone;
 };
 
 export function TextButton({
   label,
   onPress,
   disabled = false,
+  tone = 'default',
 }: TextButtonProps) {
   return (
     <TextButtonFrame
@@ -27,7 +46,7 @@ export function TextButton({
       aria-disabled={disabled}
       opacity={disabled ? 0.5 : 1}
     >
-      <BodyText textDecorationLine="underline">{label}</BodyText>
+      <TextButtonLabel tone={tone}>{label}</TextButtonLabel>
     </TextButtonFrame>
   );
 }
