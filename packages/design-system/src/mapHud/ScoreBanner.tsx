@@ -20,6 +20,7 @@ const Plate = styled(View, {
   position: 'relative',
   justify: 'center',
   minH: '20 md:32',
+  py: '2 md:3',
   variants: {
     tone: {
       title: { flex: 1, maxW: '60 md:96', pl: '5 md:8', pr: '8 md:12' },
@@ -100,13 +101,34 @@ const Caption = styled(Text, {
   color: 'banner-caption',
 });
 
+type TitleSize = 'large' | 'medium' | 'small' | 'smallest';
+
+const titleSizeMaxLengths: [TitleSize, number][] = [
+  ['large', 10],
+  ['medium', 12],
+  ['small', 14],
+];
+
+function titleSize(title: string): TitleSize {
+  const fittingSize: [TitleSize, number] | undefined = titleSizeMaxLengths.find(
+    ([, maxLength]: [TitleSize, number]) => title.length <= maxLength,
+  );
+  return fittingSize?.[0] ?? 'smallest';
+}
+
 const Title = styled(Text, {
   role: 'heading',
   fontFamily: 'body',
-  fontSize: '8 md:11',
-  lineHeight: '8 md:11',
   fontWeight: '600',
   color: 'secondary-cyan',
+  variants: {
+    size: {
+      large: { fontSize: '8 md:11', lineHeight: '10 md:12' },
+      medium: { fontSize: '7 md:9', lineHeight: '9 md:10' },
+      small: { fontSize: '6 md:8', lineHeight: '7 md:10' },
+      smallest: { fontSize: '5 md:7', lineHeight: '6 md:9' },
+    },
+  } as const,
 });
 
 const ScoreLine = styled(View, {
@@ -154,7 +176,7 @@ export function ScoreBanner({ caption, title, score }: ScoreBannerProps) {
     <BannerRow role="status">
       <BannerPlate tone="title">
         <Caption>{caption}</Caption>
-        <Title>{title}</Title>
+        <Title size={titleSize(title)}>{title}</Title>
       </BannerPlate>
       <BannerPlate tone="score">
         <ScoreLine>
