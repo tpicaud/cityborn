@@ -63,7 +63,6 @@ const TopEnd = styled(View, {
 });
 
 const OptionsSlot = styled(View, {
-  mt: '4 md:7',
   pointerEvents: 'auto',
 });
 
