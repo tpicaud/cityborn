@@ -9,13 +9,7 @@ description: "Conventions de tests Cityborn. À utiliser pour écrire, modifier 
 
 - Un comportement est testé une seule fois, au niveau le plus bas qui permet de l'observer.
 - Pour un test de `apps/backend`, lire [la référence backend](references/backend.md) : niveaux unitaire, intégration et e2e, doubles et infrastructure de test.
-
-## React et React Native
-
-- La couverture automatisée repose sur la logique testable sans montage React et sur les tests backend ; les parcours web sont vérifiés par la recette navigateur.
-- L'absence de tests de hooks montés (effets, minuteurs, nettoyage) et de composants React ou React Native est un choix assumé.
-- Conserver les outils de test existants pour les tâches courantes ; ajouter une infrastructure de tests React seulement sur demande explicite de l'utilisateur.
-- Si un bug de cycle de vie React échappe aux tests existants, proposer une couverture ciblée dans le périmètre concerné avant d'élargir l'outillage.
+- Les hooks montés et composants React/React Native restent hors couverture automatisée ; ajouter leur infrastructure de test uniquement sur demande explicite.
 
 ## Structure et nommage
 
