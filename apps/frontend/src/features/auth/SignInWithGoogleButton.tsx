@@ -87,6 +87,7 @@ export function SignInWithGoogleButton() {
       shape: 'pill',
       locale: 'fr',
     });
+
     const googleButtonObserver: MutationObserver = new MutationObserver(() => {
       if (container.querySelector('[role="button"]')) return;
       setIsGoogleButtonReady(true);
@@ -119,6 +120,7 @@ export function SignInWithGoogleButton() {
       ) : (
         <div
           ref={googleButtonContainer}
+          inert={!isGoogleButtonReady}
           style={{ opacity: isGoogleButtonReady ? 1 : 0 }}
         />
       )}
