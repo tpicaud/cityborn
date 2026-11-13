@@ -57,7 +57,7 @@ Une ou deux phrases sur le principe du changement.
 - [ ] **Migration, variable d'environnement, donnée Redis ou configuration d'hébergement** : l'action attendue.
 - **Effet de transition** : ce que vivent les clients déployés, les sessions en cours ou les données existantes.
 
-## Recette
+## 🧪 Recette
 
 ### ⏸️ Parcours — Plateforme
 
