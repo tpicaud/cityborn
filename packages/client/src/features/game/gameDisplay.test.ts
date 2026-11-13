@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
   buildGame,
   buildGameConfig,
@@ -12,7 +13,6 @@ import {
   PlayerIdSchema,
   RoundStatus,
 } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import { createGameDisplay, type GameDisplay } from './gameDisplay';
 
 const localPlayerID: PlayerId = PlayerIdSchema.parse('local-player');

@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.package.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "types": ["node"]
   },

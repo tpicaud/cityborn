@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
 import { buildUser, type User } from '@cityborn/api';
 import {
   QueryClient,
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
-import { describe, it, type TestContext } from 'vitest';
 import type { AuthApi } from '../../domains/auth/authApi';
 import { currentUserQueryOptions } from '../../domains/auth/authQueries';
 import { type CurrentUserState, toCurrentUserState } from './currentUserState';
@@ -69,7 +69,7 @@ describe('toCurrentUserState', () => {
       throw networkError;
     });
     const queryClient: QueryClient = new QueryClient();
-    context.onTestFinished(() => queryClient.clear());
+    context.after(() => queryClient.clear());
     await fetchCurrentUserIgnoringFailure({ queryClient, authApi });
 
     const currentUserState: CurrentUserState = observeCurrentUserState({
@@ -88,7 +88,7 @@ describe('toCurrentUserState', () => {
       signedInUser;
     const authApi: AuthApi = createFakeAuthApi(() => currentUserResponse());
     const queryClient: QueryClient = new QueryClient();
-    context.onTestFinished(() => queryClient.clear());
+    context.after(() => queryClient.clear());
     await fetchCurrentUserIgnoringFailure({ queryClient, authApi });
     currentUserResponse = async () => {
       throw networkError;
@@ -124,7 +124,7 @@ describe('toCurrentUserState', () => {
         );
       },
     );
-    context.onTestFinished(() => {
+    context.after(() => {
       stopObservingCurrentUser();
       queryClient.clear();
     });

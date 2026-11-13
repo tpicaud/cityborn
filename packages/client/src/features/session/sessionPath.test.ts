@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
   type Session,
   type SessionId,
@@ -6,7 +7,6 @@ import {
   SessionMode,
   UserFacingError,
 } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import type { NavigationPath } from '../../platform/navigation';
 import {
   joinableSessionPath,

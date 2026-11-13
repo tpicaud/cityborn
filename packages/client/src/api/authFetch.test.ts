@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
 import { setImmediate } from 'node:timers/promises';
 import {
   type ApiError,
@@ -10,7 +11,6 @@ import {
   type User,
 } from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
-import { describe, it, type TestContext } from 'vitest';
 import type { TokenStorage } from '../platform/tokenStorage';
 import {
   type ContractClient,
@@ -76,7 +76,7 @@ function stubFetch({
 }): void {
   const originalFetch: typeof fetch = globalThis.fetch;
   globalThis.fetch = respond;
-  context.onTestFinished(() => {
+  context.after(() => {
     globalThis.fetch = originalFetch;
   });
 }

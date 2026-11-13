@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
   buildGameRecord,
   buildUser,
@@ -8,7 +9,6 @@ import {
   SessionMode,
   type User,
 } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
 describe('createProfileGames', () => {

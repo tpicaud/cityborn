@@ -10,11 +10,7 @@
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:cov": "vitest run --coverage",
-    "test:all": "pnpm test"
+    "check": "pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.26",
@@ -42,18 +38,13 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
-    "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.10",
     "@types/node": "^25.6.0",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/swagger-ui-react": "^5.18.0",
-    "@vitest/coverage-v8": "5.1.0",
     "dotenv-cli": "^11.0.0",
-    "jsdom": "^31.0.1",
     "tailwindcss": "^4.2.4",
-    "typescript": "^6.0.3",
-    "vitest": "5.1.0"
+    "typescript": "^6.0.3"
   }
 }

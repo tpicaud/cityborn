@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
 import { buildUser, type GameRecord, type User } from '@cityborn/api';
 import { type Query, QueryClient, type QueryKey } from '@tanstack/react-query';
-import { describe, it, type TestContext } from 'vitest';
 import type { AuthApi } from './authApi';
 import {
   accountQueryKey,
@@ -47,7 +47,7 @@ describe('clearCacheAfterSignOut', () => {
   it('signs the user out and drops every other cached query', async (context: TestContext) => {
     const authApi: AuthApi = createFakeAuthApi(async () => signedInUser);
     const queryClient: QueryClient = new QueryClient();
-    context.onTestFinished(() => queryClient.clear());
+    context.after(() => queryClient.clear());
     await queryClient.query(currentUserQueryOptions(authApi));
     queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
     queryClient.setQueryData<string[]>(packTreesQueryKey, ['cities']);
@@ -77,7 +77,7 @@ describe('clearCacheAfterSignOut', () => {
         }),
     );
     const queryClient: QueryClient = new QueryClient();
-    context.onTestFinished(() => queryClient.clear());
+    context.after(() => queryClient.clear());
     const currentUserFetch: Promise<User | null> = queryClient
       .query(currentUserQueryOptions(authApi))
       .catch(() => null);

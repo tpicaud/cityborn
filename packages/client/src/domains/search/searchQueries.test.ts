@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
 import type { GuessObjectSearchResult } from '@cityborn/api';
 import {
   QueryClient,
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
-import { describe, it, type TestContext } from 'vitest';
 import type { SearchApi } from './searchApi';
 import { guessObjectSearchQueryOptions } from './searchQueries';
 
@@ -60,7 +60,7 @@ describe('guessObjectSearchQueryOptions', () => {
       );
     const stopObservingSearch: () => void =
       await waitForFirstData(searchObserver);
-    context.onTestFinished(() => {
+    context.after(() => {
       resolveNextSearch([]);
       stopObservingSearch();
       queryClient.clear();

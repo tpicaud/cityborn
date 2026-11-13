@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import { type PlayerId, PlayerIdSchema } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import { enterSession } from './useSessionController';
 
 const playerID: PlayerId = PlayerIdSchema.parse('guest');

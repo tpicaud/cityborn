@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
 import {
   buildFullPack,
   buildPack,
@@ -12,7 +13,6 @@ import {
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
-import { describe, it, type TestContext } from 'vitest';
 import type { PackApi } from './packApi';
 import {
   fullPackQueryOptions,
@@ -93,7 +93,7 @@ describe('removeDeletedPack', () => {
     await queryClient.query(packsQueryOptions(packApi));
     const stopObservingFullPack: () => void =
       await waitForFirstData(fullPackObserver);
-    context.onTestFinished(() => {
+    context.after(() => {
       stopObservingFullPack();
       queryClient.clear();
     });
@@ -133,7 +133,7 @@ describe('reloadPacks', () => {
     );
     const stopObservingPacks: () => void =
       await waitForFirstData(packsObserver);
-    context.onTestFinished(() => {
+    context.after(() => {
       stopObservingPacks();
       queryClient.clear();
     });

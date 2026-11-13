@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
   type PlayerId,
   PlayerIdSchema,
@@ -7,7 +8,6 @@ import {
   sessionWsServerEvent,
   type WsChannel,
 } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import type { SocketConnection } from './socketConnection';
 import {
   toWsChannelConnection,

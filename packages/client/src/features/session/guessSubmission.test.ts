@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import type { GuessSubmission } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import { createGuessSubmission } from './guessSubmission';
 
 describe('createGuessSubmission', () => {

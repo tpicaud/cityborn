@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'vitest';
+import { describe, it, type TestContext } from 'node:test';
 import type { TokenStorage } from '../platform/tokenStorage';
 import type { SocketConnection } from './socketConnection';
 import {
@@ -39,7 +39,7 @@ describe('createCookieSocketFactory', () => {
     });
     const firstConnection: SocketConnection = await createSocket();
     const secondConnection: SocketConnection = await createSocket();
-    context.onTestFinished(() => firstConnection.disconnect());
+    context.after(() => firstConnection.disconnect());
 
     firstConnection.connect();
 

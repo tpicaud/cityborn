@@ -12,7 +12,7 @@
     "android": "pnpm check:env:client:development && expo run:android",
     "ios": "pnpm check:env:client:development && expo run:ios",
     "web": "pnpm check:env:client:development && expo start --web",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json --noEmit",
+    "typecheck": "tsc --noEmit",
     "check:env": "dotenv -c development -- pnpm check:env:all",
     "check:env:all": "pnpm check:env:build && pnpm check:env:client",
     "check:env:build": "node config/build.js",
@@ -20,11 +20,7 @@
     "check:env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint",
-    "test": "jest --config jest.config.cjs --runInBand",
-    "test:watch": "jest --config jest.config.cjs --watch",
-    "test:cov": "pnpm test --coverage",
-    "test:all": "pnpm test"
+    "check": "pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
@@ -86,19 +82,12 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@react-native/jest-preset": "0.86.0",
     "@tailwindcss/postcss": "^4.2.4",
-    "@testing-library/react-native": "^14.1.0",
     "@types/geojson": "^7946.0.16",
-    "@types/jest": "29.5.14",
     "@types/react": "~19.2.14",
-    "babel-preset-expo": "~57.0.4",
     "dotenv-cli": "^11.0.0",
-    "jest": "29.7.0",
-    "jest-expo": "57.0.2",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
-    "test-renderer": "1.2.0",
     "typescript": "~6.0.3"
   },
   "private": true

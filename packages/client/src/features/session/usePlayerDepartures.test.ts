@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import { buildPlayer, type PlayerId, PlayerIdSchema } from '@cityborn/api';
-import { describe, it } from 'vitest';
 import { departedPlayerIDs } from './usePlayerDepartures';
 
 const alice: PlayerId = PlayerIdSchema.parse('alice');
