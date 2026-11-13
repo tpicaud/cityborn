@@ -75,7 +75,7 @@ describe('createRoundAction', () => {
     });
   });
 
-  it('disables the guess without a pre-guess', () => {
+  it('offers no guess before a pre-guess is placed', () => {
     const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
 
     const roundAction: RoundAction | undefined = createRoundAction({
@@ -85,7 +85,7 @@ describe('createRoundAction', () => {
       preGuess: undefined,
     });
 
-    assert.equal(roundAction?.isEnabled, false);
+    assert.equal(roundAction, undefined);
   });
 
   it('counts the players who guessed once the local guess is sent', () => {
