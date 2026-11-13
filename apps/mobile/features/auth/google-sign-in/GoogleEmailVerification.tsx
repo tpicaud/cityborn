@@ -1,5 +1,5 @@
 import type { IdentityProviderSignIn } from '@cityborn/client/auth';
-import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { Button, Text, TextInput, View } from 'react-native';
 
 export function GoogleEmailVerification({
@@ -7,17 +7,12 @@ export function GoogleEmailVerification({
 }: {
   flow: IdentityProviderSignIn;
 }) {
-  const [code, setCode] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const confirm = async (): Promise<void> => {
-    setIsSubmitting(true);
-    try {
-      await flow.confirmGoogleEmail(code);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    googleEmailVerificationForm: {
+      control,
+      formState: { errors, isSubmitting },
+    },
+  }: IdentityProviderSignIn = flow;
 
   return (
     <View className="gap-3 p-4">
@@ -26,20 +21,33 @@ export function GoogleEmailVerification({
         votre adresse e-mail. L’association conserve votre progression et vos
         connexions existantes.
       </Text>
-      <TextInput
-        accessibilityLabel="Code de confirmation Google"
-        value={code}
-        onChangeText={setCode}
-        keyboardType="number-pad"
-        autoComplete="one-time-code"
-        maxLength={8}
-        editable={!isSubmitting}
-        className="border rounded p-3"
+      <Controller
+        control={control}
+        name="emailVerificationCode"
+        render={({ field: { value, onChange, onBlur, ref } }) => (
+          <TextInput
+            ref={ref}
+            accessibilityLabel="Code de confirmation Google"
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            keyboardType="number-pad"
+            autoComplete="one-time-code"
+            maxLength={8}
+            editable={!isSubmitting}
+            className="border rounded p-3"
+          />
+        )}
       />
+      {errors.emailVerificationCode && (
+        <Text accessibilityRole="alert">
+          {errors.emailVerificationCode.message}
+        </Text>
+      )}
       <Button
         title="Confirmer et associer Google"
-        onPress={confirm}
-        disabled={isSubmitting || code.length !== 8}
+        onPress={flow.confirmGoogleEmail}
+        disabled={isSubmitting}
       />
       <Button
         title="Renvoyer le code (après 3 minutes)"

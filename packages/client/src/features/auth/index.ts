@@ -10,6 +10,7 @@ export {
   useCurrentUser,
   useCurrentUserLoad,
 } from './authContext';
+export type { GoogleEmailVerificationFormValues } from './authSchema';
 export {
   type PasswordResetFlow,
   type PasswordResetFlowOptions,

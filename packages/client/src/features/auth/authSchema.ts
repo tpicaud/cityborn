@@ -1,5 +1,5 @@
 import type { CreateUser } from '@cityborn/api';
-import { CreateUserSchema } from '@cityborn/api';
+import { CreateUserSchema, SignInWithGoogleSchema } from '@cityborn/api';
 import { z } from 'zod';
 
 export const SignUpFormSchema = CreateUserSchema.extend({
@@ -19,3 +19,11 @@ export function toCreateUser({
 }: SignUpFormValues): CreateUser {
   return { username, email, password };
 }
+
+export const GoogleEmailVerificationFormSchema = SignInWithGoogleSchema.pick({
+  emailVerificationCode: true,
+}).required();
+
+export type GoogleEmailVerificationFormValues = z.infer<
+  typeof GoogleEmailVerificationFormSchema
+>;

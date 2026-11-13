@@ -6,7 +6,6 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
-  UserFacingError,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -20,6 +19,8 @@ import {
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import {
+  GoogleEmailVerificationFormSchema,
+  type GoogleEmailVerificationFormValues,
   type SignUpFormInput,
   SignUpFormSchema,
   type SignUpFormValues,
@@ -50,7 +51,8 @@ export type SignUpFlow = {
 
 export type IdentityProviderSignIn = {
   googleEmailVerificationRequired: boolean;
-  confirmGoogleEmail: (code: string) => Promise<void>;
+  googleEmailVerificationForm: UseFormReturn<GoogleEmailVerificationFormValues>;
+  confirmGoogleEmail: FormSubmitHandler;
   cancelGoogleEmailVerification: () => void;
   resendGoogleEmailVerification: () => Promise<void>;
   signInWithGoogle: (data: SignInWithGoogle) => Promise<void>;
@@ -135,33 +137,36 @@ export function useIdentityProviderSignIn({
     string | null
   >(null);
   const { reportError }: ErrorReporter = useErrorReporter();
+  const googleEmailVerificationForm: UseFormReturn<GoogleEmailVerificationFormValues> =
+    useForm<GoogleEmailVerificationFormValues>({
+      resolver: zodResolver(GoogleEmailVerificationFormSchema),
+      defaultValues: { emailVerificationCode: '' },
+    });
 
   return useMemo(
     () => ({
       googleEmailVerificationRequired: pendingGoogleIdToken !== null,
-      cancelGoogleEmailVerification: () => setPendingGoogleIdToken(null),
-      confirmGoogleEmail: async (code: string): Promise<void> => {
-        if (!pendingGoogleIdToken) return;
-        if (!/^\d{8}$/.test(code)) {
-          reportError(
-            new UserFacingError(
-              'Saisissez le code à 8 chiffres reçu par e-mail.',
-            ),
-          );
-          return;
-        }
-        await completeSignIn(
-          authApi
-            .signInWithGoogle({
-              idToken: pendingGoogleIdToken,
-              emailVerificationCode: code,
-            })
-            .then((user: User) => {
-              setPendingGoogleIdToken(null);
-              return user;
-            }),
-        );
+      googleEmailVerificationForm,
+      cancelGoogleEmailVerification: () => {
+        setPendingGoogleIdToken(null);
+        googleEmailVerificationForm.reset();
       },
+      confirmGoogleEmail: googleEmailVerificationForm.handleSubmit(
+        async ({ emailVerificationCode }): Promise<void> => {
+          if (!pendingGoogleIdToken) return;
+          await completeSignIn(
+            authApi
+              .signInWithGoogle({
+                idToken: pendingGoogleIdToken,
+                emailVerificationCode,
+              })
+              .then((user: User) => {
+                setPendingGoogleIdToken(null);
+                return user;
+              }),
+          );
+        },
+      ),
       resendGoogleEmailVerification: async (): Promise<void> => {
         if (!pendingGoogleIdToken) return;
         try {
@@ -175,6 +180,7 @@ export function useIdentityProviderSignIn({
       signInWithGoogle: async (data: SignInWithGoogle): Promise<void> => {
         try {
           setPendingGoogleIdToken(null);
+          googleEmailVerificationForm.reset();
           const verification: { required: boolean } =
             await authApi.requestGoogleEmailVerification({
               idToken: data.idToken,
@@ -191,6 +197,12 @@ export function useIdentityProviderSignIn({
       signInWithApple: (data: SignInWithApple) =>
         completeSignIn(authApi.signInWithApple(data)),
     }),
-    [authApi, completeSignIn, pendingGoogleIdToken, reportError],
+    [
+      authApi,
+      completeSignIn,
+      googleEmailVerificationForm,
+      pendingGoogleIdToken,
+      reportError,
+    ],
   );
 }

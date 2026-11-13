@@ -2,28 +2,25 @@
 
 import type { IdentityProviderSignIn } from '@cityborn/client/auth';
 import { Button, TextField } from '@mui/material';
-import { type FormEvent, useState } from 'react';
 
 export function GoogleEmailVerification({
   flow,
 }: {
   flow: IdentityProviderSignIn;
 }) {
-  const [code, setCode] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const confirm = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await flow.confirmGoogleEmail(code);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    googleEmailVerificationForm: {
+      register,
+      formState: { errors, isSubmitting },
+    },
+  }: IdentityProviderSignIn = flow;
 
   return (
-    <form onSubmit={confirm} className="flex flex-col gap-3 p-4">
+    <form
+      onSubmit={flow.confirmGoogleEmail}
+      noValidate
+      className="flex flex-col gap-3 p-4"
+    >
       <p>
         Confirmez votre connexion Google avec le code à 8 chiffres envoyé à
         votre adresse e-mail. L’association conserve votre progression et vos
@@ -31,24 +28,20 @@ export function GoogleEmailVerification({
       </p>
       <TextField
         label="Code de confirmation Google"
-        value={code}
-        onChange={(event) => setCode(event.target.value)}
+        {...register('emailVerificationCode')}
+        error={!!errors.emailVerificationCode}
+        helperText={errors.emailVerificationCode?.message}
         autoComplete="one-time-code"
         slotProps={{
           htmlInput: {
             inputMode: 'numeric',
-            pattern: '[0-9]{8}',
             maxLength: 8,
           },
         }}
         required
         disabled={isSubmitting}
       />
-      <Button
-        variant="contained"
-        type="submit"
-        disabled={isSubmitting || code.length !== 8}
-      >
+      <Button variant="contained" type="submit" disabled={isSubmitting}>
         Confirmer et associer Google
       </Button>
       <Button
