@@ -224,18 +224,23 @@ function LocalRoute({ guess, answer }: { guess: Guess; answer: Coord }) {
 
 function ZoomToBounds({ answer, guess }: { answer: Coord; guess?: Coord }) {
   const map: google.maps.Map | null = useMap();
+  const { lat: answerLat, lng: answerLng }: Coord = answer;
+  const guessLat: number | undefined = guess?.lat;
+  const guessLng: number | undefined = guess?.lng;
 
   useEffect(() => {
     if (!map) return;
     const bounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
-    bounds.extend(answer);
-    if (guess) bounds.extend(guess);
+    bounds.extend({ lat: answerLat, lng: answerLng });
+    if (guessLat !== undefined && guessLng !== undefined) {
+      bounds.extend({ lat: guessLat, lng: guessLng });
+    }
 
     const timeoutId: ReturnType<typeof setTimeout> = setTimeout(() => {
       map.fitBounds(bounds, zoomPadding);
     }, 100);
     return () => clearTimeout(timeoutId);
-  }, [guess, answer, map]);
+  }, [answerLat, answerLng, guessLat, guessLng, map]);
 
   return null;
 }
