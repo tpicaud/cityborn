@@ -7,7 +7,7 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture, son déploiement ou sa recette.
 - Chaque mise à jour part de la description actuelle de la PR et la ramène à l'état de la branche au dernier commit, sans historique des passages précédents.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
-- Le rapport est télégraphique : une phrase tient en environ 120 caractères.
+- Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
 
 ## Sections
