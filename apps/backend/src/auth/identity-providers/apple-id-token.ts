@@ -52,8 +52,8 @@ export async function verifyAppleIdToken({
   idToken,
   audience,
 }: AppleIdTokenVerification): Promise<AppleIdTokenClaims | null> {
-  const decodedToken: JwtPayload | string | undefined = await new Promise(
-    (resolve, reject) => {
+  const decodedToken: JwtPayload | string | undefined | null =
+    await new Promise<JwtPayload | string | undefined>((resolve, reject) => {
       jwt.verify(
         idToken,
         getAppleSigningKey,
@@ -67,8 +67,10 @@ export async function verifyAppleIdToken({
           resolve(decoded);
         },
       );
-    },
-  );
+    }).catch((error: unknown) => {
+      if (error instanceof jwt.JsonWebTokenError) return null;
+      throw error;
+    });
   const claimsParseResult: z.SafeParseReturnType<unknown, AppleIdTokenClaims> =
     AppleIdTokenClaimsSchema.safeParse(decodedToken);
   return claimsParseResult.success ? claimsParseResult.data : null;
