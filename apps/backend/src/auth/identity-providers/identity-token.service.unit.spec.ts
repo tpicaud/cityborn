@@ -75,6 +75,7 @@ describe('IdentityTokenService.verifyGoogleIdToken', () => {
   );
 
   it.each([
+    ['without payload', null],
     ['without email', { sub: 'google-user-1', email_verified: true }],
     [
       'without subject',
@@ -82,7 +83,7 @@ describe('IdentityTokenService.verifyGoogleIdToken', () => {
     ],
   ])(
     'rejects a token %s with 401',
-    async (_label: string, payload: GoogleIdTokenPayload) => {
+    async (_label: string, payload: GoogleIdTokenPayload | null) => {
       const {
         identityTokenService,
         googleClient,
@@ -98,6 +99,26 @@ describe('IdentityTokenService.verifyGoogleIdToken', () => {
       });
     },
   );
+
+  it('rejects an unverified Google email with 401', async () => {
+    const {
+      identityTokenService,
+      googleClient,
+    }: ReturnType<typeof buildIdentityTokenService> =
+      buildIdentityTokenService();
+    googleClient.verifyIdToken.mockResolvedValue({
+      sub: 'google-user-1',
+      email: 'alice@gmail.com',
+      email_verified: false,
+    });
+
+    await expect(
+      identityTokenService.verifyGoogleIdToken('google-token'),
+    ).rejects.toMatchObject({
+      status: HttpStatus.UNAUTHORIZED,
+      response: { code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED },
+    });
+  });
 });
 
 describe('IdentityTokenService.verifyAppleIdToken', () => {
@@ -132,4 +153,19 @@ describe('IdentityTokenService.verifyAppleIdToken', () => {
       });
     },
   );
+
+  it('rejects an invalid token with 401', async () => {
+    const {
+      identityTokenService,
+    }: ReturnType<typeof buildIdentityTokenService> =
+      buildIdentityTokenService();
+    mockAppleIdTokenClaims = null;
+
+    await expect(
+      identityTokenService.verifyAppleIdToken('apple-token'),
+    ).rejects.toMatchObject({
+      status: HttpStatus.UNAUTHORIZED,
+      response: { code: ErrorCode.USER_INVALID_TOKEN },
+    });
+  });
 });
