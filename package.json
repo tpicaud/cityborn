@@ -54,7 +54,8 @@
     "recette:stop": "bash scripts/recette/launch.sh stop",
     "recette:captures": "bash scripts/recette/publish-captures.sh",
     "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
-    "check": "pnpm typecheck && pnpm lint"
+    "check": "pnpm typecheck && pnpm lint",
+    "verify": "pnpm lint && pnpm check:agent-docs && pnpm check:axiom-dashboards && pnpm check:api-compat && turbo run db:test:start --affected --filter=cityborn-backend && turbo run typecheck test:all --affected && turbo run build --affected --filter=cityborn-frontend --filter=cityborn-back-office"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
