@@ -36,7 +36,10 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
 
   return (
     <>
-      <div className="absolute top-2 left-6 z-[1300]">
+      <div
+        data-result-map-overlay="top"
+        className="absolute top-2 left-6 z-[1300]"
+      >
         <IconButton
           aria-label="Options"
           onClick={optionsMenu.open}

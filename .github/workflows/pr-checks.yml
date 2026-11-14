@@ -289,6 +289,16 @@ jobs:
           TEST_PACKAGE: ${{ matrix.package }}
         run: pnpm exec turbo run test --filter="$TEST_PACKAGE"
 
+  tests:
+    name: Tests
+    needs: [test-selection, package-tests]
+    if: always() && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require affected package tests to pass
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+
   backend-integration:
     name: Backend integration tests
     needs: test-selection

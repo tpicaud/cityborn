@@ -142,7 +142,10 @@ export default function Overlay({
           />
         )}
       </div>
-      <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
+      <div
+        data-result-map-overlay="bottom"
+        className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]"
+      >
         {isGuessing && (
           <div className="relative w-full flex justify-center items-center">
             <GuessButton

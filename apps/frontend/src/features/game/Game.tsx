@@ -45,7 +45,10 @@ export const Game = ({
         <GameOptions handleLeaveGame={handleLeaveGame} />
       )}
       {gameDisplay.roundNumber !== undefined && (
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+        <div
+          data-result-map-overlay="right"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2"
+        >
           <div className="flex flex-col gap-2">
             {gameDisplay.showNextRound && (
               <LoadingButton
