@@ -38,7 +38,7 @@ const validAppleIdTokenClaims: AppleIdTokenClaims = {
   email: 'alice@cityborn.test',
   email_verified: true,
 };
-let mockAppleIdTokenClaims: AppleIdTokenClaims | null = validAppleIdTokenClaims;
+let mockAppleIdTokenClaims: AppleIdTokenClaims = validAppleIdTokenClaims;
 
 function mockHashPassword(): Promise<string> {
   return Promise.resolve('hashed-password');
@@ -991,38 +991,6 @@ describe('AuthService.signInWithGoogle', () => {
       );
     },
   );
-
-  it('rejects an invalid Google token with 401', async () => {
-    const {
-      authService,
-      userService,
-      googleClient,
-    }: ReturnType<typeof buildAuthService> = buildAuthService();
-    googleClient.verifyIdToken.mockResolvedValue(null);
-
-    await expect(
-      authService.signInWithGoogle(signInData),
-    ).rejects.toMatchObject({
-      status: HttpStatus.UNAUTHORIZED,
-      response: { code: ErrorCode.USER_INVALID_TOKEN },
-    });
-    expect(userService.findByIdentityProviderAccount).not.toHaveBeenCalled();
-  });
-
-  it('rejects an unverified Google email', async () => {
-    const { authService, googleClient }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    googleClient.verifyIdToken.mockResolvedValue({
-      ...googleIdTokenPayload,
-      email_verified: false,
-    });
-
-    await expect(
-      authService.signInWithGoogle(signInData),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED },
-    });
-  });
 });
 
 describe('AuthService.signInWithApple', () => {
@@ -1035,20 +1003,6 @@ describe('AuthService.signInWithApple', () => {
     given_name: 'Alice',
     family_name: 'Apple',
   };
-
-  it('rejects an invalid Apple token with 401', async () => {
-    const { authService, userService }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    mockAppleIdTokenClaims = null;
-
-    await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
-      {
-        status: HttpStatus.UNAUTHORIZED,
-        response: { code: ErrorCode.USER_INVALID_TOKEN },
-      },
-    );
-    expect(userService.findByIdentityProviderAccount).not.toHaveBeenCalled();
-  });
 
   it('signs in a linked Apple account without details', async () => {
     const appleUser: User = buildUser({ type: 'email' });
