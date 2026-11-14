@@ -27,13 +27,25 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 ## Étapes
 
 1. Quand le besoin reste à clarifier (sujet à étudier, idée à planifier), mener d'abord le skill `grilling` dans le registre du template, jusqu'à la confirmation de l'utilisateur ; rédiger ensuite à partir des décisions prises.
-2. Rédiger en français selon la référence du template, tout dans la description, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
-3. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
-4. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
-5. Créer l'issue, puis l'ajouter au project Cityborn (n° 1) avec :
+2. Délimiter le besoin selon sa [taille](#taille-et-contenu) : une issue, ou une parente et ses sous-issues.
+3. Rédiger chaque issue en français selon la référence du template et les [règles de contenu](#taille-et-contenu), tout dans la description, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
+4. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
+5. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
+6. Créer chaque issue, puis l'ajouter au project Cityborn (n° 1) avec :
    - Type : `DEV` ;
    - Status : `A faire dans l'itération` ;
    - Sprint : celui résolu.
+
+## Taille et contenu
+
+- **Taille** : une issue livre un seul résultat, constatable par le joueur, l'admin ou une commande, et vérifiable seul ; repère indicatif : environ 400 lignes et 20 fichiers, hors fichiers générés et lockfiles.
+- **Découpage** : au-delà, une parente porte le besoin d'ensemble et ses sous-issues le détail, livrées dans sa [branche d'intégration](#branche-dintégration) :
+  - chaque sous-issue est une tranche verticale à travers les couches dont son résultat a besoin ;
+  - elle porte ses propres critères ;
+  - ses prérequis tiennent en tête de description : `Bloquée par #…`.
+- **Critères** : chacun se prouve par un test, une commande ou un parcours web jouable par un agent ; un critère qui exige un appareil ou un compte tiers est suivi de « (recette manuelle) ».
+- **Références** : chaque commande, skill ou fichier présenté comme existant est vérifié dans le repo avant publication.
+- **Citations** : une issue n'en cite une autre que si elle est sa parente, sa sous-issue ou sa sœur ; sinon, rattacher les deux à une même parente, ou décrire le besoin sans citer l'issue.
 
 ## Branche d'intégration
 
@@ -64,4 +76,4 @@ Des sous-issues qui partent ensemble en production passent par la **branche d'in
 
 ## Critère de fin
 
-L'issue publiée porte ses labels et suit la référence de son template ; son item de project porte son Type, son Status et son Sprint. Une branche d'intégration a sa PR draft ouverte vers `main`, et chaque issue qui y est destinée est sous-issue de la parente.
+Chaque issue publiée porte ses labels, suit la référence de son template et respecte sa taille et son contenu ; son item de project porte son Type, son Status et son Sprint. Une branche d'intégration a sa PR draft ouverte vers `main`, et chaque issue qui y est destinée est sous-issue de la parente.
