@@ -28,7 +28,12 @@ import {
 } from '@vis.gl/react-google-maps';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
-import ResultMapViewport from './resultViewport/ResultMapViewport';
+
+type MapEdge = 'top' | 'right' | 'bottom' | 'left';
+
+const MAP_EDGES: MapEdge[] = ['top', 'right', 'bottom', 'left'];
+const RESULT_MARKER_MARGIN: number = 48;
+const RESULT_MINIMUM_HALF_SPAN: number = 0.15;
 
 type GameMapProps = {
   googleMapsApiKey: string;
@@ -176,7 +181,7 @@ const LocalPlayerGuess: React.FC<{
         <>
           <AdvancedMarker position={guess.coordinates} />
           {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-            <ResultMapViewport
+            <ZoomToBounds
               answer={guessObjectCenter(guessObject)}
               guess={guess.coordinates}
             />
@@ -191,11 +196,84 @@ const LocalPlayerGuess: React.FC<{
         </>
       ) : (
         currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <ResultMapViewport answer={guessObjectCenter(guessObject)} />
+          <ZoomToBounds answer={guessObjectCenter(guessObject)} />
         )
       )}
     </>
   );
+};
+
+const ZoomToBounds: React.FC<{ answer: Coord; guess?: Coord }> = ({
+  answer,
+  guess,
+}) => {
+  const map: google.maps.Map | null = useMap();
+  const answerLat: number = answer.lat;
+  const answerLng: number = answer.lng;
+  const guessLat: number | undefined = guess?.lat;
+  const guessLng: number | undefined = guess?.lng;
+
+  useEffect(() => {
+    if (!map) return;
+
+    const bounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+    bounds.extend({
+      lat: answerLat - RESULT_MINIMUM_HALF_SPAN,
+      lng: answerLng - RESULT_MINIMUM_HALF_SPAN,
+    });
+    bounds.extend({
+      lat: answerLat + RESULT_MINIMUM_HALF_SPAN,
+      lng: answerLng + RESULT_MINIMUM_HALF_SPAN,
+    });
+    if (guessLat !== undefined && guessLng !== undefined) {
+      bounds.extend({ lat: guessLat, lng: guessLng });
+    }
+
+    const mapElement: HTMLElement = map.getDiv();
+    const overlays: { edge: MapEdge; element: Element }[] = MAP_EDGES.flatMap(
+      (edge) =>
+        Array.from(
+          document.querySelectorAll(`[data-result-map-overlay="${edge}"]`),
+          (element) => ({ edge, element }),
+        ),
+    );
+
+    const fitBounds = (): void => {
+      const mapRectangle: DOMRect = mapElement.getBoundingClientRect();
+      const padding: Record<MapEdge, number> = {
+        top: RESULT_MARKER_MARGIN,
+        right: RESULT_MARKER_MARGIN,
+        bottom: RESULT_MARKER_MARGIN,
+        left: RESULT_MARKER_MARGIN,
+      };
+      overlays.forEach(({ edge, element }) => {
+        const overlay: DOMRect = element.getBoundingClientRect();
+        const covered: Record<MapEdge, number> = {
+          top: overlay.bottom - mapRectangle.top,
+          right: mapRectangle.right - overlay.left,
+          bottom: mapRectangle.bottom - overlay.top,
+          left: overlay.right - mapRectangle.left,
+        };
+        padding[edge] = Math.max(
+          padding[edge],
+          covered[edge] + RESULT_MARKER_MARGIN,
+        );
+      });
+      map.fitBounds(bounds, padding);
+    };
+
+    const observer: ResizeObserver = new ResizeObserver(fitBounds);
+    observer.observe(mapElement);
+    overlays.forEach(({ element }) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [map, answerLat, answerLng, guessLat, guessLng]);
+
+  return null;
 };
 
 const LineBetween: React.FC<{

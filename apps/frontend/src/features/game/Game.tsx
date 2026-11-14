@@ -35,7 +35,7 @@ export const Game = ({
   const activePlayerID = gameDisplay.localPlayerID;
 
   return (
-    <div data-game-viewport>
+    <div>
       <Guess
         localPlayerID={activePlayerID}
         game={game}
