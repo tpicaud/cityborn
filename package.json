@@ -54,7 +54,8 @@
     "recette:stop": "bash scripts/recette/launch.sh stop",
     "recette:captures": "bash scripts/recette/publish-captures.sh",
     "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
-    "check": "pnpm typecheck && pnpm lint"
+    "check": "pnpm typecheck && pnpm lint",
+    "verify": "bash scripts/verify.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
