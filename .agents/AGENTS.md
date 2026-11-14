@@ -68,7 +68,6 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 - **`type` par défaut** : `interface` seulement pour un contrat à plusieurs implémentations ou une augmentation de déclaration.
 - **Paramètre objet** : dès deux valeurs, un seul objet déstructuré dans la signature, typé en ligne sauf s'il est exporté ou partagé ; une signature imposée par un framework reste positionnelle.
 - **Itération** : méthodes de tableau et `Promise.all`, récursion pour l'asynchrone séquentiel.
-- **Librairies** : l'API d'une lib s'utilise selon sa version installée, lue dans ses types ou sa documentation de cette version.
 
 ## Issues, commits & PR
 
