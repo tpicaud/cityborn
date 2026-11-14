@@ -41,9 +41,30 @@ first_free_slot() {
   exit 1
 }
 
+slot_lock="${TMPDIR:-/tmp}/cityborn-recette-slot.lock"
+
+lock_slot_choice() {
+  local attempt
+  for ((attempt = 0; attempt < 300; attempt++)); do
+    if mkdir "$slot_lock" 2>/dev/null; then
+      trap unlock_slot_choice EXIT
+      return
+    fi
+    sleep 1
+  done
+  echo "Verrou $slot_lock toujours pris : le supprimer si aucun recette:prepare ne tourne." >&2
+  exit 1
+}
+
+unlock_slot_choice() {
+  rmdir "$slot_lock" 2>/dev/null || true
+  trap - EXIT
+}
+
 command="${1:-}"
 
 if [ "$command" = prepare ]; then
+  lock_slot_choice
   slot="${RECETTE_SLOT:-$(first_free_slot)}"
 else
   slot="${RECETTE_SLOT:?RECETTE_SLOT requis : utiliser le slot affiché par pnpm recette:prepare}"
@@ -70,10 +91,11 @@ export NEXT_PUBLIC_WEBSOCKET_BACKEND_URL="ws://localhost:$backend_port"
 
 case "$command" in
   prepare)
+    echo "RECETTE_SLOT=$slot"
     recette_compose "$slot" up -d --wait postgis-recette redis-recette
+    unlock_slot_choice
     pnpm backend exec prisma migrate deploy
     pnpm backend exec prisma db seed
-    echo "RECETTE_SLOT=$slot"
     echo "Frontend : http://localhost:$frontend_port"
     echo "Back-office : http://localhost:$back_office_port"
     echo "Backend : http://localhost:$backend_port"
