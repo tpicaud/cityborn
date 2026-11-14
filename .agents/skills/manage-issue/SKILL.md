@@ -1,6 +1,6 @@
 ---
 name: manage-issue
-description: "Issues GitHub Cityborn. À utiliser pour planifier une tâche ou une feature, rédiger, publier, modifier, commenter ou abandonner une issue, la rattacher au project Cityborn ou à une branche d'intégration, ou répondre à une question sur une issue."
+description: "Issues GitHub Cityborn. À utiliser pour planifier ou découper une tâche ou une feature, rédiger, publier, modifier, commenter ou abandonner une issue, la rattacher au project Cityborn ou à une branche d'intégration, ou répondre à une question sur une issue."
 ---
 
 # Gérer une issue
@@ -9,53 +9,46 @@ description: "Issues GitHub Cityborn. À utiliser pour planifier une tâche ou u
 
 Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en écrit ou s'en dit : description, commentaires, questions de cadrage, réponses.
 
-| Template | Label posé | Lecteur | Registre | Référence |
+| Template | Label posé | Lecteur | Registre | Questions de cadrage |
 |---|---|---|---|---|
-| `nouvelle-feature.md` | `Feature` | produit | produit | [Feature](references/feature.md) |
-| `bug.md` | `Bug` | produit | produit | [Bug](references/bug.md) |
-| `tâche-technique.md` | `Tech` | dev | technique | [Tâche technique](references/tech.md) |
+| `nouvelle-feature.md` | `Feature` | produit | produit | Parcours : qui, ce qu'il voit et où il arrive après chaque action, plateformes, maquettes, cas limites, hors périmètre |
+| `bug.md` | `Bug` | produit | produit | Vécu : plateforme, étapes, fréquence, depuis quand, comportement attendu |
+| `tâche-technique.md` | `Tech` | dev | technique | Choix techniques : problème, approche et alternatives, contrat et compatibilité, migration et déploiement |
 
 - Les templates vivent dans `.github/ISSUE_TEMPLATE/`.
 - Une issue existante se rattache au template dont elle porte le label ; une issue à rédiger, au template du besoin, confirmé avec l'utilisateur en cas de doute.
 - Une issue sans label de template suit le registre produit.
 - Le label `Tech` l'emporte : une issue qui le porte suit le registre technique, quel que soit son template.
-- Lire la référence du template avant la première question ou réponse sur l'issue.
 - **Registre produit** : lisible sans connaître le code ; il parle de ce que vivent le joueur ou l'admin : écrans, parcours, règles du jeu. Le détail technique se décide au développement.
 - **Registre technique** : le vocabulaire du code et de l'architecture, pour un lecteur dev.
 - Développer, reviewer ou livrer une issue reste technique, quel que soit son template.
 
 ## Étapes
 
-1. Quand le besoin reste à clarifier (sujet à étudier, idée à planifier), mener d'abord le skill `grilling` dans le registre du template, jusqu'à la confirmation de l'utilisateur ; rédiger ensuite à partir des décisions prises.
-2. Rédiger en français selon la référence du template, tout dans la description, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
-3. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
-4. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
-5. Créer l'issue, puis l'ajouter au project Cityborn (n° 1) avec :
+1. Quand le besoin reste à clarifier (sujet à étudier, idée à planifier), mener d'abord le skill `grilling` dans le registre du template et sur ses questions de cadrage, jusqu'à la confirmation de l'utilisateur ; rédiger ensuite à partir des décisions prises.
+2. Délimiter le besoin selon la [taille](#taille-et-contenu) : une issue, ou une parente et ses sous-issues.
+3. Rédiger chaque issue en français en remplissant chaque section de son template, selon les [règles de contenu](#taille-et-contenu), tout dans la description, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
+4. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
+5. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
+6. Créer chaque issue ; pour un découpage, la parente d'abord, puis chaque sous-issue après ses prérequis, dont les numéros remplacent les titres dans son `Bloquée par #…`, et la rattacher à la parente selon la [procédure](references/integration-branch.md). Ajouter chaque issue au project Cityborn (n° 1) avec :
    - Type : `DEV` ;
    - Status : `A faire dans l'itération` ;
    - Sprint : celui résolu.
 
+## Taille et contenu
+
+- **Taille** : une issue à développer livre un seul résultat, constatable par le joueur, l'admin ou une commande, et vérifiable seul ; repère indicatif : un diff d'environ 400 lignes et 20 fichiers, hors fichiers générés et lockfiles.
+- **Découpage** : un besoin qui livre plusieurs résultats, ou dont le diff estimé dépasse nettement le repère, devient une parente, qui porte le besoin d'ensemble, et des sous-issues livrées dans sa [branche d'intégration](#branche-dintégration) :
+  - chaque sous-issue est une tranche verticale à travers les couches dont son résultat a besoin ;
+  - ses prérequis parmi ses sœurs ouvrent sa description : `Bloquée par #…` ;
+  - une sous-issue qui excède elle-même la taille se découpe en sœurs, sous la même parente.
+- **Critères** : chacun se prouve par un test, une commande ou un parcours web jouable par un agent ; un critère qui exige un appareil ou un compte tiers est suivi de « (recette manuelle) ».
+- **Références** : chaque commande, skill ou fichier présenté comme existant est vérifié dans le repo dès la rédaction.
+- **Citations** : une issue cite par son numéro seulement sa parente, ses sous-issues et ses sœurs ; le contexte utile d'une autre issue est repris en clair. Un lien de parenté sert seulement au découpage.
+
 ## Branche d'intégration
 
-Des sous-issues qui partent ensemble en production passent par la **branche d'intégration** de leur issue parente : la branche liée de la parente, tête de sa PR draft vers `main`. Chaque sous-issue y livre sa propre PR, seule liée à elle, et se ferme à la main au merge de cette PR : GitHub ne ferme une issue qu'au merge dans `main`. Le merge de la PR d'intégration ferme la parente.
-
-1. Retrouver la branche d'intégration de la parente d'une issue :
-
-   ```sh
-   gh api graphql -F n=<numéro> -f query='query($n:Int!){repository(owner:"tpicaud",name:"cityborn"){issue(number:$n){parent{number closedByPullRequestsReferences(first:10){nodes{state baseRefName headRefName}}}}}}' \
-     --jq '.data.repository.issue.parent // empty | {parent: .number, integration: [.closedByPullRequestsReferences.nodes[] | select(.state=="OPEN" and .baseRefName=="main") | .headRefName]}'
-   ```
-
-   Une sortie vide signale une issue sans parente ; une liste `integration` vide, une intégration à ouvrir.
-2. Ouvrir la branche d'intégration avant le développement de la première sous-issue, sans toucher au checkout courant :
-   - créer la branche liée de la parente avec `gh issue develop <parente> --base main` ;
-   - y pousser un commit vide, sans checkout :
-
-     ```sh
-     git fetch origin <branche> && git push origin "$(git commit-tree 'origin/<branche>^{tree}' -p origin/<branche> -m 'chore: open integration branch')":refs/heads/<branche>
-     ```
-   - ouvrir la PR draft vers `main` au titre de la parente, avec `Closes #<parente>`.
-3. Rattacher à la parente chaque issue destinée à cette branche, existante ou nouvelle : `gh api repos/tpicaud/cityborn/issues/<parente>/sub_issues -F sub_issue_id="$(gh api repos/tpicaud/cityborn/issues/<numéro> --jq .id)"`.
+La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR draft vers `main`, où chaque sous-issue livre sa propre PR. Pour la retrouver depuis une sous-issue, l'ouvrir, y rattacher une issue ou fermer une sous-issue livrée, lire la [procédure](references/integration-branch.md).
 
 ## Garde-fous
 
@@ -64,4 +57,4 @@ Des sous-issues qui partent ensemble en production passent par la **branche d'in
 
 ## Critère de fin
 
-L'issue publiée porte ses labels et suit la référence de son template ; son item de project porte son Type, son Status et son Sprint. Une branche d'intégration a sa PR draft ouverte vers `main`, et chaque issue qui y est destinée est sous-issue de la parente.
+Chaque issue publiée porte ses labels, suit son template et les règles de [taille et contenu](#taille-et-contenu) ; son item de project porte son Type, son Status et son Sprint. Chaque sous-issue est rattachée à sa parente ; une branche d'intégration ouverte a sa PR draft vers `main`.

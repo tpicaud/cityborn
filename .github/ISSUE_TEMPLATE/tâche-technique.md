@@ -9,4 +9,20 @@ assignees: ''
 
 ## 🛠️ Description de la tâche technique
 
-<!-- Description de la tâche technique -->
+### Motivation
+
+<!-- Le problème constaté ou le besoin qui justifie la tâche -->
+
+### Périmètre
+
+<!-- Les packages, apps et domaines touchés -->
+
+### Approche envisagée
+
+<!-- Les choix techniques retenus -->
+
+### Critères d'acceptation
+
+<!--
+- [ ] Un résultat vérifiable, une case par résultat
+-->
