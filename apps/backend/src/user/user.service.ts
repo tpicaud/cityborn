@@ -78,8 +78,8 @@ export class UserService {
     return credentials?.passwordHash ? credentials.authSession : null;
   }
 
-  async findByIdentifier(identifier: string): Promise<User | null> {
-    return this.userRepository.findByIdentifier(identifier);
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
   }
 
   async findCredentialsByIdentifier(

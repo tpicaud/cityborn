@@ -74,18 +74,16 @@ describe('UserService persistence', () => {
     });
   });
 
-  describe('findByIdentifier', () => {
+  describe('findByEmail', () => {
     it('delegates lookup', async () => {
       const {
         userRepository,
         userService,
       }: ReturnType<typeof buildUserService> = buildUserService();
       const user: User = buildUser();
-      userRepository.findByIdentifier.mockResolvedValue(user);
+      userRepository.findByEmail.mockResolvedValue(user);
 
-      await expect(userService.findByIdentifier(user.email)).resolves.toEqual(
-        user,
-      );
+      await expect(userService.findByEmail(user.email)).resolves.toEqual(user);
     });
   });
 

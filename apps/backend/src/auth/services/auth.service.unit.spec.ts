@@ -426,19 +426,22 @@ describe('AuthService account operations', () => {
       const { authService, userService }: ReturnType<typeof buildAuthService> =
         buildAuthService();
       const persistedUser: User = buildUser();
-      userService.findByIdentifier.mockResolvedValue(persistedUser);
+      userService.findById.mockResolvedValue(persistedUser);
 
       await expect(authService.getProfile(persistedUser.id)).resolves.toEqual(
         expect.objectContaining({ id: persistedUser.id }),
       );
+      expect(userService.findById).toHaveBeenCalledWith(persistedUser.id);
     });
 
     it('rejects a missing profile', async () => {
       const { authService, userService }: ReturnType<typeof buildAuthService> =
         buildAuthService();
-      userService.findByIdentifier.mockResolvedValue(null);
+      userService.findById.mockResolvedValue(null);
 
-      await expect(authService.getProfile('missing')).rejects.toMatchObject({
+      await expect(
+        authService.getProfile(buildUser().id),
+      ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_NOT_FOUND },
       });
     });
@@ -732,7 +735,7 @@ describe('AuthService.signInWithGoogle', () => {
       name: 'Alice Doe',
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValue(googleUser);
+    userService.findByEmail.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
       authVersion: 2,
@@ -744,6 +747,7 @@ describe('AuthService.signInWithGoogle', () => {
     );
 
     expect(result.user.username).toBe(googleUser.username);
+    expect(userService.findByEmail).toHaveBeenCalledWith('alice@cityborn.test');
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'user_signed_in',
@@ -775,7 +779,7 @@ describe('AuthService.signInWithGoogle', () => {
       name: 'Alice Doe',
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.findByEmail.mockResolvedValue(unverifiedUser);
     userService.reclaimUnverifiedAccount.mockResolvedValue({
       user: reclaimedUser,
       authVersion: 3,
@@ -817,7 +821,7 @@ describe('AuthService.signInWithGoogle', () => {
       name: 'Alice Doe',
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValueOnce(null);
+    userService.findByEmail.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
@@ -937,7 +941,7 @@ describe('AuthService.signInWithApple', () => {
         response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
       },
     );
-    expect(userService.findByIdentifier).not.toHaveBeenCalled();
+    expect(userService.findByEmail).not.toHaveBeenCalled();
   });
 
   it('identifies the account from the token claims instead of the request body', async () => {
@@ -954,7 +958,7 @@ describe('AuthService.signInWithApple', () => {
     const { authService, userService }: ReturnType<typeof buildAuthService> =
       buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValue(appleUser);
+    userService.findByEmail.mockResolvedValue(appleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: appleUser,
       authVersion: 0,
@@ -963,10 +967,8 @@ describe('AuthService.signInWithApple', () => {
     await authService.signInWithApple(signInData);
 
     expect(userService.findByAppleId).toHaveBeenCalledWith('apple-user-1');
-    expect(userService.findByIdentifier).toHaveBeenCalledWith(
-      'alice@cityborn.test',
-    );
-    expect(userService.findByIdentifier).not.toHaveBeenCalledWith(
+    expect(userService.findByEmail).toHaveBeenCalledWith('alice@cityborn.test');
+    expect(userService.findByEmail).not.toHaveBeenCalledWith(
       'admin@cityborn.test',
     );
   });
@@ -993,7 +995,7 @@ describe('AuthService.signInWithApple', () => {
       authenticatedSocketService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.findByEmail.mockResolvedValue(unverifiedUser);
     userService.reclaimUnverifiedAccount.mockResolvedValue({
       user: reclaimedUser,
       authVersion: 1,
@@ -1031,7 +1033,7 @@ describe('AuthService.signInWithApple', () => {
       eventService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValueOnce(null);
+    userService.findByEmail.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(appleUser);
     userService.findAuthSessionById.mockResolvedValue({

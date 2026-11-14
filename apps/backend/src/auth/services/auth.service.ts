@@ -152,7 +152,7 @@ export class AuthService {
     const { email, name }: GoogleIdentity =
       await this.identityTokenService.verifyGoogleIdToken(idToken);
 
-    let user = await this.userService.findByIdentifier(email);
+    let user: User | null = await this.userService.findByEmail(email);
 
     if (user && visitorId) {
       await this.eventService.trackEvent(
@@ -205,7 +205,7 @@ export class AuthService {
     const { appleUserId, verifiedEmail }: AppleIdentity =
       await this.identityTokenService.verifyAppleIdToken(identity_token);
 
-    let user = await this.userService.findByAppleId(appleUserId);
+    let user: User | null = await this.userService.findByAppleId(appleUserId);
 
     if (user && visitorId) {
       await this.eventService.trackEvent(
@@ -227,7 +227,7 @@ export class AuthService {
         });
       }
 
-      user = await this.userService.findByIdentifier(verifiedEmail);
+      user = await this.userService.findByEmail(verifiedEmail);
       if (!user) {
         const uniqueUsername = await this.generateUniqueUsername(
           `${details.given_name}${details.family_name}`,
@@ -267,8 +267,8 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async getProfile(identifier: string): Promise<User> {
-    const user = await this.userService.findByIdentifier(identifier);
+  async getProfile(userId: UserId): Promise<User> {
+    const user: User | null = await this.userService.findById(userId);
     if (!user)
       throw new NotFoundException({
         code: ErrorCode.USER_NOT_FOUND,

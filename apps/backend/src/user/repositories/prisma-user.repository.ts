@@ -58,13 +58,6 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toUserCredentials(user) : null;
   }
 
-  async findByIdentifier(identifier: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ email: identifier }, { username: identifier }] },
-    });
-    return user ? UserMapper.toUser(user) : null;
-  }
-
   async findByEmail(email: string): Promise<User | null> {
     const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
       where: { email },
@@ -75,8 +68,12 @@ export class PrismaUserRepository implements UserRepository {
   async findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ email: identifier }, { username: identifier }] },
+    const emailCredentials: UserCredentials | null =
+      await this.findCredentialsByEmail(identifier);
+    if (emailCredentials) return emailCredentials;
+
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { username: identifier },
     });
     return user ? UserMapper.toUserCredentials(user) : null;
   }

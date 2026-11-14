@@ -62,7 +62,14 @@ describe('Authentication transports', () => {
 
   it('runs the cookie sign-in, current user, refresh and sign-out flow with HttpOnly cookies', async () => {
     const password: string = 'Password1';
-    const userData: User = buildUser();
+    await persistEmailUser(
+      buildUser({ email: 'alice@ex.com', username: 'emailowner' }),
+      'OtherPassword1',
+    );
+    const userData: User = buildUser({
+      email: 'other@ex.com',
+      username: 'ALICE@EX.COM',
+    });
     const user: User = await persistEmailUser(userData, password);
     const origin: string = 'http://localhost:3000';
     const webAgent: TestAgent = request.agent(app.getHttpServer());
@@ -294,12 +301,19 @@ describe('Authentication transports', () => {
 
   it('keeps the legacy mobile bearer contract without setting cookies', async () => {
     const password: string = 'Password1';
-    const userData: User = buildUser();
+    await persistEmailUser(
+      buildUser({ email: 'other@ex.com', username: 'ALICE@EX.COM' }),
+      'OtherPassword1',
+    );
+    const userData: User = buildUser({
+      email: 'alice@ex.com',
+      username: 'emailowner',
+    });
     const user: User = await persistEmailUser(userData, password);
 
     const signInResponse: request.Response = await request(app.getHttpServer())
       .post(contract.auth.signIn.path)
-      .send({ identifier: user.email, password })
+      .send({ identifier: user.email.toUpperCase(), password })
       .expect(200);
     const authentication: AuthResponse = AuthResponseSchema.parse(
       signInResponse.body,

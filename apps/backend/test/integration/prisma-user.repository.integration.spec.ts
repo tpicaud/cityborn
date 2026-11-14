@@ -142,6 +142,83 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findCredentialsByIdentifier', () => {
+    it.each([false, true])(
+      'prioritizes the email owner over a matching username with reverse insertion %s',
+      async (reverseInsertion: boolean) => {
+        const emailOwner: CreateUserData = {
+          email: 'alice@ex.com',
+          username: UsernameSchema.parse('emailowner'),
+          type: 'email',
+          password: 'email-password',
+        };
+        const usernameOwner: CreateUserData = {
+          email: 'other@ex.com',
+          username: UsernameSchema.parse('ALICE@EX.COM'),
+          type: 'email',
+          password: 'username-password',
+        };
+        await userRepository.create(
+          reverseInsertion ? usernameOwner : emailOwner,
+        );
+        await userRepository.create(
+          reverseInsertion ? emailOwner : usernameOwner,
+        );
+
+        const credentials: UserCredentials | null =
+          await userRepository.findCredentialsByIdentifier('ALICE@EX.COM');
+        const otherCredentials: UserCredentials | null =
+          await userRepository.findCredentialsByIdentifier('OTHER@EX.COM');
+
+        expect(credentials).toMatchObject({
+          authSession: { user: { username: 'emailowner' } },
+          passwordHash: 'email-password',
+        });
+        expect(otherCredentials).toMatchObject({
+          authSession: { user: { username: 'ALICE@EX.COM' } },
+          passwordHash: 'username-password',
+        });
+      },
+    );
+
+    it('finds an email-shaped username when no email matches', async () => {
+      await userRepository.create({
+        email: 'other@ex.com',
+        username: UsernameSchema.parse('ALICE@EX.COM'),
+        type: 'email',
+        password: 'username-password',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByIdentifier('ALICE@EX.COM');
+      const changedUsername: UserCredentials | null =
+        await userRepository.findCredentialsByIdentifier('alice@ex.com');
+
+      expect(credentials?.passwordHash).toBe('username-password');
+      expect(changedUsername).toBeNull();
+    });
+
+    it('retains email priority when its owner has no password', async () => {
+      await userRepository.create({
+        email: 'alice@ex.com',
+        username: UsernameSchema.parse('emailowner'),
+        type: 'google',
+      });
+      await userRepository.create({
+        email: 'other@ex.com',
+        username: UsernameSchema.parse('ALICE@EX.COM'),
+        type: 'email',
+        password: 'username-password',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByIdentifier('ALICE@EX.COM');
+
+      expect(credentials).toMatchObject({
+        authSession: { user: { username: 'emailowner' } },
+        passwordHash: null,
+      });
+    });
+
     it('finds persisted credentials despite email casing', async () => {
       const userData: User = buildUser({
         isVerified: false,
@@ -186,60 +263,26 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('findByIdentifier', () => {
-    it('finds the email owner despite casing without changing username matching', async () => {
-      const userData: User = buildUser({ email: 'Host@Cityborn.test' });
-      const user: User = await userRepository.create({
-        email: userData.email,
-        username: userData.username,
-        type: userData.type,
-      });
-
-      const byEmail: User | null =
-        await userRepository.findByIdentifier('HOST@CITYBORN.TEST');
-      const byChangedUsername: User | null =
-        await userRepository.findByIdentifier('HOST');
-
-      expect(byEmail).toMatchObject({
-        id: user.id,
-        email: 'Host@Cityborn.test',
-      });
-      expect(byChangedUsername).toBeNull();
-    });
-
-    it('finds a user by username', async () => {
-      const userData: User = buildUser();
-      const user: User = await userRepository.create({
-        email: userData.email,
-        username: userData.username,
-        type: userData.type,
-      });
-
-      const byUsername: User | null =
-        await userRepository.findByIdentifier('host');
-
-      expect(byUsername).toMatchObject({
-        id: user.id,
-        email: 'host@cityborn.test',
-      });
-    });
-  });
-
   describe('findByEmail', () => {
-    it('finds a user by email but not by username', async () => {
-      const userData: User = buildUser();
-      const user: User = await userRepository.create({
-        email: userData.email,
-        username: userData.username,
-        type: userData.type,
+    it('matches only the email owner despite a colliding username', async () => {
+      await userRepository.create({
+        email: 'other@ex.com',
+        username: UsernameSchema.parse('ALICE@EX.COM'),
+        type: 'email',
       });
 
-      const byEmail: User | null =
-        await userRepository.findByEmail('HOST@CITYBORN.TEST');
-      const byUsername: User | null = await userRepository.findByEmail('host');
+      const withoutEmailOwner: User | null =
+        await userRepository.findByEmail('ALICE@EX.COM');
+      await userRepository.create({
+        email: 'alice@ex.com',
+        username: UsernameSchema.parse('emailowner'),
+        type: 'email',
+      });
+      const withEmailOwner: User | null =
+        await userRepository.findByEmail('ALICE@EX.COM');
 
-      expect(byEmail).toMatchObject({ id: user.id });
-      expect(byUsername).toBeNull();
+      expect(withoutEmailOwner).toBeNull();
+      expect(withEmailOwner).toMatchObject({ username: 'emailowner' });
     });
   });
 

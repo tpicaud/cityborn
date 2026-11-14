@@ -96,7 +96,7 @@ export class AuthController {
     return tsRestHandler(protectedAuthRoutes, {
       me: async () => ({
         status: 200 as const,
-        body: await this.authService.getProfile(user.username || user.email),
+        body: await this.authService.getProfile(user.id),
       }),
       deleteUser: async () => {
         await this.authService.deleteUser(user);

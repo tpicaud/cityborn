@@ -27,7 +27,6 @@ export interface UserRepository {
   findById(id: UserId): Promise<User | null>;
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findCredentialsByEmail(email: string): Promise<UserCredentials | null>;
-  findByIdentifier(identifier: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findCredentialsByIdentifier(
     identifier: string,
