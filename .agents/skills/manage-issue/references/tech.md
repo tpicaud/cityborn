@@ -2,7 +2,7 @@
 
 ## Description
 
-Partir du template `tâche-technique.md` : motivation, périmètre (packages, apps, domaines), approche envisagée, critères de fin vérifiables.
+Remplir chaque section du template `tâche-technique.md`.
 
 ## Cadrage
 
