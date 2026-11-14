@@ -25,7 +25,7 @@
       "@types/*": ["./src/types/*"]
     },
     "target": "ES2017",
-    "types": ["google.accounts"]
+    "types": ["google.accounts", "google.maps"]
   },
   "include": [
     "next-env.d.ts",
