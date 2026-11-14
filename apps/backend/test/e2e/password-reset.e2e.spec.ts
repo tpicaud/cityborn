@@ -19,6 +19,7 @@ import type { SendMailOptions } from '../../src/mail/providers/mail.provider';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { SessionGateway } from '../../src/session/session.gateway';
+import { UserService } from '../../src/user/user.service';
 import { createTestApp } from '../support/createTestApp';
 
 describe('Password reset over HTTP and WebSocket', () => {
@@ -68,6 +69,41 @@ describe('Password reset over HTTP and WebSocket', () => {
   });
   afterAll(async () => {
     await app?.close();
+  });
+
+  it('keeps the generic response and sends no token for an ambiguous legacy email', async () => {
+    const prismaService: PrismaService = app.get(PrismaService);
+    await prismaService.user.create({
+      data: {
+        type: 'email',
+        email: 'Alice@Example.com',
+        username: 'alice',
+        password: 'first-hash',
+      },
+    });
+    await prismaService.user.create({
+      data: {
+        type: 'email',
+        email: 'alice@example.com',
+        username: 'other',
+        password: 'second-hash',
+      },
+    });
+    const lookup: jest.SpiedFunction<
+      UserService['findPasswordResetAuthSession']
+    > = jest.spyOn(app.get(UserService), 'findPasswordResetAuthSession');
+
+    await request(app.getHttpServer())
+      .post(contract.auth.requestPasswordReset.path)
+      .send({ email: 'ALICE@EXAMPLE.COM' })
+      .expect(200)
+      .expect({ message: PASSWORD_RESET_REQUEST_MESSAGE });
+    await expect(lookup.mock.results[0]?.value).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
+    });
+
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+    expect(await prismaService.passwordResetToken.count()).toBe(0);
   });
 
   it('invalidates a previously emailed link when the signed-in user changes the password', async () => {

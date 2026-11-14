@@ -6,16 +6,21 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import type { User as PrismaUser } from '@prisma/client';
+import type { Prisma, User as PrismaUser } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
-import type {
-  CreateUserData,
-  UnverifiedAccountReclaim,
-  UserCredentials,
-  UserRepository,
+import {
+  type CreateUserData,
+  EmailCollisionError,
+  type UnverifiedAccountReclaim,
+  type UserCredentials,
+  type UserRepository,
 } from './user.repository';
+
+function emailFilter(email: string): Prisma.StringFilter {
+  return { equals: email.replace(/[\\%_]/g, '\\$&'), mode: 'insensitive' };
+}
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -24,7 +29,9 @@ export class PrismaUserRepository implements UserRepository {
   ) {}
 
   async create(data: CreateUserData): Promise<User> {
-    const user = await this.txHost.tx.user.create({ data });
+    const user: PrismaUser = await this.txHost.tx.user.create({
+      data: { ...data, email: data.email.toLowerCase() },
+    });
     return UserMapper.toUser(user);
   }
 
@@ -52,16 +59,12 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findCredentialsByEmail(email: string): Promise<UserCredentials | null> {
-    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
-      where: { email },
-    });
+    const user: PrismaUser | null = await this.findUniqueEmailUser(email);
     return user ? UserMapper.toUserCredentials(user) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
-      where: { email },
-    });
+    const user: PrismaUser | null = await this.findUniqueEmailUser(email);
     return user ? UserMapper.toUser(user) : null;
   }
 
@@ -97,9 +100,10 @@ export class PrismaUserRepository implements UserRepository {
     username: Username,
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null> {
-    const existingUser = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ username }, { email }] },
-    });
+    const emailUser: PrismaUser | null = await this.findUniqueEmailUser(email);
+    const existingUser: PrismaUser | null =
+      emailUser ??
+      (await this.txHost.tx.user.findUnique({ where: { username } }));
     return existingUser
       ? {
           username: UsernameSchema.parse(existingUser.username),
@@ -116,7 +120,7 @@ export class PrismaUserRepository implements UserRepository {
     email: string;
   }): Promise<User | null> {
     const updated: { count: number } = await this.txHost.tx.user.updateMany({
-      where: { id: userId, email },
+      where: { id: userId, email: emailFilter(email) },
       data: { isVerified: true },
     });
     if (updated.count === 0) return null;
@@ -140,10 +144,20 @@ export class PrismaUserRepository implements UserRepository {
   }): Promise<User | null> {
     const updated: { count: number } = await this.txHost.tx.user.updateMany({
       where: { id: userId, isVerified: false },
-      data: { email },
+      data: { email: email.toLowerCase() },
     });
     if (updated.count === 0) return null;
     return this.findById(userId);
+  }
+
+  private async findUniqueEmailUser(email: string): Promise<PrismaUser | null> {
+    const users: PrismaUser[] = await this.txHost.tx.user.findMany({
+      where: { email: emailFilter(email) },
+      take: 2,
+    });
+    if (users.length > 1)
+      throw new EmailCollisionError('Multiple accounts use this email');
+    return users[0] ?? null;
   }
 
   async deletePasswordResetTokensByUserId(userId: UserId): Promise<void> {

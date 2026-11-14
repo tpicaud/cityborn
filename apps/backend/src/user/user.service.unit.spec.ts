@@ -11,9 +11,10 @@ import type {
   EmailVerificationToken,
   EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
-import type {
-  CreateUserData,
-  UserRepository,
+import {
+  type CreateUserData,
+  EmailCollisionError,
+  type UserRepository,
 } from './repositories/user.repository';
 import { UserService } from './user.service';
 
@@ -84,6 +85,26 @@ describe('UserService persistence', () => {
       userRepository.findByEmail.mockResolvedValue(user);
 
       await expect(userService.findByEmail(user.email)).resolves.toEqual(user);
+    });
+
+    it('rejects an ambiguous email with an explicit conflict', async () => {
+      const {
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      userRepository.findByEmail.mockRejectedValue(
+        new EmailCollisionError('Multiple accounts use this email'),
+      );
+
+      await expect(
+        userService.findByEmail('alice@example.com'),
+      ).rejects.toMatchObject({
+        response: {
+          code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+          message:
+            'Plusieurs comptes utilisent cet email. Une résolution explicite est nécessaire.',
+        },
+      });
     });
   });
 

@@ -4,9 +4,10 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import type { AuthSession } from '../../src/common/types/auth-session';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
-import type {
-  CreateUserData,
-  UserCredentials,
+import {
+  type CreateUserData,
+  EmailCollisionError,
+  type UserCredentials,
 } from '../../src/user/repositories/user.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
 
@@ -31,6 +32,19 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('create', () => {
+    it('stores new addresses in lowercase', async () => {
+      const user: User = await userRepository.create({
+        email: 'New@Cityborn.Test',
+        username: UsernameSchema.parse('newuser'),
+        type: 'google',
+      });
+
+      expect(user.email).toBe('new@cityborn.test');
+      expect(
+        await infrastructure.prisma.user.findUnique({ where: { id: user.id } }),
+      ).toMatchObject({ email: 'new@cityborn.test' });
+    });
+
     it('enforces email uniqueness independently of casing', async () => {
       const firstUser: User = buildUser();
       const duplicateUser: User = buildUser({
@@ -241,7 +255,7 @@ describe('PrismaUserRepository', () => {
         },
         passwordHash: 'hashed-password',
       });
-      expect(credentials?.authSession.user.email).toBe('Host@Cityborn.test');
+      expect(credentials?.authSession.user.email).toBe('host@cityborn.test');
     });
 
     it('finds persisted credentials by username', async () => {
@@ -264,6 +278,40 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findByEmail', () => {
+    it('rejects legacy collisions even when an exact email or username matches', async () => {
+      await infrastructure.prisma.user.create({
+        data: {
+          email: 'Alice@Example.com',
+          username: 'ALICE@EXAMPLE.COM',
+          password: 'first-hash',
+        },
+      });
+      await infrastructure.prisma.user.create({
+        data: {
+          email: 'alice@example.com',
+          username: 'second',
+          password: 'second-hash',
+        },
+      });
+
+      await expect(
+        userRepository.findByEmail('alice@example.com'),
+      ).rejects.toBeInstanceOf(EmailCollisionError);
+      await expect(
+        userRepository.findCredentialsByIdentifier('ALICE@EXAMPLE.COM'),
+      ).rejects.toBeInstanceOf(EmailCollisionError);
+      await expect(
+        userRepository.findCredentialsByEmail('Alice@Example.com'),
+      ).rejects.toBeInstanceOf(EmailCollisionError);
+      await expect(
+        userRepository.findByIdentifiers(
+          UsernameSchema.parse('unused'),
+          'ALICE@EXAMPLE.COM',
+        ),
+      ).rejects.toBeInstanceOf(EmailCollisionError);
+      expect(await infrastructure.prisma.user.count()).toBe(2);
+    });
+
     it('matches only the email owner despite a colliding username', async () => {
       await userRepository.create({
         email: 'other@ex.com',
@@ -405,6 +453,22 @@ describe('PrismaUserRepository', () => {
       });
     });
 
+    it('stores changed addresses in lowercase', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'email',
+      });
+
+      const updated: User | null = await userRepository.updateEmail({
+        userId: user.id,
+        email: 'New@Cityborn.Test',
+      });
+
+      expect(updated?.email).toBe('new@cityborn.test');
+    });
+
     it('allows only one concurrent address update to case variants of an email', async () => {
       const users: User[] = await Promise.all(
         [
@@ -479,21 +543,23 @@ describe('PrismaUserRepository', () => {
       });
 
       const credentials: UserCredentials | null =
-        await userRepository.findCredentialsByEmail('alice_1@example.com');
+        await userRepository.findCredentialsByEmail('ALICE_1@EXAMPLE.COM');
 
       expect(credentials).toMatchObject({
         passwordHash: 'literal-hash',
-        authSession: { user: { email: 'Alice_1@Example.com' } },
+        authSession: { user: { email: 'alice_1@example.com' } },
       });
     });
 
-    it('finds credentials despite email casing and preserves the stored address', async () => {
+    it('finds legacy credentials despite email casing and preserves the stored address', async () => {
       const user: User = buildUser({ email: 'Alice@Example.com' });
-      await userRepository.create({
-        email: user.email,
-        username: user.username,
-        type: 'email',
-        password: 'hash',
+      await infrastructure.prisma.user.create({
+        data: {
+          email: user.email,
+          username: user.username,
+          type: 'email',
+          password: 'hash',
+        },
       });
 
       const credentials: UserCredentials | null =
@@ -566,6 +632,22 @@ describe('PrismaUserRepository', () => {
       expect(await userRepository.findById(user.id)).toMatchObject({
         isVerified: true,
       });
+    });
+
+    it('accepts a validation link issued before an address was normalized', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email.toUpperCase(),
+        username: userData.username,
+        type: 'email',
+      });
+
+      const verified: User | null = await userRepository.markEmailVerified({
+        userId: user.id,
+        email: userData.email.toUpperCase(),
+      });
+
+      expect(verified?.isVerified).toBe(true);
     });
 
     it('leaves the account unverified for another address', async () => {

@@ -9,21 +9,27 @@ import {
   type User,
   UserSchema,
 } from '@cityborn/api';
+import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bcrypt from 'bcrypt';
 import request from 'supertest';
 import type TestAgent from 'supertest/lib/agent';
+import { IdentityTokenService } from '../../src/auth/identity-providers/identity-token.service';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '../../src/auth/services/auth-cookie.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
+import { MailService } from '../../src/mail/mail.service';
+import { PrismaService } from '../../src/prisma/prisma.service';
 import {
   USER_REPOSITORY,
   type UserRepository,
 } from '../../src/user/repositories/user.repository';
 import { createTestApp } from '../support/createTestApp';
+
+type EmailAuthenticationMethod = 'google' | 'apple' | 'password' | 'signup';
 
 function responseCookies(header: string | string[] | undefined): string[] {
   if (header === undefined) {
@@ -34,12 +40,21 @@ function responseCookies(header: string | string[] | undefined): string[] {
 
 describe('Authentication transports', () => {
   let app: NestExpressApplication;
+  const identityTokenService: DeepMocked<IdentityTokenService> =
+    createMock<IdentityTokenService>();
+  const mailService: DeepMocked<MailService> = createMock<MailService>();
   let userRepository: UserRepository;
   let jwtService: JwtService;
   let authConfig: AuthConfig;
 
   beforeAll(async () => {
-    app = await createTestApp();
+    app = await createTestApp((builder) =>
+      builder
+        .overrideProvider(IdentityTokenService)
+        .useValue(identityTokenService)
+        .overrideProvider(MailService)
+        .useValue(mailService),
+    );
     userRepository = app.get(USER_REPOSITORY);
     jwtService = app.get(JwtService);
     authConfig = app.get<AuthConfig>(AUTH_CONFIG);
@@ -59,6 +74,153 @@ describe('Authentication transports', () => {
       isVerified: user.isVerified,
     });
   }
+
+  it.each(['google', 'apple'])(
+    'matches a legacy mixed-case account during %s sign-in',
+    async (provider: string) => {
+      const user: User = buildUser({
+        email: 'Alice@Example.com',
+        isVerified: true,
+      });
+      const prismaService: PrismaService = app.get(PrismaService);
+      await prismaService.user.create({
+        data: {
+          id: user.id,
+          type: user.type,
+          email: user.email,
+          username: user.username,
+          isVerified: true,
+        },
+      });
+      identityTokenService.verifyGoogleIdToken.mockResolvedValue({
+        email: 'ALICE@EXAMPLE.COM',
+        name: 'Alice',
+      });
+      identityTokenService.verifyAppleIdToken.mockResolvedValue({
+        appleUserId: 'new-apple-id',
+        verifiedEmail: 'ALICE@EXAMPLE.COM',
+      });
+      const path: string =
+        provider === 'google'
+          ? contract.auth.signInWithGoogle.path
+          : contract.auth.signInWithApple.path;
+      const body: object =
+        provider === 'google'
+          ? { idToken: 'google-token' }
+          : {
+              identity_token: 'apple-token',
+              apple_user_id: 'new-apple-id',
+              details: {
+                email: 'alice@example.com',
+                given_name: 'Alice',
+                family_name: 'Example',
+              },
+            };
+
+      const response: request.Response = await request(app.getHttpServer())
+        .post(path)
+        .send(body)
+        .expect(200);
+      const authResponse: AuthResponse = AuthResponseSchema.parse(
+        response.body,
+      );
+
+      expect(authResponse.user.id).toBe(user.id);
+      expect(authResponse.user.email).toBe('Alice@Example.com');
+      expect(await prismaService.user.count()).toBe(1);
+    },
+  );
+
+  it.each<EmailAuthenticationMethod>(['google', 'apple', 'password', 'signup'])(
+    'refuses legacy email collisions during %s authentication without selecting an account',
+    async (provider: EmailAuthenticationMethod) => {
+      const prismaService: PrismaService = app.get(PrismaService);
+      await prismaService.user.create({
+        data: {
+          type: 'email',
+          email: 'Alice@Example.com',
+          username: 'ALICE@EXAMPLE.COM',
+          password: await bcrypt.hash('Password1', 4),
+        },
+      });
+      await prismaService.user.create({
+        data: {
+          type: 'email',
+          email: 'alice@example.com',
+          username: 'second',
+          password: await bcrypt.hash('Password1', 4),
+        },
+      });
+      identityTokenService.verifyGoogleIdToken.mockResolvedValue({
+        email: 'ALICE@EXAMPLE.COM',
+        name: 'Alice',
+      });
+      identityTokenService.verifyAppleIdToken.mockResolvedValue({
+        appleUserId: 'new-apple-id',
+        verifiedEmail: 'ALICE@EXAMPLE.COM',
+      });
+      const paths: Record<EmailAuthenticationMethod, string> = {
+        google: contract.auth.signInWithGoogle.path,
+        apple: contract.auth.signInWithApple.path,
+        password: contract.auth.signIn.path,
+        signup: contract.auth.signUp.path,
+      };
+      const bodies: Record<EmailAuthenticationMethod, object> = {
+        google: { idToken: 'google-token' },
+        apple: {
+          identity_token: 'apple-token',
+          apple_user_id: 'new-apple-id',
+          details: {
+            email: 'alice@example.com',
+            given_name: 'Alice',
+            family_name: 'Example',
+          },
+        },
+        password: { identifier: 'ALICE@EXAMPLE.COM', password: 'Password1' },
+        signup: {
+          email: 'ALICE@EXAMPLE.COM',
+          username: 'newuser',
+          password: 'Password1',
+          confirmPassword: 'Password1',
+        },
+      };
+
+      const response: request.Response = await request(app.getHttpServer())
+        .post(paths[provider])
+        .send(bodies[provider])
+        .expect(409);
+      const error: ApiError = ApiErrorSchema.parse(response.body);
+
+      expect(error.code).toBe(ErrorCode.USER_EMAIL_ALREADY_TAKEN);
+      expect(await prismaService.user.count()).toBe(2);
+      expect(
+        await prismaService.user.count({ where: { isVerified: true } }),
+      ).toBe(0);
+      expect(
+        await prismaService.user.count({ where: { appleId: { not: null } } }),
+      ).toBe(0);
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects a signup using the case variant of a legacy email', async () => {
+    const prismaService: PrismaService = app.get(PrismaService);
+    await prismaService.user.create({
+      data: { email: 'Alice@Example.com', username: 'alice' },
+    });
+
+    await request(app.getHttpServer())
+      .post(contract.auth.signUp.path)
+      .send({
+        email: 'alice@example.com',
+        username: 'other',
+        password: 'Password1',
+        confirmPassword: 'Password1',
+      })
+      .expect(409);
+
+    expect(await prismaService.user.count()).toBe(1);
+  });
 
   it('runs the cookie sign-in, current user, refresh and sign-out flow with HttpOnly cookies', async () => {
     const password: string = 'Password1';

@@ -22,6 +22,7 @@ import {
 } from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
+  EmailCollisionError,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -73,19 +74,22 @@ export class UserService {
   async findPasswordResetAuthSession(
     email: string,
   ): Promise<AuthSession | null> {
-    const credentials: UserCredentials | null =
-      await this.userRepository.findCredentialsByEmail(email);
+    const credentials: UserCredentials | null = await this.withUniqueEmail(
+      this.userRepository.findCredentialsByEmail(email),
+    );
     return credentials?.passwordHash ? credentials.authSession : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findByEmail(email);
+    return this.withUniqueEmail(this.userRepository.findByEmail(email));
   }
 
   async findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null> {
-    return this.userRepository.findCredentialsByIdentifier(identifier);
+    return this.withUniqueEmail(
+      this.userRepository.findCredentialsByIdentifier(identifier),
+    );
   }
 
   async existsByUsername(username: string): Promise<boolean> {
@@ -130,8 +134,7 @@ export class UserService {
 
     if (user.email === email) return user;
 
-    const emailOwner: User | null =
-      await this.userRepository.findByEmail(email);
+    const emailOwner: User | null = await this.findByEmail(email);
     if (emailOwner?.id === user.id) return user;
     if (emailOwner)
       throw new ConflictException({
@@ -165,10 +168,10 @@ export class UserService {
   }
 
   async validateIdentifiers(username: Username, email: string): Promise<void> {
-    const existingUser = await this.userRepository.findByIdentifiers(
-      username,
-      email,
-    );
+    const existingUser: Pick<User, 'username' | 'email'> | null =
+      await this.withUniqueEmail(
+        this.userRepository.findByIdentifiers(username, email),
+      );
 
     if (!existingUser) return;
 
@@ -282,5 +285,18 @@ export class UserService {
       userId,
     );
     return user;
+  }
+
+  private async withUniqueEmail<T>(lookup: Promise<T>): Promise<T> {
+    try {
+      return await lookup;
+    } catch (error: unknown) {
+      if (!(error instanceof EmailCollisionError)) throw error;
+      throw new ConflictException({
+        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        message:
+          'Plusieurs comptes utilisent cet email. Une résolution explicite est nécessaire.',
+      });
+    }
   }
 }

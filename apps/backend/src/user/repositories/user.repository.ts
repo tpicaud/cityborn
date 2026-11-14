@@ -1,6 +1,8 @@
 import type { AccountType, User, UserId, Username } from '@cityborn/api';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 
+export class EmailCollisionError extends Error {}
+
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
 export type UserCredentials = {
