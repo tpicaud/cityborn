@@ -20,13 +20,8 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - Les autres sections listent chaque élément.
 - **Recette** : toujours présente ; un parcours est un scénario de bout en bout, joué dans l'app lancée comme le ferait un utilisateur.
   - Chaque parcours porte une plateforme, `Web` ou `Mobile`, jamais les deux ; un scénario à jouer sur les deux devient deux parcours.
-  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus, tous dans « Recette manuelle ». Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
-  - **Recette manuelle** : une case par parcours, sur une ou deux lignes, au format `- [ ] **<parcours> — <plateforme>** : <action> → <action> → <résultat attendu>`.
-  - **Recette agent** : un parcours joué par l'agent quitte « Recette manuelle » pour un titre de niveau 4 au format `#### <statut> <parcours> — <plateforme>`, avec `✅` pour une réussite ou `❌` pour un échec.
-    - Sous chaque titre, une courte liste numérotée des actions effectuées, puis `**Résultat :**` sur une ligne distincte avec l'observé, et enfin les captures associées.
-    - Un parcours que l'agent n'a pas joué jusqu'au bout reste dans « Recette manuelle » ; son motif va dans « Notes ».
-  - Remplacer les résultats rejoués ; un correctif qui invalide un parcours validé le renvoie dans « Recette manuelle ». Conserver tous les parcours et leurs attentes.
-  - Ajouter « Notes » à la fin de « Recette agent » seulement pour les exceptions utiles : anomalie, blocage, preuve manquante, changement de modèle ou nettoyage incomplet. Omettre le déroulement normal de l’infrastructure.
+  - À la rédaction, retenir dans « Recette manuelle » les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus, en une ou deux lignes chacun. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
+  - « Recette agent » suit, ajoutée par la [publication de la recette](publish-acceptance.md) ; une mise à jour renvoie dans « Recette manuelle » chaque parcours qu'un correctif invalide.
 
 ## Gabarit
 
@@ -64,21 +59,6 @@ Une ou deux phrases sur le principe du changement.
 
 - [ ] **Parcours — Web** : ouvrir l'écran → effectuer l'action → résultat attendu.
 - [ ] **Parcours — Mobile** : ouvrir l'écran → effectuer l'action → résultat attendu.
-
-### 🤖 Recette agent
-
-#### ✅ Parcours — Web
-
-1. Action effectuée.
-2. Vérification effectuée.
-
-**Résultat :** observé.
-
-![Capture du résultat observé](https://github.com/<owner>/<repo>/blob/<SHA-captures>/pr-<num>/capture-1.png?raw=true)
-
-#### Notes
-
-- **Exception** : ce qu'il y a à savoir.
 
 Closes #<numéro>
 ```

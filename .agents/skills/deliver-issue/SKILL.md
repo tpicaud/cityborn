@@ -53,8 +53,6 @@ L'étape est terminée quand chaque finding a un statut, que chaque correctif co
 
 ## Étape 4 — Recette
 
-La recette agent sert à attraper tôt un défaut critique ; la recette humaine couvre le reste.
-
 - Retenir au plus deux parcours de « Recette manuelle » : les premiers, dans l'ordre de risque, qui entrent dans le périmètre d'[execute-ui-scenarios](../execute-ui-scenarios/SKILL.md).
 - Sans parcours retenu, terminer l'étape sans sous-agent.
 - Confier les parcours retenus au sous-agent appliquant `execute-ui-scenarios`, avec `Sonnet — effort medium` ; si indisponible, `gpt-6.1-terra — effort medium`.
