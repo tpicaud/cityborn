@@ -4,63 +4,105 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import { Typography } from '@mui/material';
+import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { frontendClientConfig } from '@/config/client';
 
-type GoogleCredentialResponse = { credential: string };
+type GoogleIdentityScriptStatus = 'loading' | 'ready' | 'failed';
 
-type GoogleIdentityServices = {
-  accounts: {
-    id: {
-      initialize: (config: {
-        client_id?: string;
-        callback: (response: GoogleCredentialResponse) => void;
-      }) => void;
-      renderButton: (
-        parent: HTMLElement,
-        options: { theme?: string; size?: string; text?: string },
-      ) => void;
-    };
-  };
-};
+type GoogleCredentialHandler = (
+  response: google.accounts.id.CredentialResponse,
+) => Promise<void>;
 
-declare global {
-  interface Window {
-    google?: GoogleIdentityServices;
-  }
+const googleIdentityScriptUrl: string =
+  'https://accounts.google.com/gsi/client';
+const googleButtonWidth: number = 300;
+
+let isGoogleIdentityInitialized: boolean = false;
+let handleGoogleCredential: GoogleCredentialHandler | null = null;
+
+function isGoogleIdentityLoaded(): boolean {
+  return typeof google !== 'undefined' && google.accounts?.id !== undefined;
 }
 
-export function SignInWithGoogleButton() {
+function initializeGoogleIdentity(): void {
+  if (isGoogleIdentityInitialized) return;
+
+  google.accounts.id.initialize({
+    client_id: frontendClientConfig.googleOAuthWebClientId,
+    callback: (response: google.accounts.id.CredentialResponse): void => {
+      handleGoogleCredential?.(response);
+    },
+  });
+  isGoogleIdentityInitialized = true;
+}
+
+export function SignInWithGoogleButton({
+  text,
+}: {
+  text: 'signin_with' | 'signup_with';
+}) {
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn();
   const googleButtonContainer = useRef<HTMLDivElement>(null);
+  const [scriptStatus, setScriptStatus] =
+    useState<GoogleIdentityScriptStatus>('loading');
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
 
   useEffect(() => {
-    const container: HTMLDivElement | null = googleButtonContainer.current;
-    if (!window.google || !container) return;
+    const signInWithCredential: GoogleCredentialHandler = async ({
+      credential,
+    }: google.accounts.id.CredentialResponse): Promise<void> => {
+      setIsSigningIn(true);
+      try {
+        await signInWithGoogle({ idToken: credential });
+      } finally {
+        setIsSigningIn(false);
+      }
+    };
+    handleGoogleCredential = signInWithCredential;
 
-    window.google.accounts.id.initialize({
-      client_id: frontendClientConfig.googleOAuthWebClientId,
-      callback: async ({ credential }: GoogleCredentialResponse) => {
-        setIsSigningIn(true);
-        try {
-          await signInWithGoogle({ idToken: credential });
-        } finally {
-          setIsSigningIn(false);
-        }
-      },
-    });
-    window.google.accounts.id.renderButton(container, {
+    return () => {
+      if (handleGoogleCredential === signInWithCredential) {
+        handleGoogleCredential = null;
+      }
+    };
+  }, [signInWithGoogle]);
+
+  useEffect(() => {
+    const container: HTMLDivElement | null = googleButtonContainer.current;
+    if (scriptStatus !== 'ready' || !container) return;
+
+    initializeGoogleIdentity();
+    google.accounts.id.renderButton(container, {
+      type: 'standard',
       theme: 'outline',
       size: 'large',
-      text: 'signin_with',
+      text,
+      locale: 'fr',
+      width: googleButtonWidth,
     });
-  }, [signInWithGoogle]);
+  }, [scriptStatus, text]);
+
+  const settleScriptStatus: () => void = (): void =>
+    setScriptStatus(isGoogleIdentityLoaded() ? 'ready' : 'failed');
 
   return (
     <div className="relative flex justify-center items-center h-[44px] w-full">
-      <div ref={googleButtonContainer}></div>
+      <Script
+        src={googleIdentityScriptUrl}
+        onLoad={settleScriptStatus}
+        onReady={settleScriptStatus}
+        onError={() => setScriptStatus('failed')}
+      />
+      {scriptStatus === 'failed' ? (
+        <Typography variant="body2" color="error" align="center">
+          La connexion avec Google est indisponible pour le moment.
+        </Typography>
+      ) : (
+        <div ref={googleButtonContainer} />
+      )}
       {isSigningIn && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
           <svg
