@@ -24,7 +24,10 @@ import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
 import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import type { AppleIdTokenClaims } from '../identity-providers/apple-id-token';
-import type { GoogleIdentityClient } from '../identity-providers/google-client.provider';
+import type {
+  GoogleIdentityClient,
+  GoogleIdTokenPayload,
+} from '../identity-providers/google-client.provider';
 import { IdentityTokenService } from '../identity-providers/identity-token.service';
 import { AuthService } from './auth.service';
 import { AuthTokenService } from './auth-token.service';
@@ -706,33 +709,29 @@ describe('AuthService account operations', () => {
     });
   });
 });
-type GoogleIdentityTicket = Awaited<
-  ReturnType<GoogleIdentityClient['verifyIdToken']>
->;
+const googleIdTokenPayload: GoogleIdTokenPayload = {
+  sub: 'google-user-1',
+  email_verified: true,
+  email: 'alice@gmail.com',
+  name: 'Alice Doe',
+};
 
 describe('AuthService.signInWithGoogle', () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  const signInData: SignInWithGoogle = { idToken: 'google-token' };
 
-  it('signs in an existing Google user', async () => {
-    const googleUser: User = buildUser({ type: 'google' });
-    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+  it('signs in the account linked to the Google identifier despite a changed email', async () => {
+    const googleUser: User = buildUser({
+      email: 'former@cityborn.test',
+      type: 'google',
+    });
     const {
       authService,
       userService,
       googleClient,
       eventService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
-    const ticket: DeepMocked<GoogleIdentityTicket> =
-      createMock<GoogleIdentityTicket>();
-    ticket.getPayload.mockReturnValue({
-      email_verified: true,
-      email: 'alice@cityborn.test',
-      name: 'Alice Doe',
-    });
-    googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValue(googleUser);
+    googleClient.verifyIdToken.mockResolvedValue(googleIdTokenPayload);
+    userService.findByIdentityProviderAccount.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
       authVersion: 2,
@@ -743,23 +742,150 @@ describe('AuthService.signInWithGoogle', () => {
       'visitor-1',
     );
 
-    expect(result.user.username).toBe(googleUser.username);
+    expect(userService.findByIdentityProviderAccount).toHaveBeenCalledWith({
+      provider: 'google',
+      providerUserId: 'google-user-1',
+    });
+    expect(userService.findByEmail).not.toHaveBeenCalled();
+    expect(userService.linkIdentityProviderAccount).not.toHaveBeenCalled();
+    expect(result.user.email).toBe('former@cityborn.test');
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'user_signed_in',
         visitorId: 'visitor-1',
+        properties: { method: 'google' },
       }),
     );
-    expect(userService.reclaimUnverifiedAccount).not.toHaveBeenCalled();
   });
 
-  it('reclaims an unverified email account for its Google owner', async () => {
+  it.each([
+    ['a Gmail address', { email: 'alice@gmail.com' }],
+    [
+      'a Workspace address',
+      { email: 'alice@cityborn.test', hd: 'cityborn.test' },
+    ],
+  ])(
+    'links an existing account on %s',
+    async (_label: string, claims: Partial<GoogleIdTokenPayload>) => {
+      const emailUser: User = buildUser({ email: claims.email, type: 'email' });
+      const {
+        authService,
+        userService,
+        googleClient,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      googleClient.verifyIdToken.mockResolvedValue({
+        ...googleIdTokenPayload,
+        ...claims,
+      });
+      userService.findByIdentityProviderAccount.mockResolvedValue(null);
+      userService.findByEmail.mockResolvedValue(emailUser);
+      userService.linkIdentityProviderAccount.mockResolvedValue(emailUser);
+      userService.findAuthSessionById.mockResolvedValue({
+        user: emailUser,
+        authVersion: 0,
+      });
+
+      const result: AuthResponse =
+        await authService.signInWithGoogle(signInData);
+
+      expect(userService.linkIdentityProviderAccount).toHaveBeenCalledWith({
+        userId: emailUser.id,
+        provider: 'google',
+        providerUserId: 'google-user-1',
+      });
+      expect(userService.reclaimUnverifiedAccount).not.toHaveBeenCalled();
+      expect(result.user.id).toBe(emailUser.id);
+    },
+  );
+
+  it('links a historical Google account on an external address', async () => {
+    const historicalUser: User = buildUser({
+      email: 'alice@cityborn.test',
+      type: 'google',
+    });
+    const {
+      authService,
+      userService,
+      googleClient,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    googleClient.verifyIdToken.mockResolvedValue({
+      ...googleIdTokenPayload,
+      email: 'alice@cityborn.test',
+    });
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(historicalUser);
+    userService.linkIdentityProviderAccount.mockResolvedValue(historicalUser);
+    userService.findAuthSessionById.mockResolvedValue({
+      user: historicalUser,
+      authVersion: 0,
+    });
+
+    await authService.signInWithGoogle(signInData);
+
+    expect(userService.linkIdentityProviderAccount).toHaveBeenCalledWith({
+      userId: historicalUser.id,
+      provider: 'google',
+      providerUserId: 'google-user-1',
+    });
+  });
+
+  it('refuses to link an external address registered by another method', async () => {
+    const emailUser: User = buildUser({
+      email: 'alice@cityborn.test',
+      type: 'email',
+    });
+    const {
+      authService,
+      userService,
+      googleClient,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    googleClient.verifyIdToken.mockResolvedValue({
+      ...googleIdTokenPayload,
+      email: 'alice@cityborn.test',
+    });
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(emailUser);
+
+    await expect(
+      authService.signInWithGoogle(signInData),
+    ).rejects.toMatchObject({
+      status: HttpStatus.CONFLICT,
+      response: { code: ErrorCode.USER_IDENTITY_PROVIDER_LINK_REFUSED },
+    });
+    expect(userService.linkIdentityProviderAccount).not.toHaveBeenCalled();
+  });
+
+  it('refuses an account linked to another Google identifier', async () => {
+    const googleUser: User = buildUser({
+      email: 'alice@gmail.com',
+      type: 'google',
+    });
+    const {
+      authService,
+      userService,
+      googleClient,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    googleClient.verifyIdToken.mockResolvedValue(googleIdTokenPayload);
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(googleUser);
+    userService.linkIdentityProviderAccount.mockResolvedValue(null);
+
+    await expect(
+      authService.signInWithGoogle(signInData),
+    ).rejects.toMatchObject({
+      status: HttpStatus.CONFLICT,
+      response: { code: ErrorCode.USER_IDENTITY_PROVIDER_LINK_REFUSED },
+    });
+    expect(userService.findAuthSessionById).not.toHaveBeenCalled();
+  });
+
+  it('reclaims an unverified account once linked', async () => {
     const unverifiedUser: User = buildUser({
+      email: 'alice@gmail.com',
       type: 'email',
       isVerified: false,
     });
     const reclaimedUser: User = buildUser({ type: 'google', isVerified: true });
-    const signInData: SignInWithGoogle = { idToken: 'google-token' };
     const {
       authService,
       userService,
@@ -767,15 +893,10 @@ describe('AuthService.signInWithGoogle', () => {
       jwtService,
       authenticatedSocketService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
-    const ticket: DeepMocked<GoogleIdentityTicket> =
-      createMock<GoogleIdentityTicket>();
-    ticket.getPayload.mockReturnValue({
-      email_verified: true,
-      email: unverifiedUser.email,
-      name: 'Alice Doe',
-    });
-    googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    googleClient.verifyIdToken.mockResolvedValue(googleIdTokenPayload);
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(unverifiedUser);
+    userService.linkIdentityProviderAccount.mockResolvedValue(unverifiedUser);
     userService.reclaimUnverifiedAccount.mockResolvedValue({
       user: reclaimedUser,
       authVersion: 3,
@@ -797,80 +918,104 @@ describe('AuthService.signInWithGoogle', () => {
     expect(result.user.type).toBe('google');
   });
 
-  it('creates a Google user with an available generated username', async () => {
-    const googleUser: User = buildUser({
-      username: 'alicedoe1000',
-      type: 'google',
-    });
-    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+  it('looks an account up by exact email, never by username', async () => {
     const {
       authService,
       userService,
       googleClient,
-      eventService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
-    const ticket: DeepMocked<GoogleIdentityTicket> =
-      createMock<GoogleIdentityTicket>();
-    ticket.getPayload.mockReturnValue({
-      email_verified: true,
-      email: 'alice@cityborn.test',
-      name: 'Alice Doe',
+    googleClient.verifyIdToken.mockResolvedValue({
+      ...googleIdTokenPayload,
+      email: 'host@gmail.com',
     });
-    googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValueOnce(null);
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(null);
     userService.existsByUsername.mockResolvedValue(false);
+    const googleUser: User = buildUser({ type: 'google' });
     userService.createUser.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
       authVersion: 0,
     });
-    jest.spyOn(Math, 'random').mockReturnValue(0);
 
-    const result: AuthResponse = await authService.signInWithGoogle(
-      signInData,
-      'visitor-1',
-    );
+    await authService.signInWithGoogle(signInData);
 
-    expect(userService.createUser).toHaveBeenCalledWith({
-      email: 'alice@cityborn.test',
-      username: 'alicedoe1000',
-      type: 'google',
-      isVerified: true,
-    });
-    expect(result.user.username).toBe('alicedoe1000');
-    expect(eventService.trackEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'user_signed_up' }),
-    );
+    expect(userService.findByEmail).toHaveBeenCalledWith('host@gmail.com');
+    expect(userService.findByIdentifier).not.toHaveBeenCalled();
   });
 
-  it('rejects a Google token without payload', async () => {
-    const { authService, googleClient }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    const signInData: SignInWithGoogle = { idToken: 'google-token' };
-    const ticket: DeepMocked<GoogleIdentityTicket> =
-      createMock<GoogleIdentityTicket>();
-    ticket.getPayload.mockReturnValue(undefined);
-    googleClient.verifyIdToken.mockResolvedValue(ticket);
+  it.each([
+    ['the Google profile name', 'Alice Doe', 'alicedoe1000'],
+    ['the email local part without Google name', undefined, 'alice1000'],
+  ])(
+    'creates a Google account named after %s',
+    async (_label: string, name: string | undefined, username: string) => {
+      const googleUser: User = buildUser({ username, type: 'google' });
+      const {
+        authService,
+        userService,
+        googleClient,
+        eventService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      googleClient.verifyIdToken.mockResolvedValue({
+        ...googleIdTokenPayload,
+        name,
+      });
+      userService.findByIdentityProviderAccount.mockResolvedValue(null);
+      userService.findByEmail.mockResolvedValue(null);
+      userService.existsByUsername.mockResolvedValue(false);
+      userService.createUser.mockResolvedValue(googleUser);
+      userService.findAuthSessionById.mockResolvedValue({
+        user: googleUser,
+        authVersion: 0,
+      });
+      jest.spyOn(Math, 'random').mockReturnValue(0);
+
+      await authService.signInWithGoogle(signInData, 'visitor-1');
+
+      expect(userService.createUser).toHaveBeenCalledWith({
+        email: 'alice@gmail.com',
+        username,
+        type: 'google',
+        isVerified: true,
+        identityProviderAccount: {
+          provider: 'google',
+          providerUserId: 'google-user-1',
+        },
+      });
+      expect(eventService.trackEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'user_signed_up',
+          properties: { method: 'google' },
+        }),
+      );
+    },
+  );
+
+  it('rejects an invalid Google token with 401', async () => {
+    const {
+      authService,
+      userService,
+      googleClient,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    googleClient.verifyIdToken.mockResolvedValue(null);
 
     await expect(
       authService.signInWithGoogle(signInData),
     ).rejects.toMatchObject({
-      response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+      status: HttpStatus.UNAUTHORIZED,
+      response: { code: ErrorCode.USER_INVALID_TOKEN },
     });
+    expect(userService.findByIdentityProviderAccount).not.toHaveBeenCalled();
   });
 
   it('rejects an unverified Google email', async () => {
     const { authService, googleClient }: ReturnType<typeof buildAuthService> =
       buildAuthService();
-    const signInData: SignInWithGoogle = { idToken: 'google-token' };
-    const ticket: DeepMocked<GoogleIdentityTicket> =
-      createMock<GoogleIdentityTicket>();
-    ticket.getPayload.mockReturnValue({
+    googleClient.verifyIdToken.mockResolvedValue({
+      ...googleIdTokenPayload,
       email_verified: false,
-      email: 'alice@cityborn.test',
-      name: 'Alice Doe',
     });
-    googleClient.verifyIdToken.mockResolvedValue(ticket);
 
     await expect(
       authService.signInWithGoogle(signInData),
@@ -881,119 +1026,174 @@ describe('AuthService.signInWithGoogle', () => {
 });
 
 describe('AuthService.signInWithApple', () => {
-  it('rejects an Apple identity token without valid claims', async () => {
-    const { authService }: ReturnType<typeof buildAuthService> =
+  const signInData: SignInWithApple = {
+    identity_token: 'apple-token',
+    apple_user_id: 'apple-user-1',
+  };
+  const appleDetails: SignInWithApple['details'] = {
+    email: 'alice@icloud.com',
+    given_name: 'Alice',
+    family_name: 'Apple',
+  };
+
+  it('rejects an invalid Apple token with 401', async () => {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
       buildAuthService();
-    const signInData: SignInWithApple = {
-      identity_token: 'invalid-token',
-      apple_user_id: 'apple-user-1',
-    };
     mockAppleIdTokenClaims = null;
 
     await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
       {
+        status: HttpStatus.UNAUTHORIZED,
         response: { code: ErrorCode.USER_INVALID_TOKEN },
       },
     );
+    expect(userService.findByIdentityProviderAccount).not.toHaveBeenCalled();
   });
 
-  it('requires account details for a first Apple connection', async () => {
-    const { authService, userService }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    const signInData: SignInWithApple = {
-      identity_token: 'apple-token',
-      apple_user_id: 'apple-user-1',
-    };
-    userService.findByAppleId.mockResolvedValue(null);
-
-    await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
-      {
-        response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
-      },
-    );
-  });
-
-  it('requires a verified Apple email for a first Apple connection', async () => {
-    const { authService, userService }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    const signInData: SignInWithApple = {
-      identity_token: 'apple-token',
-      apple_user_id: 'apple-user-1',
-      details: {
-        email: 'alice@cityborn.test',
-        given_name: 'Alice',
-        family_name: 'Apple',
-      },
-    };
-    mockAppleIdTokenClaims = {
-      sub: 'apple-user-1',
-      email: 'alice@cityborn.test',
-      email_verified: false,
-    };
-    userService.findByAppleId.mockResolvedValue(null);
-
-    await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
-      {
-        response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
-      },
-    );
-    expect(userService.findByIdentifier).not.toHaveBeenCalled();
-  });
-
-  it('identifies the account from the token claims instead of the request body', async () => {
-    const appleUser: User = buildUser({ type: 'apple' });
-    const signInData: SignInWithApple = {
-      identity_token: 'apple-token',
-      apple_user_id: 'admin-apple-user',
-      details: {
-        email: 'admin@cityborn.test',
-        given_name: 'Alice',
-        family_name: 'Apple',
-      },
-    };
-    const { authService, userService }: ReturnType<typeof buildAuthService> =
-      buildAuthService();
-    userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValue(appleUser);
+  it('signs in a linked Apple account without details', async () => {
+    const appleUser: User = buildUser({ type: 'email' });
+    const {
+      authService,
+      userService,
+      eventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByIdentityProviderAccount.mockResolvedValue(appleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: appleUser,
       authVersion: 0,
     });
 
-    await authService.signInWithApple(signInData);
-
-    expect(userService.findByAppleId).toHaveBeenCalledWith('apple-user-1');
-    expect(userService.findByIdentifier).toHaveBeenCalledWith(
-      'alice@cityborn.test',
+    const result: AuthResponse = await authService.signInWithApple(
+      signInData,
+      'visitor-1',
     );
-    expect(userService.findByIdentifier).not.toHaveBeenCalledWith(
-      'admin@cityborn.test',
+
+    expect(userService.findByIdentityProviderAccount).toHaveBeenCalledWith({
+      provider: 'apple',
+      providerUserId: 'apple-user-1',
+    });
+    expect(userService.findByEmail).not.toHaveBeenCalled();
+    expect(result.user.id).toBe(appleUser.id);
+    expect(eventService.trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'user_signed_in',
+        properties: { method: 'apple' },
+      }),
     );
   });
 
-  it('reclaims an unverified email account for its Apple owner', async () => {
-    const unverifiedUser: User = buildUser({
+  it('links an existing account on an Apple address without details', async () => {
+    const emailUser: User = buildUser({
+      email: 'alice@privaterelay.appleid.com',
+      type: 'email',
+    });
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    mockAppleIdTokenClaims = {
+      sub: 'apple-user-1',
+      email: 'alice@privaterelay.appleid.com',
+      email_verified: true,
+    };
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(emailUser);
+    userService.linkIdentityProviderAccount.mockResolvedValue(emailUser);
+    userService.findAuthSessionById.mockResolvedValue({
+      user: emailUser,
+      authVersion: 0,
+    });
+
+    await authService.signInWithApple(signInData);
+
+    expect(userService.linkIdentityProviderAccount).toHaveBeenCalledWith({
+      userId: emailUser.id,
+      provider: 'apple',
+      providerUserId: 'apple-user-1',
+    });
+  });
+
+  it('refuses to link an external address registered by another method', async () => {
+    const emailUser: User = buildUser({
       email: 'alice@cityborn.test',
+      type: 'email',
+    });
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(emailUser);
+
+    await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
+      {
+        status: HttpStatus.CONFLICT,
+        response: { code: ErrorCode.USER_IDENTITY_PROVIDER_LINK_REFUSED },
+      },
+    );
+    expect(userService.linkIdentityProviderAccount).not.toHaveBeenCalled();
+  });
+
+  it('requires a verified Apple email for an unlinked Apple identifier', async () => {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    mockAppleIdTokenClaims = {
+      sub: 'apple-user-1',
+      email: 'alice@icloud.com',
+      email_verified: false,
+    };
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+
+    await expect(
+      authService.signInWithApple({ ...signInData, details: appleDetails }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+    });
+    expect(userService.findByEmail).not.toHaveBeenCalled();
+  });
+
+  it('identifies the account from the token claims instead of the request body', async () => {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(null);
+    userService.existsByUsername.mockResolvedValue(false);
+    const appleUser: User = buildUser({ type: 'apple' });
+    userService.createUser.mockResolvedValue(appleUser);
+    userService.findAuthSessionById.mockResolvedValue({
+      user: appleUser,
+      authVersion: 0,
+    });
+
+    await authService.signInWithApple({
+      identity_token: 'apple-token',
+      apple_user_id: 'admin-apple-user',
+      details: { ...appleDetails, email: 'admin@cityborn.test' },
+    });
+
+    expect(userService.findByIdentityProviderAccount).toHaveBeenCalledWith({
+      provider: 'apple',
+      providerUserId: 'apple-user-1',
+    });
+    expect(userService.findByEmail).toHaveBeenCalledWith('alice@cityborn.test');
+  });
+
+  it('reclaims an unverified account once linked', async () => {
+    const unverifiedUser: User = buildUser({
+      email: 'alice@icloud.com',
       type: 'email',
       isVerified: false,
     });
     const reclaimedUser: User = buildUser({ type: 'apple', isVerified: true });
-    const signInData: SignInWithApple = {
-      identity_token: 'apple-token',
-      apple_user_id: 'apple-user-1',
-      details: {
-        email: 'alice@cityborn.test',
-        given_name: 'Alice',
-        family_name: 'Apple',
-      },
-    };
     const {
       authService,
       userService,
       authenticatedSocketService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
-    userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    mockAppleIdTokenClaims = {
+      sub: 'apple-user-1',
+      email: 'alice@icloud.com',
+      email_verified: true,
+    };
+    userService.findByIdentityProviderAccount.mockResolvedValue(null);
+    userService.findByEmail.mockResolvedValue(unverifiedUser);
+    userService.linkIdentityProviderAccount.mockResolvedValue(unverifiedUser);
     userService.reclaimUnverifiedAccount.mockResolvedValue({
       user: reclaimedUser,
       authVersion: 1,
@@ -1004,57 +1204,55 @@ describe('AuthService.signInWithApple', () => {
     expect(userService.reclaimUnverifiedAccount).toHaveBeenCalledWith({
       userId: unverifiedUser.id,
       type: 'apple',
-      appleId: 'apple-user-1',
     });
     expect(
       authenticatedSocketService.disconnectOlderSessions,
     ).toHaveBeenCalledWith(unverifiedUser.id, 1);
   });
 
-  it('creates a user during the first Apple connection', async () => {
-    const appleUser: User = buildUser({
-      username: 'aliceapple1000',
-      type: 'apple',
-    });
-    const signInData: SignInWithApple = {
-      identity_token: 'apple-token',
-      apple_user_id: 'apple-user-1',
-      details: {
+  it.each([
+    ['the Apple details', appleDetails, 'aliceapple1000'],
+    ['the email local part without details', undefined, 'alice1000'],
+  ])(
+    'creates an Apple account named after %s',
+    async (_label: string, details: SignInWithApple['details'], username: string) => {
+      const appleUser: User = buildUser({ username, type: 'apple' });
+      const {
+        authService,
+        userService,
+        eventService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findByIdentityProviderAccount.mockResolvedValue(null);
+      userService.findByEmail.mockResolvedValue(null);
+      userService.existsByUsername.mockResolvedValue(false);
+      userService.createUser.mockResolvedValue(appleUser);
+      userService.findAuthSessionById.mockResolvedValue({
+        user: appleUser,
+        authVersion: 0,
+      });
+      jest.spyOn(Math, 'random').mockReturnValue(0);
+
+      await authService.signInWithApple(
+        { ...signInData, details },
+        'visitor-1',
+      );
+
+      expect(userService.createUser).toHaveBeenCalledWith({
         email: 'alice@cityborn.test',
-        given_name: 'Alice',
-        family_name: 'Apple',
-      },
-    };
-    const {
-      authService,
-      userService,
-      eventService,
-    }: ReturnType<typeof buildAuthService> = buildAuthService();
-    userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier.mockResolvedValueOnce(null);
-    userService.existsByUsername.mockResolvedValue(false);
-    userService.createUser.mockResolvedValue(appleUser);
-    userService.findAuthSessionById.mockResolvedValue({
-      user: appleUser,
-      authVersion: 0,
-    });
-    jest.spyOn(Math, 'random').mockReturnValue(0);
-
-    const result: AuthResponse = await authService.signInWithApple(
-      signInData,
-      'visitor-1',
-    );
-
-    expect(userService.createUser).toHaveBeenCalledWith({
-      email: 'alice@cityborn.test',
-      username: 'aliceapple1000',
-      type: 'apple',
-      appleId: 'apple-user-1',
-      isVerified: true,
-    });
-    expect(result.user.username).toBe('aliceapple1000');
-    expect(eventService.trackEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'user_signed_up' }),
-    );
-  });
+        username,
+        type: 'apple',
+        isVerified: true,
+        identityProviderAccount: {
+          provider: 'apple',
+          providerUserId: 'apple-user-1',
+        },
+      });
+      expect(eventService.trackEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'user_signed_up',
+          properties: { method: 'apple' },
+        }),
+      );
+    },
+  );
 });

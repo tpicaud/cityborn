@@ -19,6 +19,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "Vous n'avez pas de compte Cityborn. Êtes-vous sûr que ce n'est pas un compte d'un autre fournisseur ? (e.g. Google)",
   [ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED]:
     "Le compte Google n'est pas vérifié.",
+  [ErrorCode.USER_IDENTITY_PROVIDER_LINK_REFUSED]:
+    'Un compte existe déjà avec cette adresse. Connectez-vous avec votre mot de passe.',
   [ErrorCode.USER_REFRESH_FAILED]:
     'Session expirée. Veuillez vous reconnecter.',
   [ErrorCode.USER_TOKEN_MISSING]: 'Token manquant. Veuillez vous reconnecter.',

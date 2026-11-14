@@ -1,22 +1,41 @@
 import { ErrorCode } from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
+import type { IdentityProviderAccount } from '../../user/repositories/user.repository';
 import { type AppleIdTokenClaims, verifyAppleIdToken } from './apple-id-token';
 import {
   GOOGLE_IDENTITY_CLIENT,
   type GoogleIdentityClient,
-  type GoogleIdentityPayload,
+  type GoogleIdTokenPayload,
 } from './google-client.provider';
 
-export type GoogleIdentity = {
-  email: string;
-  name: string;
+export type ProviderIdentity = IdentityProviderAccount & {
+  verifiedEmail: string | undefined;
+  isEmailAuthoritative: boolean;
 };
 
-export type AppleIdentity = {
-  appleUserId: string;
-  verifiedEmail: string | undefined;
+export type GoogleIdentity = ProviderIdentity & {
+  verifiedEmail: string;
+  name: string | undefined;
 };
+
+const appleEmailDomains: ReadonlySet<string> = new Set([
+  'icloud.com',
+  'me.com',
+  'mac.com',
+  'privaterelay.appleid.com',
+]);
+
+function emailDomain(email: string): string {
+  return email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+}
+
+function invalidIdentityTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_INVALID_TOKEN,
+    message: 'Invalid identity token',
+  });
+}
 
 @Injectable()
 export class IdentityTokenService {
@@ -27,17 +46,9 @@ export class IdentityTokenService {
   ) {}
 
   async verifyGoogleIdToken(idToken: string): Promise<GoogleIdentity> {
-    const payload: GoogleIdentityPayload | undefined = (
-      await this.googleIdentityClient.verifyIdToken({
-        idToken,
-        audience: this.authConfig.googleClientId,
-      })
-    ).getPayload();
-    if (!payload)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Invalid credentials',
-      });
+    const payload: GoogleIdTokenPayload | null =
+      await this.googleIdentityClient.verifyIdToken(idToken);
+    if (!payload?.sub || !payload.email) throw invalidIdentityTokenException();
 
     if (!payload.email_verified)
       throw new UnauthorizedException({
@@ -45,32 +56,33 @@ export class IdentityTokenService {
         message: 'Google account not verified',
       });
 
-    if (!payload.email || !payload.name)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Missing name or email',
-      });
-
     return {
-      email: payload.email,
+      provider: 'google',
+      providerUserId: payload.sub,
+      verifiedEmail: payload.email,
+      isEmailAuthoritative:
+        emailDomain(payload.email) === 'gmail.com' || Boolean(payload.hd),
       name: payload.name,
     };
   }
 
-  async verifyAppleIdToken(identityToken: string): Promise<AppleIdentity> {
+  async verifyAppleIdToken(identityToken: string): Promise<ProviderIdentity> {
     const claims: AppleIdTokenClaims | null = await verifyAppleIdToken({
       idToken: identityToken,
       audience: this.authConfig.appleAppId,
     });
-    if (!claims)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_TOKEN,
-        message: 'Invalid Apple identity token claims',
-      });
+    if (!claims) throw invalidIdentityTokenException();
 
+    const verifiedEmail: string | undefined = claims.email_verified
+      ? claims.email
+      : undefined;
     return {
-      appleUserId: claims.sub,
-      verifiedEmail: claims.email_verified ? claims.email : undefined,
+      provider: 'apple',
+      providerUserId: claims.sub,
+      verifiedEmail,
+      isEmailAuthoritative:
+        verifiedEmail !== undefined &&
+        appleEmailDomains.has(emailDomain(verifiedEmail)),
     };
   }
 }
