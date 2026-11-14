@@ -15,6 +15,10 @@ export type IdentityProviderAccount = {
   providerUserId: string;
 };
 
+export type IdentityProviderLink = IdentityProviderAccount & {
+  userId: UserId;
+};
+
 export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   Partial<Pick<User, 'isVerified'>> & {
     password?: string;
@@ -42,9 +46,7 @@ export interface UserRepository {
   findByIdentityProviderAccount(
     account: IdentityProviderAccount,
   ): Promise<User | null>;
-  linkIdentityProviderAccount(
-    link: IdentityProviderAccount & { userId: UserId },
-  ): Promise<User | null>;
+  linkIdentityProviderAccount(link: IdentityProviderLink): Promise<User | null>;
   findByIdentifiers(
     username: Username,
     email: string,

@@ -14,6 +14,7 @@ import type {
   CreateUserData,
   IdentityProvider,
   IdentityProviderAccount,
+  IdentityProviderLink,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -41,7 +42,7 @@ export class PrismaUserRepository implements UserRepository {
     identityProviderAccount,
     ...data
   }: CreateUserData): Promise<User> {
-    const user = await this.txHost.tx.user.create({
+    const user: PrismaUser = await this.txHost.tx.user.create({
       data: {
         ...data,
         ...(identityProviderAccount &&
@@ -132,7 +133,7 @@ export class PrismaUserRepository implements UserRepository {
     userId,
     provider,
     providerUserId,
-  }: IdentityProviderAccount & { userId: UserId }): Promise<User | null> {
+  }: IdentityProviderLink): Promise<User | null> {
     const updated: { count: number } = await this.txHost.tx.user.updateMany({
       where: {
         id: userId,

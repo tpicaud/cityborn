@@ -349,8 +349,12 @@ export class AuthService {
     identity: ProviderIdentity;
     name: string | undefined;
   }): Promise<IdentityProviderUser> {
-    const { provider, providerUserId, verifiedEmail, isEmailAuthoritative } =
-      identity;
+    const {
+      provider,
+      providerUserId,
+      verifiedEmail,
+      isEmailAuthoritative,
+    }: ProviderIdentity = identity;
     const account: IdentityProviderAccount = { provider, providerUserId };
 
     const linkedUser: User | null =
