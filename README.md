@@ -44,7 +44,7 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
 
-Pour la recette web isolée, lancer `pnpm recette:prepare`, puis `pnpm recette:web` (frontend, back-office et backend). Les apps sont accessibles sur 3100/3101 et le backend sur 4100. Après arrêt des serveurs, `pnpm db:recette:stop` arrête PostgreSQL et Redis de recette.
+Pour la recette web isolée, lancer `pnpm recette:prepare` : il réserve un slot libre et affiche `RECETTE_SLOT` et les URL (3100/3101 et backend 4100 pour le slot 0, +10 par slot). Lancer ensuite `RECETTE_SLOT=<slot> pnpm recette:web` (frontend, back-office et backend) ; après arrêt des serveurs, `RECETTE_SLOT=<slot> pnpm recette:stop` arrête PostgreSQL et Redis de recette.
 
 La seed crée deux comptes :
 

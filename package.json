@@ -47,12 +47,11 @@
     "test:watch": "turbo run test:watch",
     "test:cov": "turbo run test:cov",
     "test:all": "turbo run test:all",
-    "db:recette:start": "pnpm backend db:recette:start",
-    "db:recette:stop": "pnpm backend db:recette:stop",
     "recette:prepare": "bash scripts/recette/launch.sh prepare",
     "recette:backend": "bash scripts/recette/launch.sh backend",
     "recette:frontend": "bash scripts/recette/launch.sh frontend",
     "recette:back-office": "bash scripts/recette/launch.sh back-office",
+    "recette:stop": "bash scripts/recette/launch.sh stop",
     "recette:captures": "bash scripts/recette/publish-captures.sh",
     "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
     "check": "pnpm typecheck && pnpm lint"

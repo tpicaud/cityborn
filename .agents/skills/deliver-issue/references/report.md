@@ -7,7 +7,7 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture, son déploiement ou sa recette.
 - Chaque mise à jour part de la description actuelle de la PR et la ramène à l'état de la branche au dernier commit, sans historique des passages précédents.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
-- Le rapport est télégraphique : une phrase tient en environ 120 caractères.
+- Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
 
 ## Sections
@@ -19,13 +19,9 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `Aucune action particulière à effectuer.`.
 - Les autres sections listent chaque élément.
 - **Recette** : toujours présente ; un parcours est un scénario de bout en bout, joué dans l'app lancée comme le ferait un utilisateur.
-  - Chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`.
-  - Sous chaque titre, écrire une courte liste numérotée des actions utilisateur et vérifications attendues, puis `**Résultat :**` sur une ligne distincte et enfin les captures associées.
-  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
-  - Avant recette, lister les actions prévues ; après recette, restituer les actions effectuées et signaler celles non exécutées.
-  - Le statut du titre est `✅` pour une réussite, `❌` pour un échec ou `⏸️` pour une non-exécution ; le résultat donne l’observé ou le motif de non-exécution.
-  - Remplacer les résultats rejoués ; invalider les validations affectées par un correctif. Conserver tous les scénarios et leurs attentes.
-  - Ajouter « Notes » sous « Recette » seulement pour les exceptions utiles : anomalie, blocage, preuve manquante, changement de modèle ou nettoyage incomplet. Omettre le déroulement normal de l’infrastructure.
+  - Chaque parcours porte une plateforme, `Web` ou `Mobile`, jamais les deux ; un scénario à jouer sur les deux devient deux parcours.
+  - À la rédaction, retenir dans « Recette manuelle » les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus, en une ou deux lignes chacun. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
+  - « Recette agent » suit, ajoutée par la [publication de la recette](publish-acceptance.md) ; une mise à jour renvoie dans « Recette manuelle » chaque parcours qu'un correctif invalide.
 
 ## Gabarit
 
@@ -59,17 +55,10 @@ Une ou deux phrases sur le principe du changement.
 
 ## 🧪 Recette
 
-### ⏸️ Parcours — Plateforme
+### 🙋 Recette manuelle
 
-1. Ouvrir l’application.
-2. Effectuer l’action du parcours.
-3. Vérifier le résultat attendu.
-
-**Résultat :** non exécuté, en attente de recette.
-
-Après recette, actualiser le statut du titre et le résultat, puis ajouter la capture disponible :
-
-![Capture du résultat observé](https://github.com/<owner>/<repo>/blob/<SHA-captures>/pr-<num>/capture-1.png?raw=true)
+- [ ] **Parcours — Web** : ouvrir l'écran → effectuer l'action → résultat attendu.
+- [ ] **Parcours — Mobile** : ouvrir l'écran → effectuer l'action → résultat attendu.
 
 Closes #<numéro>
 ```
