@@ -9,11 +9,11 @@ description: "Issues GitHub Cityborn. À utiliser pour planifier ou découper un
 
 Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en écrit ou s'en dit : description, commentaires, questions de cadrage, réponses.
 
-| Template | Label posé | Lecteur | Registre | Cadrage : questions sur |
+| Template | Label posé | Lecteur | Registre | Questions de cadrage |
 |---|---|---|---|---|
-| `nouvelle-feature.md` | `Feature` | produit | produit | le parcours : qui l'emprunte, à quel moment, ce qu'il voit à chaque étape, les cas limites (aucun résultat, erreur, abandon), le hors périmètre |
-| `bug.md` | `Bug` | produit | produit | le vécu : plateforme, étapes suivies, fréquence, ce que le problème empêche de faire |
-| `tâche-technique.md` | `Tech` | dev | technique | les choix techniques : architecture, impact sur le contrat, migration, compatibilité des clients |
+| `nouvelle-feature.md` | `Feature` | produit | produit | Parcours : qui, ce qu'il voit et où il arrive après chaque action, plateformes, maquettes, cas limites, hors périmètre |
+| `bug.md` | `Bug` | produit | produit | Vécu : plateforme, étapes, fréquence, depuis quand, comportement attendu |
+| `tâche-technique.md` | `Tech` | dev | technique | Choix techniques : problème, approche et alternatives, contrat et compatibilité, migration et déploiement |
 
 - Les templates vivent dans `.github/ISSUE_TEMPLATE/`.
 - Une issue existante se rattache au template dont elle porte le label ; une issue à rédiger, au template du besoin, confirmé avec l'utilisateur en cas de doute.
