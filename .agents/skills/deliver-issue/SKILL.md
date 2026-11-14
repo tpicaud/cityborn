@@ -55,13 +55,13 @@ L'étape est terminée quand chaque finding a un statut, que chaque correctif co
 
 La recette agent sert à attraper tôt un défaut critique ; la recette humaine couvre le reste.
 
-- Retenir au plus deux parcours de « Recette » : les premiers, dans l'ordre de risque, qui entrent dans le périmètre d'[execute-ui-scenarios](../execute-ui-scenarios/SKILL.md).
+- Retenir au plus deux parcours de « Recette manuelle » : les premiers, dans l'ordre de risque, qui entrent dans le périmètre d'[execute-ui-scenarios](../execute-ui-scenarios/SKILL.md).
 - Sans parcours retenu, terminer l'étape sans sous-agent.
 - Confier les parcours retenus au sous-agent appliquant `execute-ui-scenarios`, avec `Sonnet — effort medium` ; si indisponible, `gpt-6.1-terra — effort medium`.
 - Publier les captures et intégrer le rapport selon [la publication](references/publish-acceptance.md).
 - Les anomalies relevées ne relancent pas de boucle de correctifs.
 
-L'étape est terminée quand chaque parcours retenu porte son résultat ou son motif de non-exécution ; les autres restent en attente de recette.
+L'étape est terminée quand chaque parcours joué figure dans « Recette agent » avec son résultat, et chaque parcours non joué dans « Recette manuelle ».
 
 ## Compte rendu final
 

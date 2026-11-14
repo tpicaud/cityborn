@@ -1,6 +1,6 @@
 ---
 name: execute-ui-scenarios
-description: "Exécuter ou rejouer des scénarios de recette web desktop fournis : préparer l'environnement isolé, vérifier les résultats et rendre un rapport avec captures."
+description: "Exécuter ou rejouer des scénarios de recette web fournis : préparer l'environnement isolé, vérifier les résultats et rendre un rapport avec captures."
 ---
 
 # Exécuter une recette web
@@ -9,7 +9,7 @@ description: "Exécuter ou rejouer des scénarios de recette web desktop fournis
 
 - Identifier le checkout et tous les scénarios fournis, directement ou via une source désignée ; aucune PR requise.
 - Relever préconditions, actions et résultats attendus ; ne pas inventer les attentes manquantes.
-- Périmètre : le frontend joueur et le back-office sur la plateforme Web, joués en viewport desktop, avec les comptes du seed ou des comptes créés dans l'app.
+- Périmètre : le frontend joueur et le back-office sur la plateforme Web, dans le viewport demandé, desktop par défaut, avec les comptes du seed ou des comptes créés dans l'app.
 - Marquer non exécutés, avec leur motif, les scénarios incomplets ou hors périmètre, dont ceux qui exigent un compte tiers réel ou un appareil.
 - Sans scénario exécutable, rapporter le motif sans démarrer l'environnement.
 
@@ -19,7 +19,7 @@ Terminé quand chaque scénario est exécutable ou porte un motif de non-exécut
 
 - Relever le commit et les modifications locales du checkout ; utiliser un checkout distinct des serveurs dev actifs.
 - Vérifier Node.js 24, pnpm, Docker Compose, les dépendances installées et les `.env` backend/frontend/back-office renseignés.
-- Utiliser le navigateur fourni avec une session distincte et un viewport desktop ; les cookies de `localhost` sont partagés entre ports. Sans navigateur, rapporter explicitement son absence.
+- Utiliser le navigateur fourni avec une session distincte et le viewport du scénario ; les cookies de `localhost` sont partagés entre ports. Sans navigateur, rapporter explicitement son absence.
 - Depuis la racine, lancer `pnpm recette:prepare` : il réserve un slot libre, isolé des autres recettes, et affiche `RECETTE_SLOT` et les URL.
 - Préfixer chaque commande suivante de ce `RECETTE_SLOT`, à commencer par `pnpm recette:web` qui lance les trois serveurs. Relever les ressources lancées, même en cas d'échec.
 - Pour Google Maps, les clés des apps web doivent autoriser les origines `localhost` des slots de recette.

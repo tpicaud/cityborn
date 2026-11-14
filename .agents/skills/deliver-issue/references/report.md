@@ -19,14 +19,14 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `Aucune action particulière à effectuer.`.
 - Les autres sections listent chaque élément.
 - **Recette** : toujours présente ; un parcours est un scénario de bout en bout, joué dans l'app lancée comme le ferait un utilisateur.
-  - Chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`, où la plateforme est `Web` ou `Mobile`, jamais les deux.
-  - Un scénario à jouer sur les deux plateformes devient deux parcours, un par plateforme.
-  - Sous chaque titre, écrire une courte liste numérotée des actions utilisateur et vérifications attendues, puis `**Résultat :**` sur une ligne distincte et enfin les captures associées.
-  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
-  - Avant recette, lister les actions prévues ; après recette, restituer les actions effectuées et signaler celles non exécutées.
-  - Le statut du titre est `✅` pour une réussite, `❌` pour un échec ou `⏸️` pour une non-exécution ; le résultat donne l’observé ou le motif de non-exécution.
-  - Remplacer les résultats rejoués ; invalider les validations affectées par un correctif. Conserver tous les scénarios et leurs attentes.
-  - Ajouter « Notes » sous « Recette » seulement pour les exceptions utiles : anomalie, blocage, preuve manquante, changement de modèle ou nettoyage incomplet. Omettre le déroulement normal de l’infrastructure.
+  - Chaque parcours porte une plateforme, `Web` ou `Mobile`, jamais les deux ; un scénario à jouer sur les deux devient deux parcours.
+  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus, tous dans « Recette manuelle ». Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
+  - **Recette manuelle** : une case par parcours, sur une ou deux lignes, au format `- [ ] **<parcours> — <plateforme>** : <action> → <action> → <résultat attendu>`.
+  - **Recette agent** : un parcours joué par l'agent quitte « Recette manuelle » pour un titre de niveau 4 au format `#### <statut> <parcours> — <plateforme>`, avec `✅` pour une réussite ou `❌` pour un échec.
+    - Sous chaque titre, une courte liste numérotée des actions effectuées, puis `**Résultat :**` sur une ligne distincte avec l'observé, et enfin les captures associées.
+    - Un parcours que l'agent n'a pas joué jusqu'au bout reste dans « Recette manuelle » ; son motif va dans « Notes ».
+  - Remplacer les résultats rejoués ; un correctif qui invalide un parcours validé le renvoie dans « Recette manuelle ». Conserver tous les parcours et leurs attentes.
+  - Ajouter « Notes » à la fin de « Recette agent » seulement pour les exceptions utiles : anomalie, blocage, preuve manquante, changement de modèle ou nettoyage incomplet. Omettre le déroulement normal de l’infrastructure.
 
 ## Gabarit
 
@@ -60,17 +60,25 @@ Une ou deux phrases sur le principe du changement.
 
 ## 🧪 Recette
 
-### ⏸️ Parcours — Web
+### 🙋 Recette manuelle
 
-1. Ouvrir l’application.
-2. Effectuer l’action du parcours.
-3. Vérifier le résultat attendu.
+- [ ] **Parcours — Web** : ouvrir l'écran → effectuer l'action → résultat attendu.
+- [ ] **Parcours — Mobile** : ouvrir l'écran → effectuer l'action → résultat attendu.
 
-**Résultat :** non exécuté, en attente de recette.
+### 🤖 Recette agent
 
-Après recette, actualiser le statut du titre et le résultat, puis ajouter la capture disponible :
+#### ✅ Parcours — Web
+
+1. Action effectuée.
+2. Vérification effectuée.
+
+**Résultat :** observé.
 
 ![Capture du résultat observé](https://github.com/<owner>/<repo>/blob/<SHA-captures>/pr-<num>/capture-1.png?raw=true)
+
+#### Notes
+
+- **Exception** : ce qu'il y a à savoir.
 
 Closes #<numéro>
 ```
