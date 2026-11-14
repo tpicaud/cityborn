@@ -19,7 +19,8 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `Aucune action particulière à effectuer.`.
 - Les autres sections listent chaque élément.
 - **Recette** : toujours présente ; un parcours est un scénario de bout en bout, joué dans l'app lancée comme le ferait un utilisateur.
-  - Chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`.
+  - Chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`, où la plateforme est `Web` ou `Mobile`, jamais les deux.
+  - Un scénario à jouer sur les deux plateformes devient deux parcours, un par plateforme.
   - Sous chaque titre, écrire une courte liste numérotée des actions utilisateur et vérifications attendues, puis `**Résultat :**` sur une ligne distincte et enfin les captures associées.
   - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
   - Avant recette, lister les actions prévues ; après recette, restituer les actions effectuées et signaler celles non exécutées.
@@ -59,7 +60,7 @@ Une ou deux phrases sur le principe du changement.
 
 ## 🧪 Recette
 
-### ⏸️ Parcours — Plateforme
+### ⏸️ Parcours — Web
 
 1. Ouvrir l’application.
 2. Effectuer l’action du parcours.

@@ -9,7 +9,7 @@ description: "Exécuter ou rejouer des scénarios de recette web desktop fournis
 
 - Identifier le checkout et tous les scénarios fournis, directement ou via une source désignée ; aucune PR requise.
 - Relever préconditions, actions et résultats attendus ; ne pas inventer les attentes manquantes.
-- Périmètre : le frontend joueur et le back-office en web desktop, avec les comptes du seed ou des comptes créés dans l'app.
+- Périmètre : le frontend joueur et le back-office sur la plateforme Web, joués en viewport desktop, avec les comptes du seed ou des comptes créés dans l'app.
 - Marquer non exécutés, avec leur motif, les scénarios incomplets ou hors périmètre, dont ceux qui exigent un compte tiers réel ou un appareil.
 - Sans scénario exécutable, rapporter le motif sans démarrer l'environnement.
 
