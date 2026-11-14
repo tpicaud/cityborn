@@ -21,7 +21,7 @@ assignees: ''
 
 <!-- Les choix techniques retenus -->
 
-### Critères de fin
+### Critères d'acceptation
 
 <!--
 - [ ] Un résultat vérifiable, une case par résultat

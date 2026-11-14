@@ -42,10 +42,11 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 - **Découpage** : au-delà, une parente porte le besoin d'ensemble et ses sous-issues le détail, livrées dans sa [branche d'intégration](#branche-dintégration) :
   - chaque sous-issue est une tranche verticale à travers les couches dont son résultat a besoin ;
   - elle porte ses propres critères ;
-  - ses prérequis tiennent en tête de description : `Bloquée par #…`.
+  - ses prérequis tiennent en tête de description : `Bloquée par #…` ;
+  - trop grosse, elle se découpe en sœurs sous la même parente : une branche d'intégration n'a qu'un niveau.
 - **Critères** : chacun se prouve par un test, une commande ou un parcours web jouable par un agent ; un critère qui exige un appareil ou un compte tiers est suivi de « (recette manuelle) ».
 - **Références** : chaque commande, skill ou fichier présenté comme existant est vérifié dans le repo avant publication.
-- **Citations** : une issue n'en cite une autre que si elle est sa parente, sa sous-issue ou sa sœur ; sinon, rattacher les deux à une même parente, ou décrire le besoin sans citer l'issue.
+- **Citations** : une issue n'en cite une autre que si elle est sa parente, sa sous-issue ou sa sœur ; sinon, décrire le besoin sans citer l'issue, sans créer de lien de parenté pour pouvoir la citer.
 
 ## Branche d'intégration
 
