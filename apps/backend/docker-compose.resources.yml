@@ -98,7 +98,7 @@ services:
       POSTGRES_PASSWORD: cityborn_recette
       POSTGRES_DB: cityborn_recette
     ports:
-      - "127.0.0.1:5434:5432"
+      - "127.0.0.1:${RECETTE_POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres-recette-data:/var/lib/postgresql/data
 
@@ -106,7 +106,7 @@ services:
     <<: *redis
     profiles: [recette]
     ports:
-      - "127.0.0.1:6381:6379"
+      - "127.0.0.1:${RECETTE_REDIS_PORT:-6381}:6379"
     volumes:
       - redis-recette-data:/data
 
