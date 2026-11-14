@@ -22,6 +22,7 @@ import {
 } from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
+  type IdentityProviderAccount,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -96,8 +97,20 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async findByAppleId(appleUserId: string): Promise<User | null> {
-    return this.userRepository.findByAppleId(appleUserId);
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
+
+  async findByIdentityProviderAccount(
+    account: IdentityProviderAccount,
+  ): Promise<User | null> {
+    return this.userRepository.findByIdentityProviderAccount(account);
+  }
+
+  async linkIdentityProviderAccount(
+    link: IdentityProviderAccount & { userId: UserId },
+  ): Promise<User | null> {
+    return this.userRepository.linkIdentityProviderAccount(link);
   }
 
   async updateUsername(user: User, username: Username): Promise<User> {
