@@ -17,10 +17,6 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "L'adresse mail est déjà vérifiée et ne peut plus être modifiée.",
   [ErrorCode.USER_NOT_VANILLA_ACCOUNT]:
     "Vous n'avez pas de compte Cityborn. Êtes-vous sûr que ce n'est pas un compte d'un autre fournisseur ? (e.g. Google)",
-  [ErrorCode.USER_GOOGLE_EMAIL_PROOF_REQUIRED]:
-    'Confirmez votre adresse Cityborn par code email avant de continuer. Si votre ancien compte utilise une autre adresse, contactez l’assistance Cityborn.',
-  [ErrorCode.USER_GOOGLE_ACCOUNT_CONFLICT]:
-    'Ce compte est déjà associé ou a changé. Recommencez ou contactez l’assistance Cityborn.',
   [ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED]:
     "Le compte Google n'est pas vérifié.",
   [ErrorCode.USER_REFRESH_FAILED]:

@@ -1,6 +1,5 @@
 import {
   type AuthResponse,
-  type ConfirmGoogleEmail,
   type CreateUser,
   ErrorCode,
   type PublicUser,
@@ -39,14 +38,11 @@ import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
   type AppleIdentity,
+  type GoogleIdentity,
   IdentityTokenService,
 } from '../identity-providers/identity-token.service';
 import { hashPassword, verifyPassword } from '../password-hashing';
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
-import {
-  type GoogleAuthentication,
-  GoogleAuthService,
-} from './google-auth.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
 
@@ -66,7 +62,6 @@ export class AuthService {
     private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly identityTokenService: IdentityTokenService,
     private readonly rateLimitService: RateLimitService,
-    private readonly googleAuthService: GoogleAuthService,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
@@ -152,41 +147,53 @@ export class AuthService {
     dto: SignInWithGoogle,
     visitorId?: string,
   ): Promise<AuthResponse> {
-    return this.completeGoogleAuthentication({
-      authentication: await this.googleAuthService.signIn(dto),
-      visitorId,
-    });
-  }
+    const { idToken } = dto;
 
-  async confirmGoogleEmail({
-    confirmation,
-    visitorId,
-  }: {
-    confirmation: ConfirmGoogleEmail;
-    visitorId?: string;
-  }): Promise<AuthResponse> {
-    return this.completeGoogleAuthentication({
-      authentication: await this.googleAuthService.confirmEmail(confirmation),
-      visitorId,
-    });
-  }
+    const { email, name }: GoogleIdentity =
+      await this.identityTokenService.verifyGoogleIdToken(idToken);
 
-  private async completeGoogleAuthentication({
-    authentication: { session, isNewAccount },
-    visitorId,
-  }: {
-    authentication: GoogleAuthentication;
-    visitorId?: string;
-  }): Promise<AuthResponse> {
-    if (visitorId)
+    let user = await this.userService.findByIdentifier(email);
+
+    if (user && visitorId) {
       await this.eventService.trackEvent(
         createEvent({
-          name: isNewAccount ? 'user_signed_up' : 'user_signed_in',
+          name: 'user_signed_in',
           visitorId,
-          properties: { method: 'google' },
+          properties: {
+            method: 'google',
+          },
         }),
       );
-    return this.createAuthResponse(session);
+    }
+
+    if (!user) {
+      const uniqueUsername = await this.generateUniqueUsername(name);
+
+      user = await this.userService.createUser({
+        email,
+        username: uniqueUsername,
+        type: 'google',
+        isVerified: true,
+      });
+
+      if (visitorId) {
+        await this.eventService.trackEvent(
+          createEvent({
+            name: 'user_signed_up',
+            visitorId,
+            properties: {
+              method: 'google',
+            },
+          }),
+        );
+      }
+    }
+
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: 'google',
+    });
+    return this.createAuthResponse(authSession);
   }
 
   async signInWithApple(
@@ -303,12 +310,10 @@ export class AuthService {
       });
 
     const passwordHash: string = await hashPassword(data.newPassword);
-    const authVersion: AuthVersion = await this.userService.updatePassword({
-      userId: user.id,
+    const authVersion: AuthVersion = await this.userService.updatePassword(
+      user.id,
       passwordHash,
-      expectedPasswordHash: credentials.passwordHash,
-      authVersion: credentials.authSession.authVersion,
-    });
+    );
     this.authenticatedSocketService.disconnectOlderSessions(
       user.id,
       authVersion,

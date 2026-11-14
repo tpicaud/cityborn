@@ -227,12 +227,7 @@ describe('Prisma transactions', () => {
           .mockRejectedValueOnce(new Error('write failed'));
 
         await expect(
-          userService.updatePassword({
-            userId: user.id,
-            passwordHash: 'new-hash',
-            expectedPasswordHash: 'old-hash',
-            authVersion: 0,
-          }),
+          userService.updatePassword(user.id, 'new-hash'),
         ).rejects.toThrow('write failed');
 
         expect(
@@ -279,12 +274,7 @@ describe('Prisma transactions', () => {
           confirmUpdate = resolve;
         });
         const update: Promise<void> = txHost.withTransaction(async () => {
-          await userService.updatePassword({
-            userId: user.id,
-            passwordHash: 'new-hash',
-            expectedPasswordHash: 'old-hash',
-            authVersion: 0,
-          });
+          await userService.updatePassword(user.id, 'new-hash');
           confirmUpdate();
           await released;
         });

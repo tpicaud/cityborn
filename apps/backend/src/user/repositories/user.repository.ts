@@ -8,18 +8,10 @@ export type UserCredentials = {
   passwordHash: string | null;
 };
 
-export type PasswordUpdate = {
-  userId: UserId;
-  passwordHash: string;
-  expectedPasswordHash: string;
-  authVersion: AuthVersion;
-};
-
 export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   Partial<Pick<User, 'isVerified'>> & {
     password?: string;
     appleId?: string;
-    googleSubject?: string;
   };
 
 export type UnverifiedAccountReclaim = {
@@ -28,19 +20,7 @@ export type UnverifiedAccountReclaim = {
   appleId?: string;
 };
 
-export type GoogleAccountAssociation = {
-  userId: UserId;
-  email: string;
-  isVerified: boolean;
-  subject: string;
-};
-
 export interface UserRepository {
-  findByGoogleSubject(subject: string): Promise<AuthSession | null>;
-  findGoogleEmailCandidates(email: string): Promise<User[]>;
-  associateGoogleAccount(
-    association: GoogleAccountAssociation,
-  ): Promise<AuthSession | null>;
   create(data: CreateUserData): Promise<User>;
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
@@ -68,7 +48,7 @@ export interface UserRepository {
     email: string;
   }): Promise<User | null>;
   deletePasswordResetTokensByUserId(userId: UserId): Promise<void>;
-  updatePassword(update: PasswordUpdate): Promise<boolean>;
+  updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
   reclaimUnverifiedAccount(
     reclaim: UnverifiedAccountReclaim,

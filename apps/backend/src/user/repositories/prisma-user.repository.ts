@@ -12,8 +12,6 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
-  GoogleAccountAssociation,
-  PasswordUpdate,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -24,45 +22,6 @@ export class PrismaUserRepository implements UserRepository {
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
-
-  async findByGoogleSubject(subject: string): Promise<AuthSession | null> {
-    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
-      where: { googleSubject: subject },
-    });
-    return user ? UserMapper.toAuthSession(user) : null;
-  }
-
-  async findGoogleEmailCandidates(email: string): Promise<User[]> {
-    const users: PrismaUser[] = await this.txHost.tx.user.findMany({
-      where: { email: { equals: email, mode: 'insensitive' } },
-      take: 2,
-    });
-    return users.map(UserMapper.toUser);
-  }
-
-  async associateGoogleAccount({
-    userId,
-    email,
-    isVerified,
-    subject,
-  }: GoogleAccountAssociation): Promise<AuthSession | null> {
-    const updated: { count: number } = await this.txHost.tx.user.updateMany({
-      where: { id: userId, email, isVerified, googleSubject: null },
-      data: {
-        googleSubject: subject,
-        isVerified: true,
-        ...(!isVerified
-          ? {
-              type: 'google',
-              password: null,
-              appleId: null,
-              authVersion: { increment: 1 },
-            }
-          : {}),
-      },
-    });
-    return updated.count === 1 ? this.findAuthSessionById(userId) : null;
-  }
 
   async create(data: CreateUserData): Promise<User> {
     const user = await this.txHost.tx.user.create({ data });
@@ -201,19 +160,12 @@ export class PrismaUserRepository implements UserRepository {
     await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
   }
 
-  async updatePassword({
-    userId,
-    passwordHash,
-    expectedPasswordHash,
-    authVersion,
-  }: PasswordUpdate): Promise<boolean> {
-    const updated: { count: number } = await this.txHost.tx.user.updateMany({
-      where: { id: userId, password: expectedPasswordHash, authVersion },
+  async updatePassword(userId: UserId, passwordHash: string): Promise<void> {
+    await this.txHost.tx.user.update({
+      where: { id: userId },
       data: { password: passwordHash },
     });
-    if (updated.count === 0) return false;
     await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
-    return true;
   }
 
   async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {
