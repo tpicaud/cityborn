@@ -23,6 +23,7 @@ import {
 import {
   type CreateUserData,
   type IdentityProviderAccount,
+  type IdentityProviderLink,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -108,7 +109,7 @@ export class UserService {
   }
 
   async linkIdentityProviderAccount(
-    link: IdentityProviderAccount & { userId: UserId },
+    link: IdentityProviderLink,
   ): Promise<User | null> {
     return this.userRepository.linkIdentityProviderAccount(link);
   }
