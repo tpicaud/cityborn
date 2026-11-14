@@ -5,16 +5,9 @@ L'orchestrateur réalise cette préparation avant de transmettre le worktree au 
 ## Retenir le worktree et la branche
 
 1. Résoudre l'issue exacte à partir de son numéro ou de son URL.
-2. Retenir la **branche cible**, base de la branche liée et de sa PR :
-   - la branche d'intégration de l'issue parente, tête de sa PR ouverte vers `main`, quand elle existe ;
-   - sinon `main`.
+2. Retenir la **branche cible**, base de la branche liée et de sa PR : `main` pour une issue sans parente, sinon la branche d'intégration de sa parente, retrouvée ou ouverte selon le skill `manage-issue`.
 
-   Seule l'issue parente détermine la branche cible. Si l'issue ou l'utilisateur vise une branche d'intégration alors que l'issue n'en est pas une sous-issue, demander de la rattacher à l'issue qui porte cette branche, selon le skill `manage-issue`.
-
-   ```sh
-   gh api graphql -F n=<numéro> -f query='query($n:Int!){repository(owner:"tpicaud",name:"cityborn"){issue(number:$n){parent{closedByPullRequestsReferences(first:10){nodes{state baseRefName headRefName}}}}}}' \
-     --jq '.data.repository.issue.parent.closedByPullRequestsReferences.nodes[]? | select(.state=="OPEN" and .baseRefName=="main") | .headRefName'
-   ```
+   Seule l'issue parente détermine la branche cible. Si l'issue ou l'utilisateur vise une branche d'intégration alors que l'issue n'en est pas une sous-issue, demander de la rattacher à l'issue qui porte cette branche.
 3. Exécuter `git fetch --all --prune`, puis retenir la **branche liée**, unique branche de l'issue, dans cet ordre :
    - la tête de la PR ouverte vers la branche cible qui ferme l'issue : `gh pr list --base <branche cible> --json headRefName,closingIssuesReferences --jq '.[] | select(any(.closingIssuesReferences[]; .number==<numéro>)) | .headRefName'` ;
    - sinon la branche de `gh issue develop <numéro> --list` ;
