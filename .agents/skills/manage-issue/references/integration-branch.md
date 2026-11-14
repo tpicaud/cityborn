@@ -1,5 +1,7 @@
 # Branche d'intégration
 
+Chaque sous-issue livre dans la branche d'intégration sa propre PR, seule liée à elle, et se ferme à la main au merge de cette PR : GitHub ne ferme une issue qu'au merge dans `main`. Le merge de la PR d'intégration ferme la parente.
+
 1. Retrouver la branche d'intégration de la parente d'une issue :
 
    ```sh
