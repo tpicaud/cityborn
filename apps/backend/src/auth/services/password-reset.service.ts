@@ -105,12 +105,10 @@ export class PasswordResetService {
     const credentials: UserCredentials | null =
       await this.userService.findCredentialsById(userId);
     if (!credentials?.passwordHash) this.rejectToken();
-    const authVersion: AuthVersion = await this.userService.updatePassword({
+    const authVersion: AuthVersion = await this.userService.updatePassword(
       userId,
       passwordHash,
-      expectedPasswordHash: credentials.passwordHash,
-      authVersion: credentials.authSession.authVersion,
-    });
+    );
     const user: User = credentials.authSession.user.isVerified
       ? credentials.authSession.user
       : ((await this.userService.verifyEmailOwnership({

@@ -13,8 +13,6 @@ import {
 import { AuthGuard, BearerAuthGuard } from '../guards/access-token.guard';
 import { BearerRefreshGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';
-import { GoogleAuthService } from '../services/google-auth.service';
-import { GoogleEmailProofService } from '../services/google-email-proof.service';
 import { PasswordResetService } from '../services/password-reset.service';
 
 const c = initContract();
@@ -26,9 +24,6 @@ const publicAuthRoutes = c.router({
   signIn: contract.auth.signIn,
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
-  requestGoogleEmail: contract.auth.requestGoogleEmail,
-  resendGoogleEmail: contract.auth.resendGoogleEmail,
-  confirmGoogleEmail: contract.auth.confirmGoogleEmail,
   verifyEmail: contract.auth.verifyEmail,
   renewVerificationEmail: contract.auth.renewVerificationEmail,
 });
@@ -49,8 +44,6 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly passwordResetService: PasswordResetService,
-    private readonly googleAuthService: GoogleAuthService,
-    private readonly googleEmailProofService: GoogleEmailProofService,
   ) {}
 
   @TsRestHandler(publicAuthRoutes)
@@ -81,21 +74,6 @@ export class AuthController {
       signInWithGoogle: async ({ body }) => ({
         status: 200 as const,
         body: await this.authService.signInWithGoogle(body, visitorId),
-      }),
-      requestGoogleEmail: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.googleAuthService.requestEmail(body),
-      }),
-      resendGoogleEmail: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.googleEmailProofService.resend(body.challengeId),
-      }),
-      confirmGoogleEmail: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.authService.confirmGoogleEmail({
-          confirmation: body,
-          visitorId,
-        }),
       }),
       signInWithApple: async ({ body }) => ({
         status: 200 as const,

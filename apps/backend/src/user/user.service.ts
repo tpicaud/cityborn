@@ -22,8 +22,6 @@ import {
 } from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
-  type GoogleAccountAssociation,
-  type PasswordUpdate,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -45,45 +43,6 @@ export class UserService {
     @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
     private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
   ) {}
-
-  async findByGoogleSubject(subject: string): Promise<AuthSession | null> {
-    return this.userRepository.findByGoogleSubject(subject);
-  }
-
-  async findGoogleEmailOwner(email: string): Promise<User | null> {
-    const candidates: User[] =
-      await this.userRepository.findGoogleEmailCandidates(email);
-    if (candidates.length > 1)
-      throw new ConflictException({
-        code: ErrorCode.USER_GOOGLE_ACCOUNT_CONFLICT,
-        message:
-          'Plusieurs comptes correspondent à cette adresse. Contactez l’assistance Cityborn.',
-      });
-    return candidates[0] ?? null;
-  }
-
-  @Transactional()
-  async associateGoogleAccount(
-    association: GoogleAccountAssociation,
-  ): Promise<AuthSession> {
-    const session: AuthSession | null =
-      await this.userRepository.associateGoogleAccount(association);
-    if (!session)
-      throw new ConflictException({
-        code: ErrorCode.USER_GOOGLE_ACCOUNT_CONFLICT,
-        message:
-          'Le compte a changé ou possède déjà une identité Google. Recommencez ou contactez l’assistance Cityborn.',
-      });
-    if (!association.isVerified) {
-      await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
-        association.userId,
-      );
-      await this.userRepository.deletePasswordResetTokensByUserId(
-        association.userId,
-      );
-    }
-    return session;
-  }
 
   async createUser(data: CreateUserData): Promise<User> {
     return this.userRepository.create(data);
@@ -196,14 +155,12 @@ export class UserService {
   }
 
   @Transactional()
-  async updatePassword(update: PasswordUpdate): Promise<AuthVersion> {
-    const updated: boolean = await this.userRepository.updatePassword(update);
-    if (!updated)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT,
-        message: 'Current credentials are no longer valid',
-      });
-    return this.userRepository.incrementAuthVersion(update.userId);
+  async updatePassword(
+    userId: UserId,
+    passwordHash: string,
+  ): Promise<AuthVersion> {
+    await this.userRepository.updatePassword(userId, passwordHash);
+    return this.userRepository.incrementAuthVersion(userId);
   }
 
   async validateIdentifiers(username: Username, email: string): Promise<void> {

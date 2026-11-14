@@ -33,7 +33,6 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
   isVerified Boolean   @default(false)
-  googleSubject String? @unique
   appleId    String?
 
   tokens      EmailVerificationToken[]

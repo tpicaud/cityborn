@@ -93,28 +93,3 @@ export type ResetPassword = z.infer<typeof ResetPasswordSchema>;
 export type PasswordResetRequestResponse = z.infer<
   typeof PasswordResetRequestResponseSchema
 >;
-
-export const RequestGoogleEmailSchema = SignInWithGoogleSchema.extend({
-  accountEmail: z.string().trim().email().optional(),
-});
-
-export type RequestGoogleEmail = z.infer<typeof RequestGoogleEmailSchema>;
-
-export const GoogleEmailChallengeSchema = z.object({
-  challengeId: z.string().min(1),
-  email: z.string().email(),
-  expiresInSeconds: z.number().int().positive(),
-});
-
-export const ConfirmGoogleEmailSchema = z.object({
-  challengeId: z.string().min(1).max(128),
-  code: z.string().regex(/^\d{6}$/, 'Saisissez le code à six chiffres'),
-});
-
-export const ResendGoogleEmailSchema = ConfirmGoogleEmailSchema.pick({
-  challengeId: true,
-});
-
-export type GoogleEmailChallenge = z.infer<typeof GoogleEmailChallengeSchema>;
-export type ConfirmGoogleEmail = z.infer<typeof ConfirmGoogleEmailSchema>;
-export type ResendGoogleEmail = z.infer<typeof ResendGoogleEmailSchema>;
