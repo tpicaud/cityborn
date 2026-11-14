@@ -168,7 +168,10 @@ describe('UserService.updateEmail', () => {
       buildUserService();
     const user: User = buildUser({ isVerified: false });
     userRepository.findByEmail.mockResolvedValue(
-      buildUser({ email: 'other@cityborn.test' }),
+      buildUser({
+        id: '00000000-0000-4000-8000-000000000002',
+        email: 'Other@Cityborn.test',
+      }),
     );
 
     await expect(
@@ -188,6 +191,28 @@ describe('UserService.updateEmail', () => {
       userService.updateEmail({ user, email: user.email }),
     ).resolves.toBe(user);
     expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('keeps the stored address and existing links for a case-only change', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    userRepository.findByEmail.mockResolvedValue(user);
+
+    await expect(
+      userService.updateEmail({ user, email: user.email.toUpperCase() }),
+    ).resolves.toBe(user);
+
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+    expect(
+      emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+    ).not.toHaveBeenCalled();
+    expect(
+      userRepository.deletePasswordResetTokensByUserId,
+    ).not.toHaveBeenCalled();
   });
 
   it('persists the new address and invalidates verification and reset links', async () => {
@@ -281,12 +306,12 @@ describe('UserService.validateIdentifiers', () => {
     });
   });
 
-  it('rejects an existing email', async () => {
+  it('rejects an existing email despite a different casing', async () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =
       buildUserService();
     userRepository.findByIdentifiers.mockResolvedValue({
       username: username('other'),
-      email: 'alice@cityborn.test',
+      email: 'Alice@Cityborn.test',
     });
 
     await expect(

@@ -31,11 +31,12 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('create', () => {
-    it('enforces the unique email constraint', async () => {
+    it('enforces email uniqueness independently of casing', async () => {
       const firstUser: User = buildUser();
       const duplicateUser: User = buildUser({
         id: '00000000-0000-4000-8000-000000000002',
         username: 'guest',
+        email: firstUser.email.toUpperCase(),
       });
       const firstData: CreateUserData = {
         email: firstUser.email,
@@ -52,6 +53,34 @@ describe('PrismaUserRepository', () => {
       await expect(userRepository.create(duplicateData)).rejects.toMatchObject({
         code: 'P2002',
       });
+    });
+
+    it('allows only one concurrent creation for case variants of an email', async () => {
+      const first: User = buildUser();
+      const second: User = buildUser({
+        username: 'other',
+        email: first.email.toUpperCase(),
+      });
+
+      const results: PromiseSettledResult<User>[] = await Promise.allSettled(
+        [first, second].map((user: User) =>
+          userRepository.create({
+            email: user.email,
+            username: user.username,
+            type: user.type,
+          }),
+        ),
+      );
+
+      expect(
+        results.filter((result) => result.status === 'fulfilled'),
+      ).toHaveLength(1);
+      expect(results.filter((result) => result.status === 'rejected')).toEqual([
+        expect.objectContaining({
+          reason: expect.objectContaining({ code: 'P2002' }),
+        }),
+      ]);
+      expect(await infrastructure.prisma.user.count()).toBe(1);
     });
   });
 
@@ -113,8 +142,11 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findCredentialsByIdentifier', () => {
-    it('finds persisted credentials by email', async () => {
-      const userData: User = buildUser({ isVerified: false });
+    it('finds persisted credentials despite email casing', async () => {
+      const userData: User = buildUser({
+        isVerified: false,
+        email: 'Host@Cityborn.test',
+      });
       const user: User = await userRepository.create({
         email: userData.email,
         username: userData.username,
@@ -132,6 +164,7 @@ describe('PrismaUserRepository', () => {
         },
         passwordHash: 'hashed-password',
       });
+      expect(credentials?.authSession.user.email).toBe('Host@Cityborn.test');
     });
 
     it('finds persisted credentials by username', async () => {
@@ -154,6 +187,26 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findByIdentifier', () => {
+    it('finds the email owner despite casing without changing username matching', async () => {
+      const userData: User = buildUser({ email: 'Host@Cityborn.test' });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const byEmail: User | null =
+        await userRepository.findByIdentifier('HOST@CITYBORN.TEST');
+      const byChangedUsername: User | null =
+        await userRepository.findByIdentifier('HOST');
+
+      expect(byEmail).toMatchObject({
+        id: user.id,
+        email: 'Host@Cityborn.test',
+      });
+      expect(byChangedUsername).toBeNull();
+    });
+
     it('finds a user by username', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
@@ -182,7 +235,7 @@ describe('PrismaUserRepository', () => {
       });
 
       const byEmail: User | null =
-        await userRepository.findByEmail('host@cityborn.test');
+        await userRepository.findByEmail('HOST@CITYBORN.TEST');
       const byUsername: User | null = await userRepository.findByEmail('host');
 
       expect(byEmail).toMatchObject({ id: user.id });
@@ -208,7 +261,7 @@ describe('PrismaUserRepository', () => {
       const byEmail: Pick<User, 'username' | 'email'> | null =
         await userRepository.findByIdentifiers(
           unusedUser.username,
-          'host@cityborn.test',
+          'HOST@CITYBORN.TEST',
         );
 
       expect(byUsername).toEqual({
@@ -279,6 +332,71 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('rejects an address owned by another user regardless of casing', async () => {
+      const firstData: User = buildUser({ email: 'Host@Cityborn.test' });
+      const secondData: User = buildUser({
+        username: 'other',
+        email: 'other@cityborn.test',
+      });
+      await userRepository.create({
+        email: firstData.email,
+        username: firstData.username,
+        type: 'email',
+      });
+      const second: User = await userRepository.create({
+        email: secondData.email,
+        username: secondData.username,
+        type: 'email',
+      });
+
+      await expect(
+        userRepository.updateEmail({
+          userId: second.id,
+          email: 'HOST@CITYBORN.TEST',
+        }),
+      ).rejects.toMatchObject({ code: 'P2002' });
+
+      expect(await userRepository.findById(second.id)).toMatchObject({
+        email: 'other@cityborn.test',
+      });
+    });
+
+    it('allows only one concurrent address update to case variants of an email', async () => {
+      const users: User[] = await Promise.all(
+        [
+          buildUser(),
+          buildUser({ username: 'other', email: 'other@cityborn.test' }),
+        ].map((user: User) =>
+          userRepository.create({
+            email: user.email,
+            username: user.username,
+            type: 'email',
+          }),
+        ),
+      );
+
+      const results: PromiseSettledResult<User | null>[] =
+        await Promise.allSettled(
+          users.map((user: User, index: number) =>
+            userRepository.updateEmail({
+              userId: user.id,
+              email: index === 0 ? 'New@Cityborn.test' : 'NEW@CITYBORN.TEST',
+            }),
+          ),
+        );
+
+      expect(
+        results.filter((result) => result.status === 'fulfilled'),
+      ).toHaveLength(1);
+      expect(results.filter((result) => result.status === 'rejected')).toEqual([
+        expect.objectContaining({
+          reason: expect.objectContaining({ code: 'P2002' }),
+        }),
+      ]);
+    });
+  });
+
   describe('findCredentialsByEmail', () => {
     it.each(['ali_e@example.com', 'a%lice@example.com'])(
       'does not interpret pattern characters in %s as email wildcards',
@@ -342,36 +460,6 @@ describe('PrismaUserRepository', () => {
         passwordHash: 'hash',
         authSession: { user: { email: 'Alice@Example.com' } },
       });
-    });
-
-    it('retains exact matches and refuses an ambiguous case-insensitive fallback', async () => {
-      const first: User = buildUser({ email: 'Alice@Example.com' });
-      const second: User = buildUser({
-        email: 'ALICE@EXAMPLE.COM',
-        username: 'second',
-      });
-      await userRepository.create({
-        email: first.email,
-        username: first.username,
-        type: 'email',
-        password: 'first-hash',
-      });
-      await userRepository.create({
-        email: second.email,
-        username: second.username,
-        type: 'email',
-        password: 'second-hash',
-      });
-
-      expect(
-        await userRepository.findCredentialsByEmail('Alice@Example.com'),
-      ).toMatchObject({ passwordHash: 'first-hash' });
-      expect(
-        await userRepository.findCredentialsByEmail('ALICE@EXAMPLE.COM'),
-      ).toMatchObject({ passwordHash: 'second-hash' });
-      expect(
-        await userRepository.findCredentialsByEmail('alice@example.com'),
-      ).toBeNull();
     });
 
     it('matches only the email and retains unverified credentials', async () => {

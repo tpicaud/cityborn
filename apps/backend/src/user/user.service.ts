@@ -132,6 +132,7 @@ export class UserService {
 
     const emailOwner: User | null =
       await this.userRepository.findByEmail(email);
+    if (emailOwner?.id === user.id) return user;
     if (emailOwner)
       throw new ConflictException({
         code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -178,12 +179,10 @@ export class UserService {
       });
     }
 
-    if (existingUser.email === email) {
-      throw new ConflictException({
-        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
-        message: 'Email already taken',
-      });
-    }
+    throw new ConflictException({
+      code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+      message: 'Email already taken',
+    });
   }
 
   @Transactional()
