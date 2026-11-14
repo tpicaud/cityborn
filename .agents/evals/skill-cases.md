@@ -20,12 +20,12 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `manage-issue`, puis `grilling` avant le brouillon |
 | « Explique-moi ce que demande l'issue #400. » | `manage-issue` |
 | « Ouvre une branche d'intégration pour #500 et rattaches-y #501 et #502. » | `manage-issue`, sans `deliver-issue` |
-| « Développe-moi l'issue #123. » | `deliver-issue`, puis `execute-ui-scenarios` en dernière étape si un parcours est jouable en web desktop |
-| « Développe #501. », sous-issue de #500 sans PR d'intégration | `deliver-issue`, `manage-issue` pour ouvrir l'intégration de #500, puis `execute-ui-scenarios` |
+| « Développe-moi l'issue #123. » | `deliver-issue`, puis `execute-ui-scenarios` en dernière étape si un parcours Web est jouable |
+| « Développe #501. », sous-issue de #500 sans PR d'intégration | `deliver-issue`, `manage-issue` pour ouvrir l'intégration de #500, puis `execute-ui-scenarios` si un parcours Web est jouable |
 | « Fais la recette web de la PR #300 avec les scénarios de sa description. » | `execute-ui-scenarios`, sans `deliver-issue` |
 | « Fais la recette desktop du back-office avec ces scénarios. » | `execute-ui-scenarios`, sans `deliver-issue` |
 | « Rejoue dans ce checkout les scénarios fournis. » | `execute-ui-scenarios`, sans `deliver-issue` ni `manage-issue` |
-| « Livre une modification mobile. » | `deliver-issue`, sans `execute-ui-scenarios` : aucun parcours web desktop |
+| « Livre une modification mobile. » | `deliver-issue`, sans `execute-ui-scenarios` : aucun parcours Web |
 | « Explique-moi les scénarios de recette de cette PR sans les exécuter. » | Pas de `execute-ui-scenarios` |
 | « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
 | « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |
