@@ -17,8 +17,9 @@ Terminé quand chaque référence de l'issue est vérifiée dans le repo et que 
 ## Développer
 
 1. Charger les skills de conventions des périmètres touchés.
-2. Implémenter le périmètre demandé, avec ses tests.
-3. Rédiger et actualiser les scénarios de « Recette » selon l'issue et le diff.
+2. Si l'issue lie des maquettes, appliquer `.agents/skills/deliver-issue/references/mockups.md` du développement à la livraison.
+3. Implémenter le périmètre demandé, avec ses tests.
+4. Rédiger et actualiser les scénarios de « Recette » selon l'issue et le diff.
 
 ## Vérifier
 
