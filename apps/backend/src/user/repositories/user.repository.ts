@@ -8,16 +8,26 @@ export type UserCredentials = {
   passwordHash: string | null;
 };
 
+export type IdentityProvider = Exclude<AccountType, 'email'>;
+
+export type IdentityProviderAccount = {
+  provider: IdentityProvider;
+  providerUserId: string;
+};
+
+export type IdentityProviderLink = IdentityProviderAccount & {
+  userId: UserId;
+};
+
 export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   Partial<Pick<User, 'isVerified'>> & {
     password?: string;
-    appleId?: string;
+    identityProviderAccount?: IdentityProviderAccount;
   };
 
 export type UnverifiedAccountReclaim = {
   userId: UserId;
-  type: Exclude<AccountType, 'email'>;
-  appleId?: string;
+  type: IdentityProvider;
 };
 
 export interface UserRepository {
@@ -33,7 +43,10 @@ export interface UserRepository {
     identifier: string,
   ): Promise<UserCredentials | null>;
   existsByUsername(username: string): Promise<boolean>;
-  findByAppleId(appleUserId: string): Promise<User | null>;
+  findByIdentityProviderAccount(
+    account: IdentityProviderAccount,
+  ): Promise<User | null>;
+  linkIdentityProviderAccount(link: IdentityProviderLink): Promise<User | null>;
   findByIdentifiers(
     username: Username,
     email: string,

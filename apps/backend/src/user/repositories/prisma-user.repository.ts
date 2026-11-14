@@ -12,10 +12,25 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
+  IdentityProvider,
+  IdentityProviderAccount,
+  IdentityProviderLink,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
 } from './user.repository';
+
+function identityProviderIdField({
+  provider,
+  providerUserId,
+}: {
+  provider: IdentityProvider;
+  providerUserId: string | null;
+}): { googleId: string | null } | { appleId: string | null } {
+  return provider === 'google'
+    ? { googleId: providerUserId }
+    : { appleId: providerUserId };
+}
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -23,8 +38,17 @@ export class PrismaUserRepository implements UserRepository {
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
 
-  async create(data: CreateUserData): Promise<User> {
-    const user = await this.txHost.tx.user.create({ data });
+  async create({
+    identityProviderAccount,
+    ...data
+  }: CreateUserData): Promise<User> {
+    const user: PrismaUser = await this.txHost.tx.user.create({
+      data: {
+        ...data,
+        ...(identityProviderAccount &&
+          identityProviderIdField(identityProviderAccount)),
+      },
+    });
     return UserMapper.toUser(user);
   }
 
@@ -96,11 +120,29 @@ export class PrismaUserRepository implements UserRepository {
     return user !== null;
   }
 
-  async findByAppleId(appleUserId: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
-      where: { appleId: appleUserId },
+  async findByIdentityProviderAccount(
+    account: IdentityProviderAccount,
+  ): Promise<User | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
+      where: identityProviderIdField(account),
     });
     return user ? UserMapper.toUser(user) : null;
+  }
+
+  async linkIdentityProviderAccount({
+    userId,
+    provider,
+    providerUserId,
+  }: IdentityProviderLink): Promise<User | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: {
+        id: userId,
+        ...identityProviderIdField({ provider, providerUserId: null }),
+      },
+      data: identityProviderIdField({ provider, providerUserId }),
+    });
+    if (updated.count === 0) return null;
+    return this.findById(userId);
   }
 
   async findByIdentifiers(
@@ -180,7 +222,6 @@ export class PrismaUserRepository implements UserRepository {
   async reclaimUnverifiedAccount({
     userId,
     type,
-    appleId,
   }: UnverifiedAccountReclaim): Promise<AuthSession> {
     const user: PrismaUser = await this.txHost.tx.user.update({
       where: { id: userId },
@@ -188,7 +229,6 @@ export class PrismaUserRepository implements UserRepository {
         password: null,
         isVerified: true,
         type,
-        appleId,
         authVersion: { increment: 1 },
       },
     });

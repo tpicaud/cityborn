@@ -16,6 +16,7 @@ import {
   VerifyEmailData,
 } from '@cityborn/api';
 import {
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -31,15 +32,16 @@ import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type {
+  IdentityProviderAccount,
   UnverifiedAccountReclaim,
   UserCredentials,
 } from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
-  type AppleIdentity,
   type GoogleIdentity,
   IdentityTokenService,
+  type ProviderIdentity,
 } from '../identity-providers/identity-token.service';
 import { hashPassword, verifyPassword } from '../password-hashing';
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
@@ -49,6 +51,11 @@ const verificationEmailCooldown = 3 * 60 * 1000;
 type IdentityProviderSessionRequest = {
   user: User;
 } & Omit<UnverifiedAccountReclaim, 'userId'>;
+
+type IdentityProviderUser = {
+  user: User;
+  isNewUser: boolean;
+};
 
 @Injectable()
 export class AuthService {
@@ -147,53 +154,10 @@ export class AuthService {
     dto: SignInWithGoogle,
     visitorId?: string,
   ): Promise<AuthResponse> {
-    const { idToken } = dto;
+    const { name, ...identity }: GoogleIdentity =
+      await this.identityTokenService.verifyGoogleIdToken(dto.idToken);
 
-    const { email, name }: GoogleIdentity =
-      await this.identityTokenService.verifyGoogleIdToken(idToken);
-
-    let user = await this.userService.findByIdentifier(email);
-
-    if (user && visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'user_signed_in',
-          visitorId,
-          properties: {
-            method: 'google',
-          },
-        }),
-      );
-    }
-
-    if (!user) {
-      const uniqueUsername = await this.generateUniqueUsername(name);
-
-      user = await this.userService.createUser({
-        email,
-        username: uniqueUsername,
-        type: 'google',
-        isVerified: true,
-      });
-
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'user_signed_up',
-            visitorId,
-            properties: {
-              method: 'google',
-            },
-          }),
-        );
-      }
-    }
-
-    const authSession: AuthSession = await this.openIdentityProviderSession({
-      user,
-      type: 'google',
-    });
-    return this.createAuthResponse(authSession);
+    return this.signInWithIdentityProvider({ identity, name, visitorId });
   }
 
   async signInWithApple(
@@ -202,65 +166,14 @@ export class AuthService {
   ): Promise<AuthResponse> {
     const { identity_token, details } = dto;
 
-    const { appleUserId, verifiedEmail }: AppleIdentity =
+    const identity: ProviderIdentity =
       await this.identityTokenService.verifyAppleIdToken(identity_token);
 
-    let user = await this.userService.findByAppleId(appleUserId);
-
-    if (user && visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'user_signed_in',
-          visitorId,
-          properties: {
-            method: 'apple',
-          },
-        }),
-      );
-    }
-
-    if (!user) {
-      if (!details || !verifiedEmail) {
-        throw new UnauthorizedException({
-          code: ErrorCode.USER_INVALID_CREDENTIALS,
-          message: `Invalid credentials`,
-        });
-      }
-
-      user = await this.userService.findByIdentifier(verifiedEmail);
-      if (!user) {
-        const uniqueUsername = await this.generateUniqueUsername(
-          `${details.given_name}${details.family_name}`,
-        );
-
-        user = await this.userService.createUser({
-          email: verifiedEmail,
-          username: uniqueUsername,
-          type: 'apple',
-          appleId: appleUserId,
-          isVerified: true,
-        });
-
-        if (visitorId) {
-          await this.eventService.trackEvent(
-            createEvent({
-              name: 'user_signed_up',
-              visitorId,
-              properties: {
-                method: 'apple',
-              },
-            }),
-          );
-        }
-      }
-    }
-
-    const authSession: AuthSession = await this.openIdentityProviderSession({
-      user,
-      type: 'apple',
-      appleId: appleUserId,
+    return this.signInWithIdentityProvider({
+      identity,
+      name: details && `${details.given_name}${details.family_name}`,
+      visitorId,
     });
-    return this.createAuthResponse(authSession);
   }
 
   async refresh(authSession: AuthSession): Promise<AuthResponse> {
@@ -396,6 +309,94 @@ export class AuthService {
     const authTokenPair: AuthTokenPair =
       await this.authTokenService.issueTokenPair(authSession);
     return { ...authTokenPair, user: authSession.user };
+  }
+
+  private async signInWithIdentityProvider({
+    identity,
+    name,
+    visitorId,
+  }: {
+    identity: ProviderIdentity;
+    name: string | undefined;
+    visitorId: string | undefined;
+  }): Promise<AuthResponse> {
+    const { user, isNewUser }: IdentityProviderUser =
+      await this.resolveIdentityProviderUser({ identity, name });
+
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: isNewUser ? 'user_signed_up' : 'user_signed_in',
+          visitorId,
+          properties: {
+            method: identity.provider,
+          },
+        }),
+      );
+    }
+
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: identity.provider,
+    });
+    return this.createAuthResponse(authSession);
+  }
+
+  private async resolveIdentityProviderUser({
+    identity,
+    name,
+  }: {
+    identity: ProviderIdentity;
+    name: string | undefined;
+  }): Promise<IdentityProviderUser> {
+    const {
+      provider,
+      providerUserId,
+      verifiedEmail,
+      isEmailAuthoritative,
+    }: ProviderIdentity = identity;
+    const account: IdentityProviderAccount = { provider, providerUserId };
+
+    const linkedUser: User | null =
+      await this.userService.findByIdentityProviderAccount(account);
+    if (linkedUser) return { user: linkedUser, isNewUser: false };
+
+    if (!verifiedEmail)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'Invalid credentials',
+      });
+
+    const emailOwner: User | null =
+      await this.userService.findByEmail(verifiedEmail);
+    if (emailOwner) {
+      const canLink: boolean =
+        isEmailAuthoritative || emailOwner.type === provider;
+      const user: User | null = canLink
+        ? await this.userService.linkIdentityProviderAccount({
+            userId: emailOwner.id,
+            ...account,
+          })
+        : null;
+      if (!user)
+        throw new ConflictException({
+          code: ErrorCode.USER_IDENTITY_PROVIDER_LINK_REFUSED,
+          message: 'An account already exists with this email',
+        });
+      return { user, isNewUser: false };
+    }
+
+    const username: Username = await this.generateUniqueUsername(
+      name?.trim() || verifiedEmail.slice(0, verifiedEmail.lastIndexOf('@')),
+    );
+    const user: User = await this.userService.createUser({
+      email: verifiedEmail,
+      username,
+      type: provider,
+      isVerified: true,
+      identityProviderAccount: account,
+    });
+    return { user, isNewUser: true };
   }
 
   private async openIdentityProviderSession({

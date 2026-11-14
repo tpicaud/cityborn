@@ -241,20 +241,116 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('findByAppleId', () => {
-    it('finds an account by Apple identifier', async () => {
+  describe('findByIdentityProviderAccount', () => {
+    it('finds an account by its provider identifier only', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
         email: userData.email,
         username: userData.username,
-        type: userData.type,
-        appleId: 'apple-user-123',
+        type: 'google',
+        identityProviderAccount: {
+          provider: 'google',
+          providerUserId: 'provider-user-1',
+        },
       });
 
-      const found: User | null =
-        await userRepository.findByAppleId('apple-user-123');
+      const byGoogleId: User | null =
+        await userRepository.findByIdentityProviderAccount({
+          provider: 'google',
+          providerUserId: 'provider-user-1',
+        });
+      const byAppleId: User | null =
+        await userRepository.findByIdentityProviderAccount({
+          provider: 'apple',
+          providerUserId: 'provider-user-1',
+        });
 
-      expect(found).toMatchObject({ id: user.id, email: 'host@cityborn.test' });
+      expect(byGoogleId).toMatchObject({ id: user.id });
+      expect(byAppleId).toBeNull();
+    });
+  });
+
+  describe('linkIdentityProviderAccount', () => {
+    it('links a provider identifier to an account without one', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'email',
+      });
+
+      const linkedUser: User | null =
+        await userRepository.linkIdentityProviderAccount({
+          userId: user.id,
+          provider: 'apple',
+          providerUserId: 'apple-user-1',
+        });
+
+      expect(linkedUser).toMatchObject({ id: user.id, type: 'email' });
+      expect(
+        await userRepository.findByIdentityProviderAccount({
+          provider: 'apple',
+          providerUserId: 'apple-user-1',
+        }),
+      ).toMatchObject({ id: user.id });
+    });
+
+    it('keeps the identifier an account already carries', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'google',
+        identityProviderAccount: {
+          provider: 'google',
+          providerUserId: 'google-user-1',
+        },
+      });
+
+      const linkedUser: User | null =
+        await userRepository.linkIdentityProviderAccount({
+          userId: user.id,
+          provider: 'google',
+          providerUserId: 'google-user-2',
+        });
+
+      expect(linkedUser).toBeNull();
+      expect(
+        await userRepository.findByIdentityProviderAccount({
+          provider: 'google',
+          providerUserId: 'google-user-1',
+        }),
+      ).toMatchObject({ id: user.id });
+    });
+
+    it('enforces the unique provider identifier constraint', async () => {
+      const firstUser: User = buildUser();
+      const secondUser: User = buildUser({
+        username: 'guest',
+        email: 'guest@cityborn.test',
+      });
+      await userRepository.create({
+        email: firstUser.email,
+        username: firstUser.username,
+        type: 'apple',
+        identityProviderAccount: {
+          provider: 'apple',
+          providerUserId: 'apple-user-1',
+        },
+      });
+      const user: User = await userRepository.create({
+        email: secondUser.email,
+        username: secondUser.username,
+        type: 'email',
+      });
+
+      await expect(
+        userRepository.linkIdentityProviderAccount({
+          userId: user.id,
+          provider: 'apple',
+          providerUserId: 'apple-user-1',
+        }),
+      ).rejects.toMatchObject({ code: 'P2002' });
     });
   });
 
@@ -497,7 +593,6 @@ describe('PrismaUserRepository', () => {
         await userRepository.reclaimUnverifiedAccount({
           userId: user.id,
           type: 'apple',
-          appleId: 'apple-user-1',
         });
       const credentials: UserCredentials | null =
         await userRepository.findCredentialsById(user.id);
@@ -507,9 +602,6 @@ describe('PrismaUserRepository', () => {
         authVersion: 1,
       });
       expect(credentials?.passwordHash).toBeNull();
-      expect(await userRepository.findByAppleId('apple-user-1')).toMatchObject({
-        id: user.id,
-      });
     });
   });
 
