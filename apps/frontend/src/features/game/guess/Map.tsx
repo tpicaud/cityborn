@@ -1,4 +1,3 @@
-/// <reference types="@types/google.maps" />
 'use client';
 
 import {
