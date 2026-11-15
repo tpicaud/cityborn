@@ -72,7 +72,7 @@ export const SignUpForm = () => {
         <div className="flex-1 h-px bg-black rounded-full"></div>
       </div>
 
-      <SignInWithGoogleButton />
+      <SignInWithGoogleButton text="signup_with" />
     </Box>
   );
 };
