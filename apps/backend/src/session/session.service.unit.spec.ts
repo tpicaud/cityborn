@@ -17,6 +17,7 @@ import {
   defaultGuess,
   ErrorCode,
   PlayerIdSchema,
+  RoundStatus,
   type Session,
   SessionIdSchema,
   SessionMode,
@@ -41,6 +42,7 @@ const sessionId: (value: string) => SessionId = (value: string) =>
 
 function buildSessionService(session: Session | null) {
   const redisService: DeepMocked<RedisService> = createMock<RedisService>();
+  redisService.get.mockResolvedValue(null);
   redisService.getJSON.mockResolvedValue(session);
   redisService.setJSON.mockImplementation(async (_key, storedSession) => {
     redisService.getJSON.mockResolvedValue(storedSession);
@@ -182,6 +184,65 @@ describe('SessionService lobby operations', () => {
       const result: Session = await sessionService.getById(session.id);
 
       expect(result.currentGame).toBe(hiddenGame);
+    });
+
+    it('projects the existing deadline with a fresh server time without persisting timing', async () => {
+      const game: Game = buildGame({
+        state: buildGameState({ currentRound: buildRound() }),
+      });
+      const session: Session = buildSession({ currentGame: game });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      redisService.get.mockResolvedValue('1030000');
+      const now: jest.SpyInstance<number, []> = jest
+        .spyOn(Date, 'now')
+        .mockReturnValue(1_010_000);
+
+      const first: Session = await sessionService.getById(session.id);
+      now.mockReturnValue(1_020_000);
+      const refreshed: Session = await sessionService.getById(session.id);
+
+      expect(first.currentGame?.state.currentRound).toEqual({
+        status: RoundStatus.GUESSING,
+        guessObjectId: 'guess-object-1',
+        endsAt: 1_028_000,
+        serverTime: 1_010_000,
+      });
+      expect(refreshed.currentGame?.state.currentRound).toEqual({
+        ...first.currentGame?.state.currentRound,
+        serverTime: 1_020_000,
+      });
+      expect(game.state.currentRound?.endsAt).toBeUndefined();
+      expect(game.state.currentRound?.serverTime).toBeUndefined();
+      expect(redisService.get).toHaveBeenCalledWith(
+        `session:${session.id}:round-deadline`,
+      );
+      expect(redisService.set).not.toHaveBeenCalled();
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
+    it('does not project a previous deadline onto round results', async () => {
+      const game: Game = buildGame({
+        state: buildGameState({
+          currentRound: buildRound({ status: RoundStatus.SHOWING_RESULTS }),
+        }),
+      });
+      const session: Session = buildSession({ currentGame: game });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      redisService.get.mockResolvedValue('1030000');
+
+      const result: Session = await sessionService.getById(session.id);
+
+      expect(result.currentGame?.state.currentRound).toEqual({
+        status: RoundStatus.SHOWING_RESULTS,
+        guessObjectId: 'guess-object-1',
+      });
+      expect(redisService.get).not.toHaveBeenCalled();
     });
 
     it('rejects a missing session', async () => {
@@ -422,7 +483,10 @@ describe('SessionService game operations', () => {
 
     it('sets the round deadline after the countdown, the timer and the network tolerance', async () => {
       const session: Session = buildSession();
-      const game: Game = buildGame({ config: buildGameConfig({ timer: 25 }) });
+      const game: Game = buildGame({
+        config: buildGameConfig({ timer: 25 }),
+        state: buildGameState({ currentRound: buildRound() }),
+      });
       const {
         sessionService,
         redisService,
@@ -430,15 +494,26 @@ describe('SessionService game operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.createGame.mockResolvedValue(game);
       gameService.beginGame.mockReturnValue(game);
+      redisService.set.mockImplementation(async (_key, value) => {
+        redisService.get.mockResolvedValue(value);
+      });
       jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
 
-      await sessionService.startGame(playerId('host'), session.id);
+      const result: Session = await sessionService.startGame(
+        playerId('host'),
+        session.id,
+      );
 
       expect(redisService.set).toHaveBeenCalledWith(
         `session:${session.id}:round-deadline`,
         '1030000',
         600,
       );
+      expect(result.currentGame?.state.currentRound).toMatchObject({
+        endsAt: 1_028_000,
+        serverTime: 1_000_000,
+      });
+      expect(game.state.currentRound?.endsAt).toBeUndefined();
     });
 
     it('rejects starting a second game', async () => {
@@ -648,7 +723,10 @@ describe('SessionService game operations', () => {
     });
 
     it('sets the deadline of the next round', async () => {
-      const game: Game = buildGame({ config: buildGameConfig({ timer: 40 }) });
+      const game: Game = buildGame({
+        config: buildGameConfig({ timer: 40 }),
+        state: buildGameState({ currentRound: buildRound() }),
+      });
       const session: Session = buildSession({ currentGame: game });
       const {
         sessionService,
@@ -659,15 +737,27 @@ describe('SessionService game operations', () => {
         game,
         isGameOver: false,
       });
+      redisService.get.mockResolvedValue('1000000');
+      redisService.set.mockImplementation(async (_key, value) => {
+        redisService.get.mockResolvedValue(value);
+      });
       jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
 
-      await sessionService.handleNextRound(playerId('host'), session.id);
+      const result: Session = await sessionService.handleNextRound(
+        playerId('host'),
+        session.id,
+      );
 
       expect(redisService.set).toHaveBeenCalledWith(
         `session:${session.id}:round-deadline`,
         '1045000',
         600,
       );
+      expect(result.currentGame?.state.currentRound).toMatchObject({
+        endsAt: 1_043_000,
+        serverTime: 1_000_000,
+      });
+      expect(game.state.currentRound?.endsAt).toBeUndefined();
     });
   });
 

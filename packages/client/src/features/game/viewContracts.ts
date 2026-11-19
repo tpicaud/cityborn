@@ -3,7 +3,9 @@ import type { Coord, Game, PlayerId } from '@cityborn/api';
 export type GameComponentProps = {
   localPlayerID: PlayerId | undefined;
   isHost: boolean;
+  isConnectionReady?: boolean;
   game: Game;
+  gameReceivedAt?: number;
   handleGuess: (coordinates: Coord | undefined) => Promise<void>;
   handleNextRound: () => Promise<void>;
   handleEndGame: () => Promise<void>;

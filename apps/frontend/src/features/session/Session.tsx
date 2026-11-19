@@ -36,8 +36,10 @@ export default function Session({ sessionID }: SessionProps) {
         <Game
           localPlayerID={sessionController.localPlayerID}
           isHost={sessionController.isHost}
+          isConnectionReady={sessionController.connectionStatus === 'connected'}
           session={sessionController.session}
           game={sessionController.session.currentGame}
+          gameReceivedAt={sessionController.sessionReceivedAt}
           handleGuess={sessionController.guess}
           handleNextRound={sessionController.nextRound}
           handleEndGame={sessionController.endGame}

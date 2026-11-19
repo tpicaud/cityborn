@@ -101,6 +101,8 @@ export const RoundSchema = z.object({
   status: RoundStatusSchema,
   guessObjectId: GuessObjectIdSchema,
   playersGuesses: PlayerGuessesSchema.optional(),
+  endsAt: z.number().finite().optional(),
+  serverTime: z.number().finite().optional(),
 });
 
 export const RoundGuessObjectSchema = FullGuessObjectSchema.partial({

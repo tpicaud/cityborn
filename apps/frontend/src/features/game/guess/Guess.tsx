@@ -15,18 +15,25 @@ const GameMap = dynamic(() => import('@/features/game/guess/Map'), {
   ssr: false,
 });
 
-type GuessProps = Pick<GameComponentProps, 'game' | 'handleGuess'> & {
+type GuessProps = Pick<
+  GameComponentProps,
+  'game' | 'gameReceivedAt' | 'isConnectionReady' | 'handleGuess'
+> & {
   localPlayerID: PlayerId;
 };
 
 export default function Guess({
   localPlayerID,
   game,
+  gameReceivedAt,
+  isConnectionReady,
   handleGuess,
 }: GuessProps) {
   const gameRound: GameRound = useGameRound({
     game,
+    gameReceivedAt,
     localPlayerID,
+    isConnectionReady,
     handleGuess,
   });
 
@@ -39,18 +46,18 @@ export default function Guess({
         />
       </div>
 
-      {gameRound.showCountdown && (
-        <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
+      {gameRound.countdown > 0 && (
+        <RoundCountdown count={gameRound.countdown} />
       )}
 
-      {gameRound.showOverlay && (
+      {gameRound.countdown === 0 && (
         <div className="z-10">
           <Overlay
             localPlayerID={localPlayerID}
-            preGuess={gameRound.preGuess}
+            endsAt={gameRound.endsAt}
+            canGuess={gameRound.canGuess}
             game={game}
-            handleGuess={handleGuess}
-            handleIsTimeUp={gameRound.handleIsTimeUp}
+            submitPreGuess={gameRound.submitPreGuess}
           />
         </div>
       )}

@@ -1,12 +1,10 @@
 import {
-  type Coord,
   type Game,
   type PlayerId,
   type RoundGuessObject,
   RoundStatus,
 } from '@cityborn/api';
 import {
-  canSubmitGuess,
   createGameDisplay,
   createRoundResult,
   currentGuessObject,
@@ -15,7 +13,6 @@ import {
   type RoundGuessOutcome,
   type RoundResult,
 } from '@cityborn/client/game';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -25,11 +22,11 @@ import Timer from './Timer';
 
 type OverlayProps = {
   localPlayerID: PlayerId;
-  preGuess: Coord | undefined;
+  endsAt: number;
+  canGuess: boolean;
   game: Game;
   isHost: boolean;
-  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
-  handleIsTimeUp: () => void;
+  submitPreGuess: () => Promise<void>;
   handleNextRound: () => Promise<void>;
 };
 
@@ -100,14 +97,13 @@ function GuessResult({ roundResult }: { roundResult: RoundResult }) {
 
 export default function Overlay({
   localPlayerID,
-  preGuess,
+  endsAt,
+  canGuess,
   game,
   isHost,
-  handleGuess,
-  handleIsTimeUp,
+  submitPreGuess,
   handleNextRound,
 }: OverlayProps) {
-  const [hasGuessed, setHasGuessed] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
   const guessObject: RoundGuessObject | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
@@ -117,6 +113,8 @@ export default function Overlay({
   const gameDisplay: GameDisplay = createGameDisplay(game, localPlayerID);
   const currentRound = game.state.currentRound;
   const isGuessing: boolean = currentRound?.status === RoundStatus.GUESSING;
+  const hasGuessed: boolean =
+    currentRound?.playersGuesses?.[localPlayerID] !== undefined;
   const guessedPlayerCount: number = Object.keys(
     currentRound?.playersGuesses ?? {},
   ).length;
@@ -136,9 +134,10 @@ export default function Overlay({
         <View className="absolute left-0 w-40">
           {isGuessing && (
             <Timer
+              key={endsAt}
               totalTimeInSeconds={game.config.timer}
               endMessage="Terminé !"
-              onTimeUp={handleIsTimeUp}
+              endsAt={endsAt}
             />
           )}
         </View>
@@ -158,12 +157,8 @@ export default function Overlay({
               label={
                 hasGuessed ? `${guessedPlayerCount}/${playerCount}...` : 'GUESS'
               }
-              disabled={!canSubmitGuess(game, localPlayerID, preGuess)}
-              onPress={async () => {
-                if (!preGuess) return;
-                await handleGuess(preGuess);
-                setHasGuessed(true);
-              }}
+              disabled={!canGuess}
+              onPress={submitPreGuess}
             />
           </View>
         )}

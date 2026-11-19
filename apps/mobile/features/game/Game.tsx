@@ -18,7 +18,9 @@ import Results from './Results';
 export const Game = ({
   localPlayerID,
   isHost,
+  isConnectionReady,
   game,
+  gameReceivedAt,
   handleGuess,
   handleNextRound,
   handlePlayAgain,
@@ -60,6 +62,8 @@ export const Game = ({
         <Guess
           localPlayerID={activePlayerID}
           game={game}
+          gameReceivedAt={gameReceivedAt}
+          isConnectionReady={isConnectionReady}
           isHost={isHost}
           handleGuess={handleGuess}
           handleNextRound={handleNextRound}

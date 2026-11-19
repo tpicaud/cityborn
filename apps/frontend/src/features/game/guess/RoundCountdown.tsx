@@ -1,15 +1,8 @@
 'use client';
 
-import {
-  type Countdown,
-  type CountdownOptions,
-  useCountdown,
-} from '@cityborn/client/game';
 import { Backdrop, Typography } from '@mui/material';
 
-export default function RoundCountdown(countdownOptions: CountdownOptions) {
-  const { count }: Countdown = useCountdown(countdownOptions);
-
+export default function RoundCountdown({ count }: { count: number }) {
   return (
     <Backdrop
       open={true}
