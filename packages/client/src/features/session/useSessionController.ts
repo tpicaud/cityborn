@@ -20,7 +20,12 @@ import {
   sessionWsServerEvent,
   UserFacingError,
 } from '@cityborn/api';
-import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  type UseQueryResult,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   type RefObject,
   useCallback,
@@ -48,6 +53,7 @@ import {
   type SessionAdmission,
   type SessionAdmissionDecision,
 } from './admission/sessionAdmission';
+import { sessionAdmissionQueryOptions } from './admission/sessionAdmissionQuery';
 import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
@@ -62,6 +68,7 @@ export type SessionControllerOptions = {
 
 export type SessionController = {
   session: Session | undefined;
+  sessionReceivedAt: number | undefined;
   localPlayerID: PlayerId | undefined;
   isAdmitting: boolean;
   isHost: boolean;
@@ -84,6 +91,11 @@ export type SessionController = {
 
 const kickedFromLobbyMessage: string =
   "L'hôte t'a sorti du lobby. Tu peux revenir avec le code, s'il veut bien de toi.";
+
+type SessionSnapshot = {
+  session: Session;
+  receivedAt: number;
+};
 
 export async function enterSession({
   session,
@@ -124,9 +136,11 @@ export function useSessionController({
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
-  const [session, setSession] = useState<Session>();
+  const [snapshot, setSnapshot] = useState<SessionSnapshot>();
+  const session: Session | undefined = snapshot?.session;
   const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
     useState<boolean>(true);
+  const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
   const [admission, setAdmission] = useState<SessionAdmission>({
     status: 'idle',
   });
@@ -147,7 +161,21 @@ export function useSessionController({
   const joinedPlayer: RefObject<JoinedSessionPlayer | null> =
     useRef<JoinedSessionPlayer | null>(null);
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
-  const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
+  const joinInProgress: RefObject<boolean> = useRef<boolean>(false);
+  const hasSnapshot: boolean = snapshot !== undefined;
+  const {
+    data: fetchedSession,
+    error: fetchSessionError,
+    isFetchedAfterMount,
+  }: UseQueryResult<Session> = useQuery(
+    sessionAdmissionQueryOptions({
+      sessionApi,
+      sessionID,
+      hasSnapshot,
+      admission,
+      automaticPlayerID,
+    }),
+  );
 
   const leaveKickedSession: () => void = useCallback(() => {
     joinedPlayer.current = null;
@@ -188,19 +216,44 @@ export function useSessionController({
   });
 
   useEffect(() => {
-    const loadSession = async (): Promise<void> => {
-      try {
-        setSession(await sessionApi.fetchSession(sessionID));
-      } catch (error: unknown) {
-        reportError(
-          error,
-          'Impossible de charger la partie. Vérifiez votre connexion et réessayez.',
-        );
-        navigation.returnTo('/');
-      }
-    };
-    loadSession();
-  }, [sessionID, sessionApi, navigation, reportError]);
+    if (
+      !isFetchedAfterMount ||
+      joinInProgress.current ||
+      joinedPlayer.current ||
+      admission.status === 'pending' ||
+      returnToHome
+    ) {
+      return;
+    }
+    if (
+      fetchSessionError &&
+      (!hasSnapshot || isSessionEntryRejected(fetchSessionError))
+    ) {
+      reportError(
+        fetchSessionError,
+        'Impossible de charger la partie. Vérifiez votre connexion et réessayez.',
+      );
+      navigation.returnTo('/');
+      return;
+    }
+    if (fetchedSession) {
+      const receivedAt: number = performance.now();
+      setSnapshot((current) =>
+        current?.session === fetchedSession
+          ? current
+          : { session: fetchedSession, receivedAt },
+      );
+    }
+  }, [
+    admission.status,
+    fetchedSession,
+    fetchSessionError,
+    hasSnapshot,
+    isFetchedAfterMount,
+    navigation,
+    reportError,
+    returnToHome,
+  ]);
 
   const gameStatus: GameStatus | undefined = session?.currentGame?.status;
   const userId: UserId | undefined = user?.id;
@@ -213,7 +266,7 @@ export function useSessionController({
   useEffect(
     () =>
       sessionChannel?.on(sessionWsServerEvent.update, (incoming: Session) => {
-        setSession(incoming);
+        setSnapshot({ session: incoming, receivedAt: performance.now() });
       }),
     [sessionChannel],
   );
@@ -234,11 +287,13 @@ export function useSessionController({
 
   const join = useCallback(
     async (playerID: PlayerId) => {
+      if (joinInProgress.current || joinedPlayer.current) return;
       if (!session || !playerID)
         throw new Error(
           'Joining session failed: session or player not initialized',
         );
       joinAttempted.current = true;
+      joinInProgress.current = true;
       setAdmission({ status: 'pending' });
       try {
         const admittedPlayer: JoinedSessionPlayer = await admitSessionPlayer({
@@ -251,6 +306,8 @@ export function useSessionController({
         setAdmission({ status: 'admitted', playerID: admittedPlayer.playerID });
       } catch (error: unknown) {
         setAdmission({ status: 'rejected', error });
+      } finally {
+        joinInProgress.current = false;
       }
     },
     [session, emit, user?.id],
@@ -347,7 +404,13 @@ export function useSessionController({
 
   const endGame = async () => {
     const current = requireGame('Ending game');
-    setSession(withStatus(current, SessionStatus.IN_LOBBY));
+    setSnapshot(
+      (previous) =>
+        previous && {
+          ...previous,
+          session: withStatus(current, SessionStatus.IN_LOBBY),
+        },
+    );
   };
 
   const playAgain = async () => {
@@ -368,6 +431,7 @@ export function useSessionController({
 
   return {
     session,
+    sessionReceivedAt: snapshot?.receivedAt,
     localPlayerID,
     isAdmitting,
     isHost: isHostOf(session, localPlayerID),

@@ -1,15 +1,14 @@
 'use client';
 
 import { roundCountdownInSeconds } from '@cityborn/core';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const roundTimerTickInMilliseconds = 10;
-const countdownTickInMilliseconds = 1000;
-const runningOutThresholdInSeconds = 5;
+const roundTimerTickInMilliseconds: number = 10;
+const runningOutThresholdInSeconds: number = 5;
 
 export type RoundTimerOptions = {
   totalTimeInSeconds: number;
-  onTimeUp: () => void;
+  endsAt: number;
 };
 
 export type RoundTimer = {
@@ -18,6 +17,20 @@ export type RoundTimer = {
   isRunningOut: boolean;
   isTimeUp: boolean;
 };
+
+type RemainingSecondsOptions = {
+  now: number;
+  endsAt: number;
+  durationInSeconds: number;
+};
+
+export function remainingSeconds({
+  now,
+  endsAt,
+  durationInSeconds,
+}: RemainingSecondsOptions): number {
+  return Math.max(0, Math.min(durationInSeconds, (endsAt - now) / 1000));
+}
 
 export function formatTimeLeft(timeLeftInSeconds: number): string {
   const wholeSecondsLeft: number = Math.ceil(timeLeftInSeconds);
@@ -28,68 +41,65 @@ export function formatTimeLeft(timeLeftInSeconds: number): string {
 
 export function useRoundTimer({
   totalTimeInSeconds,
-  onTimeUp,
+  endsAt,
 }: RoundTimerOptions): RoundTimer {
-  const [timeLeftInSeconds, setTimeLeftInSeconds] =
-    useState<number>(totalTimeInSeconds);
-  const onTimeUpRef = useRef<() => void>(onTimeUp);
-  onTimeUpRef.current = onTimeUp;
+  const [now, setNow] = useState<number>(() => performance.now());
+  const timeLeftInSeconds: number = remainingSeconds({
+    now,
+    endsAt,
+    durationInSeconds: totalTimeInSeconds,
+  });
 
   useEffect(() => {
-    const startTime: number = Date.now();
-    setTimeLeftInSeconds(totalTimeInSeconds);
+    const currentTime: number = performance.now();
+    setNow(currentTime);
+    if (currentTime >= endsAt) return;
 
-    const intervalId = setInterval(() => {
-      const elapsedTimeInSeconds: number = (Date.now() - startTime) / 1000;
-      const nextTimeLeftInSeconds: number = Math.max(
-        totalTimeInSeconds - elapsedTimeInSeconds,
-        0,
-      );
-      setTimeLeftInSeconds(nextTimeLeftInSeconds);
-      if (nextTimeLeftInSeconds > 0) return;
-
-      clearInterval(intervalId);
-      onTimeUpRef.current();
+    const intervalId: ReturnType<typeof setInterval> = setInterval(() => {
+      const tickTime: number = performance.now();
+      setNow(tickTime);
+      if (tickTime >= endsAt) clearInterval(intervalId);
     }, roundTimerTickInMilliseconds);
 
     return () => clearInterval(intervalId);
-  }, [totalTimeInSeconds]);
+  }, [endsAt]);
 
   return {
     formattedTimeLeft: formatTimeLeft(timeLeftInSeconds),
-    progressPercentage: (timeLeftInSeconds / totalTimeInSeconds) * 100,
+    progressPercentage:
+      totalTimeInSeconds > 0
+        ? (timeLeftInSeconds / totalTimeInSeconds) * 100
+        : 0,
     isRunningOut: timeLeftInSeconds <= runningOutThresholdInSeconds,
     isTimeUp: timeLeftInSeconds === 0,
   };
 }
 
-export type CountdownOptions = {
-  initialCount?: number;
-  onCountdownEnd: () => void;
-};
-
-export type Countdown = {
-  count: number;
-};
-
-export function useCountdown({
-  initialCount = roundCountdownInSeconds,
-  onCountdownEnd,
-}: CountdownOptions): Countdown {
-  const [count, setCount] = useState<number>(initialCount);
+export function useRoundCountdown(
+  guessingStartsAt: number | undefined,
+): number {
+  const [, setTick] = useState<number>(0);
+  const now: number = performance.now();
 
   useEffect(() => {
-    if (count <= 0) {
-      onCountdownEnd();
-      return;
-    }
+    if (guessingStartsAt === undefined || guessingStartsAt <= now) return;
 
-    const timeoutId = setTimeout(
-      () => setCount((previousCount) => previousCount - 1),
-      countdownTickInMilliseconds,
+    const millisecondsUntilStart: number = guessingStartsAt - now;
+    const millisecondsUntilTick: number = millisecondsUntilStart % 1000 || 1000;
+    const timeoutId: ReturnType<typeof setTimeout> = setTimeout(
+      () => setTick((tick) => tick + 1),
+      millisecondsUntilTick,
     );
     return () => clearTimeout(timeoutId);
-  }, [count, onCountdownEnd]);
+  }, [guessingStartsAt, now]);
 
-  return { count };
+  return guessingStartsAt === undefined
+    ? 0
+    : Math.ceil(
+        remainingSeconds({
+          now,
+          endsAt: guessingStartsAt,
+          durationInSeconds: roundCountdownInSeconds,
+        }),
+      );
 }

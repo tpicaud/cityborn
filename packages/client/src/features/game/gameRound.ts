@@ -1,20 +1,59 @@
-import { type Game, RoundStatus } from '@cityborn/api';
+import { roundCountdownInSeconds } from '@cityborn/core';
 
-export type RoundDisplayState = 'countdown' | 'guessing' | 'results';
-type RoundStatusValue = NonNullable<Game['state']['currentRound']>['status'];
+type RoundTiming = {
+  serverEndsAt: number | undefined;
+  guessingStartsAt: number;
+  endsAt: number;
+};
 
-export function synchronizeRoundDisplayState(
-  roundStatus: RoundStatusValue | undefined,
-): Exclude<RoundDisplayState, 'guessing'> {
-  return roundStatus === RoundStatus.SHOWING_RESULTS ? 'results' : 'countdown';
+type CreateRoundTimingOptions = {
+  serverEndsAt: number | undefined;
+  serverTime: number | undefined;
+  receivedAt: number;
+  totalTimeInSeconds: number;
+};
+
+type SynchronizeRoundTimingOptions = {
+  current: RoundTiming;
+  incoming: RoundTiming;
+  now: number;
+};
+
+export function createRoundTiming({
+  serverEndsAt,
+  serverTime,
+  receivedAt,
+  totalTimeInSeconds,
+}: CreateRoundTimingOptions): RoundTiming {
+  const guessingDuration: number = totalTimeInSeconds * 1000;
+  if (serverEndsAt === undefined || serverTime === undefined) {
+    const guessingStartsAt: number =
+      receivedAt + roundCountdownInSeconds * 1000;
+    return {
+      serverEndsAt: undefined,
+      guessingStartsAt,
+      endsAt: guessingStartsAt + guessingDuration,
+    };
+  }
+
+  const endsAt: number = receivedAt + (serverEndsAt - serverTime);
+  return {
+    serverEndsAt,
+    guessingStartsAt: endsAt - guessingDuration,
+    endsAt,
+  };
 }
 
-export function shouldShowRoundOverlay(
-  state: RoundDisplayState,
-  roundStatus: RoundStatusValue | undefined,
-): boolean {
-  return (
-    state === 'guessing' ||
-    (state === 'results' && roundStatus !== RoundStatus.GUESSING)
-  );
+export function synchronizeRoundTiming({
+  current,
+  incoming,
+  now,
+}: SynchronizeRoundTimingOptions): RoundTiming {
+  if (incoming.serverEndsAt === undefined) return current;
+  if (
+    incoming.serverEndsAt !== current.serverEndsAt ||
+    (now < current.endsAt && incoming.endsAt < current.endsAt)
+  )
+    return incoming;
+  return current;
 }

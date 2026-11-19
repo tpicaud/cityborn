@@ -5,17 +5,17 @@ import { Text, View } from 'react-native';
 type TimerProps = {
   totalTimeInSeconds: number;
   endMessage: string;
-  onTimeUp: () => void;
+  endsAt: number;
 };
 
 export default function Timer({
   totalTimeInSeconds,
   endMessage,
-  onTimeUp,
+  endsAt,
 }: TimerProps) {
   const roundTimer: RoundTimer = useRoundTimer({
     totalTimeInSeconds,
-    onTimeUp,
+    endsAt,
   });
 
   return (

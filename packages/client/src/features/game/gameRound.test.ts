@@ -1,53 +1,98 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { RoundStatus } from '@cityborn/api';
-import {
-  type RoundDisplayState,
-  shouldShowRoundOverlay,
-  synchronizeRoundDisplayState,
-} from './gameRound';
+import { createRoundTiming, synchronizeRoundTiming } from './gameRound';
 
-describe('synchronizeRoundDisplayState', () => {
-  it('shows the results of a round showing its results', () => {
-    const displayState: RoundDisplayState = synchronizeRoundDisplayState(
-      RoundStatus.SHOWING_RESULTS,
-    );
+describe('createRoundTiming', () => {
+  it('resumes an active round using the time remaining on the server', () => {
+    const timing: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_010_000,
+      receivedAt: 250,
+      totalTimeInSeconds: 25,
+    });
 
-    assert.equal(displayState, 'results');
+    assert.deepEqual(timing, {
+      serverEndsAt: 1_028_000,
+      guessingStartsAt: -6_750,
+      endsAt: 18_250,
+    });
   });
 
-  it('starts the countdown of a guessing round', () => {
-    const displayState: RoundDisplayState = synchronizeRoundDisplayState(
-      RoundStatus.GUESSING,
-    );
+  it('keeps the elapsed deadline when the server time has passed it', () => {
+    const timing: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_029_250,
+      receivedAt: 200_000,
+      totalTimeInSeconds: 25,
+    });
 
-    assert.equal(displayState, 'countdown');
+    assert.equal(timing.endsAt, 198_750);
   });
 
-  it('starts the countdown without a round', () => {
-    const displayState: RoundDisplayState =
-      synchronizeRoundDisplayState(undefined);
+  it('uses the local preparation start when the payload has no deadline', () => {
+    const timing: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: undefined,
+      serverTime: undefined,
+      receivedAt: 1_010_000,
+      totalTimeInSeconds: 25,
+    });
 
-    assert.equal(displayState, 'countdown');
+    assert.deepEqual(timing, {
+      serverEndsAt: undefined,
+      guessingStartsAt: 1_013_000,
+      endsAt: 1_038_000,
+    });
   });
 });
 
-describe('shouldShowRoundOverlay', () => {
-  it('hides the results once the server starts the next round', () => {
-    const showsOverlay: boolean = shouldShowRoundOverlay(
-      'results',
-      RoundStatus.GUESSING,
+describe('synchronizeRoundTiming', () => {
+  it('resynchronizes after the local clock pauses during the round', () => {
+    const current: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_010_000,
+      receivedAt: 250,
+      totalTimeInSeconds: 25,
+    });
+    const incoming: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_026_000,
+      receivedAt: 450,
+      totalTimeInSeconds: 25,
+    });
+
+    const timing: ReturnType<typeof createRoundTiming> = synchronizeRoundTiming(
+      {
+        current,
+        incoming,
+        now: 450,
+      },
     );
 
-    assert.equal(showsOverlay, false);
+    assert.equal(timing.endsAt, 2_450);
   });
 
-  it('shows the results while the server shows them', () => {
-    const showsOverlay: boolean = shouldShowRoundOverlay(
-      'results',
-      RoundStatus.SHOWING_RESULTS,
+  it('keeps the deadline when an update takes longer to arrive', () => {
+    const current: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_010_000,
+      receivedAt: 250,
+      totalTimeInSeconds: 25,
+    });
+    const incoming: ReturnType<typeof createRoundTiming> = createRoundTiming({
+      serverEndsAt: 1_028_000,
+      serverTime: 1_011_000,
+      receivedAt: 1_450,
+      totalTimeInSeconds: 25,
+    });
+
+    const timing: ReturnType<typeof createRoundTiming> = synchronizeRoundTiming(
+      {
+        current,
+        incoming,
+        now: 1_450,
+      },
     );
 
-    assert.equal(showsOverlay, true);
+    assert.equal(timing, current);
   });
 });

@@ -1,14 +1,12 @@
 'use client';
 
 import {
-  type Coord,
   type Game,
   type PlayerId,
   type RoundGuessObject,
   RoundStatus,
 } from '@cityborn/api';
 import {
-  canSubmitGuess,
   createRoundResult,
   currentGuessObject,
   formatDistanceInKm,
@@ -22,27 +20,23 @@ import Timer from './Timer';
 
 type OverlayProps = {
   localPlayerID: PlayerId;
-  preGuess: Coord | undefined;
+  endsAt: number;
+  canGuess: boolean;
   game: Game;
-  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
-  handleIsTimeUp: () => void;
+  submitPreGuess: () => Promise<void>;
 };
 
 function GuessButton({
-  preGuess,
   disabled,
-  handleGuess,
+  submitPreGuess,
 }: {
-  preGuess: Coord | undefined;
   disabled: boolean;
-  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
+  submitPreGuess: () => Promise<void>;
 }) {
   return (
     <LoadingButton
       variant="contained"
-      onClick={async () => {
-        if (preGuess) await handleGuess(preGuess);
-      }}
+      onClick={submitPreGuess}
       disabled={disabled}
       sx={{
         color: 'white',
@@ -117,10 +111,10 @@ function GuessResult({ roundResult }: { roundResult: RoundResult }) {
 
 export default function Overlay({
   localPlayerID,
-  preGuess,
+  endsAt,
+  canGuess,
   game,
-  handleGuess,
-  handleIsTimeUp,
+  submitPreGuess,
 }: OverlayProps) {
   const guessObject: RoundGuessObject | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
@@ -136,9 +130,10 @@ export default function Overlay({
       <div className="absolute w-[27%] mx-6 my-14">
         {isGuessing && (
           <Timer
+            key={endsAt}
             totalTimeInSeconds={game.config.timer}
             endMessage="Terminé !"
-            onTimeUp={handleIsTimeUp}
+            endsAt={endsAt}
           />
         )}
       </div>
@@ -148,11 +143,7 @@ export default function Overlay({
       >
         {isGuessing && (
           <div className="relative w-full flex justify-center items-center">
-            <GuessButton
-              preGuess={preGuess}
-              disabled={!canSubmitGuess(game, localPlayerID, preGuess)}
-              handleGuess={handleGuess}
-            />
+            <GuessButton disabled={!canGuess} submitPreGuess={submitPreGuess} />
           </div>
         )}
 
