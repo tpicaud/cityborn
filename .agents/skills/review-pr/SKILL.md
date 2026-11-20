@@ -12,7 +12,7 @@ Ce skill orchestre deux axes ; la lecture du code et la confirmation des finding
 ## Étapes
 
 1. Retenir les entrées des axes :
-   - la cible : une PR, sinon la branche courante, et son worktree s'il est connu ;
+   - la cible : une PR, sinon la branche courante ou celle du worktree transmis, avec sa base ;
    - l'issue liée : `Closes #…` de la PR, sinon le numéro de la branche ;
    - en relecture, le SHA de départ du delta, le registre des findings et le plus grand ID déjà attribué.
 2. Lancer les deux axes en parallèle, chacun dans un sous-agent au contexte neuf, avec les entrées et le chemin de son brief à appliquer :

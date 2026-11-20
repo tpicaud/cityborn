@@ -1,18 +1,22 @@
 # Rapport de livraison
 
-Le rapport de livraison est la description de la PR, écrite une seule fois, en fin de `deliver-issue`, sur le dernier commit. Son lecteur est le dev qui fait la recette puis merge : le rapport lui dit si la PR est prête, ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
+Le rapport de livraison est la description de la PR, écrite une seule fois par le développeur, à la livraison, sur le dernier commit. Son lecteur est le dev qui fait la recette puis merge : le rapport lui dit si la PR est prête, ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
 
 ## Rédaction
 
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture ou son déploiement.
-- Sources : les preuves du dernier tour de l'axe Correction pour « Critères non satisfaits », le rapport du dev pour « Décisions prises », les findings hors périmètre pour « Pistes », le diff final pour le reste.
+- Sources : les éléments de review transmis par l'orchestrateur pour le verdict et « Pistes », les preuves du dernier tour de l'axe Correction pour « Critères non satisfaits » et « À vérifier en recette », tes décisions pour « Décisions prises », le diff final pour le reste.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
 - Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
 
 ## Sections
 
-- **Verdict** : la ligne transmise par l'orchestrateur, telle quelle, en première ligne.
+- **Verdict** : une citation d'une ligne, en première ligne :
+  - aucun finding `ouvert` et `pnpm verify` vert sur le commit poussé : `> ✅ **Prête pour recette** · Review : <n> tours (<modèle Correction> + <modèle Conventions>) · <n> mineurs non traités · <n> critères à vérifier en recette` ;
+  - sinon : `> ⛔ **Bloquée** : <condition en échec ou finding ouvert, en quelques mots>, décision attendue.` ;
+  - y ajouter `review mono-famille` quand l'axe Correction a tourné sur la famille du modèle de la session, et `conflits résolus : <fichiers>` après un rebase conflictuel.
+- **À vérifier en recette** : une case par critère que seule la recette manuelle prouve, avec ce qu'il faut regarder et où.
 - **Comment ça marche** : le mécanisme qui produit le comportement, ses pièces et leur enchaînement ; le résultat et le code retiré se lisent dans « En bref » et le diff. Quelques phrases de prose, complétées au besoin de bullets pour les étapes du flux ; cinq phrases ou bullets au plus. Quand le flux traverse au moins trois acteurs, comme client, serveur et Redis, un diagramme de séquence Mermaid peut remplacer les bullets.
 - **Décisions prises** : un arbitrage dont l'alternative écartée aurait été un choix crédible pour le relecteur ; sans alternative à nommer, ce n'est pas une décision. Une phrase par décision, sans détail d'implémentation.
 - **Décisions prises** et **Déploiement** : chaque bullet commence par un libellé court en gras qui nomme son sujet ; dans « Décisions prises », les points liés partagent une bullet.
@@ -22,7 +26,7 @@ Le rapport de livraison est la description de la PR, écrite une seule fois, en 
 ## Gabarit
 
 ```markdown
-> ✅ **Prête pour recette** · Review : 2 tours (GPT Sol 6.1 + Opus 5.5) · 0 bloquant · 0 à corriger · 3 mineurs non traités · 1 critère à vérifier en recette
+> ✅ **Prête pour recette** · Review : 2 tours (GPT Sol 6.1 + Opus 5.5) · 3 mineurs non traités · 1 critère à vérifier en recette
 
 ## 📌 En bref
 
@@ -31,6 +35,10 @@ Une ou deux phrases : le comportement ou la structure obtenus.
 ## ❌ Critères non satisfaits
 
 - ❌ Critère de l'issue : pourquoi.
+
+## 🔍 À vérifier en recette
+
+- [ ] Critère de l'issue : ce qu'il faut regarder, sur quel écran ou appareil.
 
 ## ⚙️ Comment ça marche
 

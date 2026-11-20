@@ -23,12 +23,7 @@ L'orchestrateur réalise cette préparation avant de transmettre le worktree au 
 7. Placer le worktree retenu sur la branche liée :
    - worktree existant sur une autre branche : `git switch <branche liée>` ;
    - nouveau worktree : `git worktree add <chemin> <branche liée>` ; bloquer si le chemin existe déjà.
-
-## Mettre la branche à jour
-
-1. Si `origin/<branche liée>` existe, l'intégrer avec `git merge --ff-only origin/<branche liée>`. Si l'avance rapide échoue, présenter la divergence et demander une décision.
-2. Vérifier que `origin/<branche cible>` est ancêtre de la branche avec `git merge-base --is-ancestor origin/<branche cible> HEAD`.
-3. Sinon, rebaser sur `origin/<branche cible>`, commits publiés compris, et résoudre chaque conflit d'après l'issue et le code actuel. En préparation, l'orchestrateur confie ce rebase au développeur, avec cette section à appliquer.
+8. Si `origin/<branche liée>` existe, l'intégrer avec `git merge --ff-only origin/<branche liée>`. Si l'avance rapide échoue, présenter la divergence et demander une décision. Le rebase sur la branche cible revient au développeur.
 
 ## Préparer l'environnement
 
