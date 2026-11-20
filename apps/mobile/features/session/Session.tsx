@@ -50,7 +50,6 @@ export default function Session({ sessionID, launchedPackId }: SessionProps) {
           game={sessionController.session.currentGame}
           handleGuess={sessionController.guess}
           handleNextRound={sessionController.nextRound}
-          handleEndGame={sessionController.endGame}
           handlePlayAgain={sessionController.playAgain}
           handleExitGame={sessionController.exitGame}
           handleLeaveGame={sessionController.leaveGame}

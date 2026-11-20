@@ -1,4 +1,4 @@
-import { type Game, RoundStatus } from '@cityborn/api';
+import { type Game, GameStatus, RoundStatus } from '@cityborn/api';
 
 export type RoundDisplayState = 'countdown' | 'guessing' | 'results';
 type RoundStatusValue = NonNullable<Game['state']['currentRound']>['status'];
@@ -9,10 +9,16 @@ export function synchronizeRoundDisplayState(
   return roundStatus === RoundStatus.SHOWING_RESULTS ? 'results' : 'countdown';
 }
 
-export function shouldShowRoundOverlay(
-  state: RoundDisplayState,
-  roundStatus: RoundStatusValue | undefined,
-): boolean {
+export function shouldShowRoundOverlay({
+  state,
+  roundStatus,
+  gameStatus,
+}: {
+  state: RoundDisplayState;
+  roundStatus: RoundStatusValue | undefined;
+  gameStatus: GameStatus;
+}): boolean {
+  if (gameStatus === GameStatus.IN_RESULTS) return false;
   return (
     state === 'guessing' ||
     (state === 'results' && roundStatus !== RoundStatus.GUESSING)

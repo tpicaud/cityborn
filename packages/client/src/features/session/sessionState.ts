@@ -1,8 +1,4 @@
-import type { PlayerId, Session, SessionStatus } from '@cityborn/api';
-
-export function withStatus(session: Session, status: SessionStatus): Session {
-  return { ...session, status };
-}
+import type { PlayerId, Session } from '@cityborn/api';
 
 export function isHostOf(
   session: Session | undefined,
