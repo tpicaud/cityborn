@@ -14,7 +14,7 @@ Ce skill orchestre deux axes ; la lecture du code et la confirmation des finding
 1. Retenir les entrées des axes :
    - la cible : une PR, sinon la branche courante, et son worktree s'il est connu ;
    - l'issue liée : `Closes #…` de la PR, sinon le numéro de la branche ;
-   - en relecture, le SHA de départ du delta et le registre des findings.
+   - en relecture, le SHA de départ du delta, le registre des findings et le plus grand ID déjà attribué.
 2. Lancer les deux axes en parallèle, chacun dans un sous-agent au contexte neuf, avec les entrées et le chemin de son brief à appliquer :
 
    | Axe | Brief | Modèle |
@@ -23,6 +23,6 @@ Ce skill orchestre deux axes ; la lecture du code et la confirmation des finding
    | Conventions | `.agents/skills/review-pr/references/conventions.md` | celui de la session |
 
    Sans sous-agent possible, appliquer les deux briefs à la suite et l'indiquer.
-3. Fusionner les rapports selon le [format](references/axis.md#format) : statuts du registre, puis un seul tableau trié par axe et, dans chaque axe, par gravité, sans reclasser un finding d'un axe à l'autre ; numéroter les nouveaux findings `F<n>` à la suite du registre.
+3. Fusionner les rapports selon le [format](references/axis.md#format) : ligne de tête et de modèle de chaque axe, statuts du registre, puis un seul tableau trié par axe et, dans chaque axe, par gravité, sans reclasser un finding d'un axe à l'autre ; numéroter les nouveaux findings `F<n>` à la suite du plus grand ID déjà attribué.
 
-Terminé quand chaque axe a rendu son rapport et que la fusion indique le SHA de tête relu et le modèle de chaque axe.
+Terminé quand chaque axe a rendu son rapport et que la fusion reprend la ligne de tête et de modèle de chaque axe.
