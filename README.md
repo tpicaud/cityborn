@@ -44,7 +44,7 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites.
 
-Chaque checkout, principal ou worktree, a son propre env Docker de test : un PostgreSQL et un Redis sur des ports choisis par Docker. `pnpm test:int` et `pnpm test:e2e` le démarrent au besoin ; l'intégration et les e2e partagent sa base, à lancer l'une après l'autre. `pnpm env:up` affiche ses URL, `pnpm env:down` l'arrête, `pnpm env:destroy` le supprime avec ses données et `pnpm env:prune` supprime ceux des worktrees disparus ; `scripts/cleanup-worktree.sh` supprime celui du worktree nettoyé.
+Chaque checkout, principal ou worktree, a son propre env Docker de test : un PostgreSQL et un Redis sur des ports choisis par Docker. `pnpm test:int` et `pnpm test:e2e` le démarrent au besoin ; l'intégration et les e2e partagent sa base, à lancer l'une après l'autre. `pnpm env:up` affiche ses URL, `pnpm env:down` l'arrête, `pnpm env:destroy` le supprime avec ses données et `pnpm env:prune` supprime ceux des worktrees disparus.
 
 `pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés.
 
