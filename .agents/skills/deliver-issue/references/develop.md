@@ -10,7 +10,7 @@ Travailler dans le worktree transmis, déjà sur la branche liée à l'issue et 
    - cite une commande, un skill ou un fichier absent du repo ;
    - dépasse la taille d'une issue fixée par le skill `manage-issue` ;
    - laisse ouvert un choix qui change ce que voit le joueur ou l'admin.
-3. Trancher seul tout autre choix, architecture comprise, et le consigner dans « Décisions prises ».
+3. Trancher seul tout autre choix, architecture comprise, et le consigner pour le compte rendu.
 
 Terminé quand chaque référence de l'issue est vérifiée dans le repo et que chaque point bloquant est remonté.
 
@@ -21,16 +21,16 @@ Terminé quand chaque référence de l'issue est vérifiée dans le repo et que 
 
 ## Vérifier
 
-1. Prouver chaque critère d'acceptation par un test ou une commande, sans lancer l'app.
-2. Reporter chaque critère non prouvé dans « Critères non satisfaits ».
+1. Prouver chaque critère d'acceptation par un test ou une commande, sans lancer l'app ; un critère qui ne se prouve qu'app lancée ou sur un appareil est « à vérifier en recette ».
+2. Reporter chaque autre critère non prouvé dans les critères non satisfaits.
 
-Terminé quand chaque critère a sa preuve ou sa place dans le rapport.
+Terminé quand chaque critère a sa preuve ou sa place dans le compte rendu.
 
 ## Livrer
 
 1. Créer un commit dès qu'une étape cohérente est complète et vérifiée, en gardant séparées les étapes indépendantes.
-2. Une fois `pnpm verify` vert, pousser le développement initial et les correctifs de review sur la branche liée à la même PR.
-3. Créer la PR draft vers la branche cible si la branche n'en a pas, sinon la mettre à jour, avec pour description le rapport de `.agents/skills/deliver-issue/references/report.md`. L'assigner au compte authentifié (`@me`).
+2. Une fois `pnpm verify` vert, pousser le développement initial et les correctifs de review sur la branche liée à la même PR, avec `--force-with-lease` après un rebase.
+3. Si la branche n'a pas de PR, créer la PR draft vers la branche cible avec `Closes #<numéro>` pour toute description, et l'assigner au compte authentifié (`@me`).
 4. Vérifier que la PR est la seule de `gh issue view <numéro> --json closedByPullRequestsReferences`. Vers une branche d'intégration, `Closes #<numéro>` ne lie pas la PR à l'issue : la lier avec
 
    ```sh
@@ -41,8 +41,8 @@ Terminé quand chaque critère a sa preuve ou sa place dans le rapport.
 
 ## Compte rendu final
 
-Donner l'URL de la PR draft, dont la description porte le rapport de livraison, la preuve de chaque critère d'acceptation, et chaque vérification en échec ou non exécutée, avec la raison.
+Donner l'URL de la PR draft, la preuve de chaque critère d'acceptation, les critères non satisfaits avec leur raison, les décisions prises, et chaque vérification en échec ou non exécutée, avec la raison.
 
 ## Critère de fin
 
-La branche liée est poussée après un `pnpm verify` vert, sa PR draft vers la branche cible est à jour et seule liée à l'issue.
+La branche liée est poussée après un `pnpm verify` vert, et sa PR draft vers la branche cible ne porte que `Closes #<numéro>` et est seule liée à l'issue.

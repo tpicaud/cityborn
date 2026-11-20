@@ -1,11 +1,13 @@
 ---
 name: deliver-issue
-description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, review puis correctifs par sous-agents."
+description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, boucle de review, correctifs et verdict par sous-agents."
 ---
 
 # Délivrer une issue
 
-Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte neuf, et ton contexte ne garde que l'issue et les rapports. Le diff et le code restent dans les sous-agents, pour que chaque étape démarre avec toute son attention.
+Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte neuf, et ton contexte ne garde que l'issue, les rapports et le registre des findings. Le diff et le code restent dans les sous-agents, pour que chaque étape démarre avec toute son attention.
+
+`deliver-issue` s'arrête à la PR draft prête pour la recette de l'utilisateur.
 
 ## Préparer le worktree
 
@@ -26,31 +28,28 @@ Ces règles valent pour chaque étape.
 
 ## Étape 1 — Développement
 
-Transmettre au sous-agent l'URL de l'issue, les consignes explicites de l'utilisateur sur le périmètre recopiées telles quelles et l'instruction d'appliquer `.agents/skills/deliver-issue/references/develop.md`. Son rapport donne l'URL de la PR draft.
+Transmettre au sous-agent l'URL de l'issue, les consignes explicites de l'utilisateur sur le périmètre recopiées telles quelles et l'instruction d'appliquer `.agents/skills/deliver-issue/references/develop.md`. Son rapport donne l'URL de la PR draft, la preuve de chaque critère, les critères non satisfaits et les décisions prises ; il reste chez l'orchestrateur jusqu'à l'étape 3.
 
 L'étape est terminée au critère de fin de la référence.
 
 ## Étape 2 — Review
 
-Transmettre au sous-agent uniquement l'URL de l'issue et l'URL de la PR, avec l'instruction d'appliquer `.agents/skills/review-pr/SKILL.md`. Le reviewer juge le code, sans le récit du développement : le rapport de l'étape 1 reste chez l'orchestrateur.
+Appliquer [la boucle de review](references/review-loop.md).
 
-L'étape est terminée quand le rapport liste les findings au format de `review-pr`, éventuellement aucun.
+L'étape est terminée au critère de fin de la référence.
 
-## Étape 3 — Correctifs
+## Étape 3 — Description de la PR
 
-Si au moins un finding est dans le périmètre de l'issue, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et ces findings, recopiés tels quels. Il doit :
+Transmettre au sous-agent l'URL de l'issue et de la PR, le rapport de l'étape 1, le verdict, les findings hors périmètre et l'instruction d'écrire la description de la PR selon `.agents/skills/deliver-issue/references/report.md`, sans pousser de code.
 
-- charger les skills de conventions des périmètres touchés ;
-- traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
-- vérifier chaque correctif ;
-- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur les findings hors périmètre de « Pistes ».
-
-Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne, puis chaque vérification en échec ou non exécutée, avec la raison.
-
-Dans tous les cas, ajouter ensuite les findings hors périmètre à « Pistes » dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`.
-
-L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que « Pistes » liste chaque finding hors périmètre.
+L'étape est terminée quand la description de la PR commence par le verdict et se termine par `Closes #<numéro>`.
 
 ## Compte rendu final
 
-Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter les vérifications en échec ou non exécutées et que les étapes ont tourné sans sous-agent.
+Donner, dans cet ordre :
+
+- le verdict ;
+- les liens de l'issue et de la PR, et le chemin du worktree ;
+- la description de la PR ;
+- les findings mineurs non traités ;
+- chaque vérification en échec ou non exécutée, avec la raison, et le cas échéant que les étapes ont tourné sans sous-agent.

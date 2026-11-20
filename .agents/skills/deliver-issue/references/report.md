@@ -1,17 +1,18 @@
 # Rapport de livraison
 
-Le rapport de livraison sert à la fois de description de la PR et de compte rendu final de `deliver-issue`. Son lecteur est le dev qui relit avant de merger : le rapport lui explique ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
+Le rapport de livraison est la description de la PR, écrite une seule fois, en fin de `deliver-issue`, sur le dernier commit. Son lecteur est le dev qui fait la recette puis merge : le rapport lui dit si la PR est prête, ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
 
 ## Rédaction
 
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture ou son déploiement.
-- Chaque mise à jour part de la description actuelle de la PR et la ramène à l'état de la branche au dernier commit, sans historique des passages précédents.
+- Sources : le rapport du dev pour « Critères non satisfaits » et « Décisions prises », les findings hors périmètre pour « Pistes », le diff final pour le reste.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
 - Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
 
 ## Sections
 
+- **Verdict** : la ligne transmise par l'orchestrateur, telle quelle, en première ligne.
 - **Comment ça marche** : le mécanisme qui produit le comportement, ses pièces et leur enchaînement ; le résultat et le code retiré se lisent dans « En bref » et le diff. Quelques phrases de prose, complétées au besoin de bullets pour les étapes du flux ; cinq phrases ou bullets au plus. Quand le flux traverse au moins trois acteurs, comme client, serveur et Redis, un diagramme de séquence Mermaid peut remplacer les bullets.
 - **Décisions prises** : un arbitrage dont l'alternative écartée aurait été un choix crédible pour le relecteur ; sans alternative à nommer, ce n'est pas une décision. Une phrase par décision, sans détail d'implémentation.
 - **Décisions prises** et **Déploiement** : chaque bullet commence par un libellé court en gras qui nomme son sujet ; dans « Décisions prises », les points liés partagent une bullet.
@@ -21,6 +22,8 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 ## Gabarit
 
 ```markdown
+> ✅ **Prête pour recette** · Review : 2 tours (GPT Sol 6.1 + Opus 5.5) · 0 bloquant · 0 à corriger · 3 mineurs non traités · 1 critère à vérifier en recette
+
 ## 📌 En bref
 
 Une ou deux phrases : le comportement ou la structure obtenus.
