@@ -42,7 +42,7 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
   - chaque sous-issue est une tranche verticale à travers les couches dont son résultat a besoin ;
   - ses prérequis parmi ses sœurs ouvrent sa description : `Bloquée par #…` ;
   - une sous-issue qui excède elle-même la taille se découpe en sœurs, sous la même parente.
-- **Critères** : chacun se prouve par un test, une commande ou un parcours web jouable par un agent ; un critère qui exige un appareil ou un compte tiers est suivi de « (vérification manuelle) ».
+- **Critères** : chacun se prouve par un test ou une commande ; un critère qui exige l'app lancée, un appareil ou un compte tiers est suivi de « (vérification manuelle) ».
 - **Références** : chaque commande, skill ou fichier présenté comme existant est vérifié dans le repo dès la rédaction.
 - **Citations** : une issue cite par son numéro seulement sa parente, ses sous-issues et ses sœurs ; le contexte utile d'une autre issue est repris en clair. Un lien de parenté sert seulement au découpage.
 
