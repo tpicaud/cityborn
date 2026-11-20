@@ -18,6 +18,7 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { signOutFromGoogle } from '@/features/auth/GoogleSignIn';
 
 export default function Profile() {
   const { user }: CurrentUser = useCurrentUser();
@@ -50,7 +51,10 @@ export default function Profile() {
     closeDeleteAccountDialog,
     deleteAccount,
   }: ProfileEditor = useProfileEditor({
-    onAccountDeleted: () => router.navigate('/'),
+    onAccountDeleted: () => {
+      void signOutFromGoogle();
+      router.navigate('/');
+    },
   });
 
   const openProfileFooterLink = async (url: string): Promise<void> => {
