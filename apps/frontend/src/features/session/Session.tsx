@@ -42,11 +42,9 @@ export default function Session({ sessionID, launchedPackId }: SessionProps) {
         <Game
           localPlayerID={sessionController.localPlayerID}
           isHost={sessionController.isHost}
-          session={sessionController.session}
           game={sessionController.session.currentGame}
           handleGuess={sessionController.guess}
           handleNextRound={sessionController.nextRound}
-          handleEndGame={sessionController.endGame}
           handlePlayAgain={sessionController.playAgain}
           handleExitGame={sessionController.exitGame}
           handleLeaveGame={sessionController.leaveGame}

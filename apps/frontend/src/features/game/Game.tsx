@@ -1,6 +1,5 @@
 'use client';
 
-import type { Session } from '@cityborn/api';
 import {
   createGameDisplay,
   type GameComponentProps,
@@ -14,25 +13,20 @@ import {
   LoadingScreen,
   Screen,
 } from '@cityborn/design-system';
-import { Backdrop } from '@mui/material';
 import { GameOptions } from './GameOptions';
-import Results from './Results';
+import { Results } from './Results';
 import { Round } from './round/Round';
 
 export const Game = ({
   localPlayerID,
   isHost,
-  session,
   game,
   handleGuess,
   handleNextRound,
-  handleEndGame,
   handlePlayAgain,
   handleExitGame,
   handleLeaveGame,
-}: GameComponentProps & {
-  session: Session;
-}) => {
+}: GameComponentProps) => {
   const gameDisplay: GameDisplay = createGameDisplay(game, localPlayerID);
   const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
     leaveGame: handleLeaveGame,
@@ -59,28 +53,19 @@ export const Game = ({
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
         onOpenOptions={gameDisplay.showOptions ? optionsMenu.open : undefined}
+        finalResults={
+          gameDisplay.showResults ? (
+            <Results
+              game={game}
+              localPlayerID={activePlayerID}
+              isHost={isHost}
+              handlePlayAgain={handlePlayAgain}
+              handleExitGame={handleExitGame}
+            />
+          ) : undefined
+        }
       />
       {gameDisplay.showOptions && <GameOptions optionsMenu={optionsMenu} />}
-
-      {gameDisplay.showResults && (
-        <div className="absolute inset-0">
-          <div className="flex flex-row w-full h-full items-center justify-center">
-            <Backdrop open={true}>
-              <div className="w-[80%]">
-                <Results
-                  game={game}
-                  localPlayerID={activePlayerID}
-                  isHost={isHost}
-                  mode={session.mode}
-                  handleEndGame={handleEndGame}
-                  handlePlayAgain={handlePlayAgain}
-                  handleExitGame={handleExitGame}
-                />
-              </div>
-            </Backdrop>
-          </div>
-        </div>
-      )}
     </>
   );
 };
