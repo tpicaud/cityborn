@@ -4,7 +4,9 @@ import tabletBackground from '@cityborn/design-system/assets/backgrounds/tablet.
 import backIcon from '@cityborn/design-system/assets/common/back.svg';
 import closeIcon from '@cityborn/design-system/assets/common/close.svg';
 import optionsIcon from '@cityborn/design-system/assets/common/options.svg';
+import clouds from '@cityborn/design-system/assets/decorations/clouds.png';
 import globe from '@cityborn/design-system/assets/decorations/globe.png';
+import trophy from '@cityborn/design-system/assets/decorations/trophy.png';
 import logo from '@cityborn/design-system/assets/logo.svg';
 import monogram from '@cityborn/design-system/assets/monogram.svg';
 import collectionIcon from '@cityborn/design-system/assets/navigation/collection.svg';
@@ -33,7 +35,9 @@ const assetSources: Record<ImageAsset, StaticImageData> = {
   'navigation/profile-pressed': profilePressedIcon,
   'backgrounds/phone': phoneBackground,
   'backgrounds/tablet': tabletBackground,
+  'decorations/clouds': clouds,
   'decorations/globe': globe,
+  'decorations/trophy': trophy,
   'providers/google': googleIcon,
   'providers/apple': appleIcon,
   logo,
