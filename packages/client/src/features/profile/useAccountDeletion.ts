@@ -1,12 +1,13 @@
 'use client';
 
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { clearCacheAfterSignOut } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import { type SignOut, useSignOut } from '../auth/useSignOut';
 
 export type AccountDeletionOptions = {
   onAccountDeleted?: () => void;
@@ -23,14 +24,9 @@ export function useAccountDeletion({
   onAccountDeleted,
 }: AccountDeletionOptions = {}): AccountDeletion {
   const { authApi }: DomainApis = useDomainApis();
+  const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState<boolean>(false);
-  const { signOut: signOutDeletedAccount }: SignOut = useSignOut({
-    onSignedOut: () => {
-      setIsConfirmationOpen(false);
-      onAccountDeleted?.();
-    },
-  });
 
   const deleteAccount = async (): Promise<void> => {
     try {
@@ -39,7 +35,14 @@ export function useAccountDeletion({
       reportError(error);
       return;
     }
-    await signOutDeletedAccount();
+    try {
+      await authApi.signOut();
+    } catch (error: unknown) {
+      reportError(error);
+    }
+    await clearCacheAfterSignOut(queryClient);
+    setIsConfirmationOpen(false);
+    onAccountDeleted?.();
   };
 
   return {
