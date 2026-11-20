@@ -12,11 +12,14 @@ import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { cn } from '@/lib/classNames';
+import { signOutFromGoogle } from './GoogleSignIn';
 
 export default function Home() {
   const router = useRouter();
   const { user }: CurrentUser = useCurrentUser();
-  const { signOut }: SignOut = useSignOut();
+  const { signOut }: SignOut = useSignOut({
+    onSignedOut: signOutFromGoogle,
+  });
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
 
