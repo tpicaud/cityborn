@@ -182,7 +182,7 @@ describe('UserService.updateEmail', () => {
     expect(userRepository.updateEmail).not.toHaveBeenCalled();
   });
 
-  it('persists a change of case in the account own address', async () => {
+  it("persists a letter-case change of the account's own email", async () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =
       buildUserService();
     const user: User = buildUser({

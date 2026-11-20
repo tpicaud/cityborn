@@ -63,7 +63,7 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findByIdentifier(identifier: string): Promise<User | null> {
-    const user = await this.txHost.tx.user.findFirst({
+    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
       where: {
         OR: [{ email: sameEmailAs(identifier) }, { username: identifier }],
       },
@@ -81,7 +81,7 @@ export class PrismaUserRepository implements UserRepository {
   async findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null> {
-    const user = await this.txHost.tx.user.findFirst({
+    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
       where: {
         OR: [{ email: sameEmailAs(identifier) }, { username: identifier }],
       },
@@ -108,9 +108,11 @@ export class PrismaUserRepository implements UserRepository {
     username: Username,
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null> {
-    const existingUser = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ username }, { email: sameEmailAs(email) }] },
-    });
+    const existingUser: PrismaUser | null = await this.txHost.tx.user.findFirst(
+      {
+        where: { OR: [{ username }, { email: sameEmailAs(email) }] },
+      },
+    );
     return existingUser
       ? {
           username: UsernameSchema.parse(existingUser.username),
