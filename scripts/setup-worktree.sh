@@ -98,7 +98,13 @@ compose_file="$target_root/apps/backend/docker-compose.resources.yml"
 backend_env="$target_root/apps/backend/.env"
 host_id="$(cat /etc/machine-id 2>/dev/null || hostname)"
 worktree_name="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
-project="cityborn-wt-${worktree_name%-}"
+project="cityborn-${worktree_name%-}"
+case "$project" in
+  cityborn-dev|cityborn-test)
+    echo "Le dossier du worktree ne peut pas s'appeler dev ni test : $project est l'env Docker du checkout principal." >&2
+    exit 1
+    ;;
+esac
 
 docker ps --all --filter "label=cityborn.host=$host_id" \
   --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
