@@ -17,14 +17,12 @@ Terminé quand chaque référence de l'issue est vérifiée dans le repo et que 
 ## Développer
 
 1. Charger les skills de conventions des périmètres touchés.
-2. Si l'issue lie des maquettes, appliquer `.agents/skills/deliver-issue/references/mockups.md` du développement à la livraison.
-3. Implémenter le périmètre demandé, avec ses tests.
-4. Rédiger et actualiser les scénarios de « Recette » selon l'issue et le diff.
+2. Implémenter le périmètre demandé, avec ses tests.
 
 ## Vérifier
 
-1. Prouver chaque critère d'acceptation par un test, une commande ou une exécution réelle sur l'environnement de recette isolé (`pnpm recette:prepare`, arrêté après usage) : lancer la seed puis se connecter, appeler la route, ouvrir l'écran.
-2. Reporter chaque critère non prouvé dans « Critères non satisfaits », ou dans « Recette manuelle » s'il attend un parcours joué dans l'app.
+1. Prouver chaque critère d'acceptation par un test ou une commande, sans lancer l'app.
+2. Reporter chaque critère non prouvé dans « Critères non satisfaits ».
 
 Terminé quand chaque critère a sa preuve ou sa place dans le rapport.
 

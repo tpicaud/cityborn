@@ -1,6 +1,6 @@
 ---
 name: deliver-issue
-description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, review, correctifs puis recette par sous-agents."
+description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, review puis correctifs par sous-agents."
 ---
 
 # Délivrer une issue
@@ -50,16 +50,6 @@ Son rapport donne, pour chaque finding, son statut et le correctif ou la raison 
 Dans tous les cas, ajouter ensuite les findings hors périmètre à « Pistes » dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`.
 
 L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que « Pistes » liste chaque finding hors périmètre.
-
-## Étape 4 — Recette
-
-- Retenir au plus deux parcours de « Recette manuelle » : les premiers, dans l'ordre de risque, qui entrent dans le périmètre d'[execute-ui-scenarios](../execute-ui-scenarios/SKILL.md).
-- Sans parcours retenu, terminer l'étape sans sous-agent.
-- Confier les parcours retenus au sous-agent appliquant `execute-ui-scenarios`, avec `Sonnet — effort medium` ; si indisponible, `gpt-6.1-terra — effort medium`.
-- Publier les captures et intégrer le rapport selon [la publication](references/publish-acceptance.md).
-- Les anomalies relevées ne relancent pas de boucle de correctifs.
-
-L'étape est terminée quand chaque parcours joué figure dans « Recette agent » avec son résultat, et chaque parcours non joué dans « Recette manuelle ».
 
 ## Compte rendu final
 

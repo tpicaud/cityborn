@@ -34,5 +34,5 @@
 
 ## Commandes
 
-- `pnpm db:test:start` avant `pnpm test:int` ou `pnpm test:e2e`.
-- Intégration et e2e se lancent l'un après l'autre : ils partagent la base de test.
+- `pnpm test:int` et `pnpm test:e2e` démarrent eux-mêmes le PostgreSQL et le Redis propres au worktree ; `pnpm env:up` affiche leurs URL.
+- Intégration et e2e se lancent l'un après l'autre : ils partagent la base de test du worktree.
