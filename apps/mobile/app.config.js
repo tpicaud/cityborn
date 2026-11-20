@@ -88,7 +88,6 @@ export default {
       'expo-secure-store',
       'expo-web-browser',
       ['./expo-plugins/withGradleProperties'],
-      ['./expo-plugins/withModularHeaders'],
       ['expo-apple-authentication'],
       [
         'expo-build-properties',
@@ -118,7 +117,7 @@ export default {
         },
       ],
       [
-        '@react-native-google-signin/google-signin',
+        'react-native-nitro-google-signin',
         {
           iosUrlScheme:
             'com.googleusercontent.apps.871572964929-iajpene5iktr5isun4sg6dqnjri8po0p',
