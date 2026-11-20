@@ -6,7 +6,6 @@ export type GameComponentProps = {
   game: Game;
   handleGuess: (coordinates: Coord | undefined) => Promise<void>;
   handleNextRound: () => Promise<void>;
-  handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
   handleLeaveGame: () => Promise<void>;

@@ -7,7 +7,7 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { isHostOf, withStatus } from './sessionState';
+import { isHostOf } from './sessionState';
 
 const citizen: PlayerId = PlayerIdSchema.parse('citizen');
 const otherPlayer: PlayerId = PlayerIdSchema.parse('other');
@@ -15,15 +15,6 @@ const session: Session = buildSession({
   hostID: citizen,
   status: SessionStatus.IN_LOBBY,
   players: [],
-});
-
-describe('withStatus', () => {
-  it('replaces the status without mutating the given session', () => {
-    const updated: Session = withStatus(session, SessionStatus.IN_GAME);
-
-    assert.equal(updated.status, SessionStatus.IN_GAME);
-    assert.equal(session.status, SessionStatus.IN_LOBBY);
-  });
 });
 
 describe('isHostOf', () => {

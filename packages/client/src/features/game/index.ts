@@ -1,5 +1,9 @@
 export { createGameDisplay, type GameDisplay } from './gameDisplay';
-export { createGameResults } from './gameResult';
+export {
+  createGameResults,
+  type GameResultRow,
+  type GameResults,
+} from './gameResult';
 export type { RoundAction } from './roundAction';
 export {
   createRoundResult,

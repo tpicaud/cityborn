@@ -18,7 +18,6 @@ import {
   GameStatus,
   getFriendlyErrorMessage,
   SessionMode,
-  SessionStatus,
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -49,7 +48,7 @@ import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
-import { isHostOf, withStatus } from './sessionState';
+import { isHostOf } from './sessionState';
 import { usePlayerDepartures } from './usePlayerDepartures';
 
 export type SessionControllerOptions = {
@@ -70,7 +69,6 @@ export type SessionController = {
   playPack: (pack: Pack) => Promise<void>;
   guess: (coordinates: Coord | undefined) => Promise<void>;
   nextRound: () => Promise<void>;
-  endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
   exitGame: () => Promise<void>;
   leaveGame: () => Promise<void>;
@@ -329,11 +327,6 @@ export function useSessionController({
     await emit(sessionWsEvent.nextRound);
   };
 
-  const endGame = async () => {
-    const current = requireGame('Ending game');
-    setSession(withStatus(current, SessionStatus.IN_LOBBY));
-  };
-
   const playAgain = async () => {
     const current = requireGame('Playing again');
     if (!isHostOf(current, localPlayerID)) return;
@@ -365,7 +358,6 @@ export function useSessionController({
     playPack: reportActionErrors({ action: playPack, reportError }),
     guess: reportActionErrors({ action: guess, reportError }),
     nextRound: reportActionErrors({ action: nextRound, reportError }),
-    endGame: reportActionErrors({ action: endGame, reportError }),
     playAgain: reportActionErrors({ action: playAgain, reportError }),
     exitGame: reportActionErrors({ action: exitGame, reportError }),
     leaveGame: reportActionErrors({ action: leaveGame, reportError }),
