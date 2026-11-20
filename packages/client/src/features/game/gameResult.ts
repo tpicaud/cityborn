@@ -9,7 +9,7 @@ import { PlayerIdSchema } from '@cityborn/api';
 import { calculateTotalPoints } from '@cityborn/core';
 import { formatDistanceInKm } from './roundResult';
 
-export type GameResultRow = {
+type GameResultRow = {
   key: string;
   position: number;
   label: string;

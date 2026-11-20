@@ -1,7 +1,6 @@
 export { createGameDisplay, type GameDisplay } from './gameDisplay';
 export {
   createGameResults,
-  type GameResultRow,
   type GameResults,
 } from './gameResult';
 export type { RoundAction } from './roundAction';
