@@ -45,4 +45,4 @@ Donner l'URL de la PR draft, la preuve de chaque critère d'acceptation, les cri
 
 ## Critère de fin
 
-La branche liée est poussée après un `pnpm verify` vert, et sa PR draft vers la branche cible ne porte que `Closes #<numéro>` et est seule liée à l'issue.
+La branche liée est poussée après un `pnpm verify` vert, et sa PR draft vers la branche cible contient `Closes #<numéro>` pour toute description et est seule liée à l'issue.
