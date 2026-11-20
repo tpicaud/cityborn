@@ -8,15 +8,15 @@ L'orchestrateur enchaîne au plus 3 tours de review, tient le registre, puis vé
 |---|---|---|---|---|---|---|
 | `F1` | Correction | bloquant | `chemin:ligne` | le constat en une phrase | `corrigé <sha>` | 1 |
 
-- Il porte chaque finding `bloquant` ou `à corriger` du périmètre `issue` ; les mineurs et les findings hors périmètre sont gardés à part, pour le verdict et la description.
+- Il porte chaque finding `bloquant` ou `à corriger` du périmètre `issue` ; les mineurs sont gardés à part pour le verdict et le compte rendu final, les findings hors périmètre pour « Pistes ».
 - Statuts : `ouvert`, `corrigé <sha>` ou `rejeté : raison`. Le reviewer qui infirme un correctif ou conteste un rejet par un argument tiré du code repasse le finding `ouvert`.
 
 ## Tour
 
-1. Appliquer `review-pr` avec l'URL de l'issue, l'URL de la PR et le worktree ; dès le tour 2, avec le SHA de tête relu au tour précédent et le registre. Le rapport du dev et ceux des correctifs restent chez l'orchestrateur.
+1. Appliquer `review-pr` avec l'URL de l'issue, l'URL de la PR et le worktree ; dès le tour 2, avec le SHA de tête relu au tour précédent, le registre et le plus grand ID attribué. Le rapport du dev et ceux des correctifs restent chez l'orchestrateur.
 2. Reporter au registre chaque statut rendu et chaque nouveau finding.
 3. Sans finding `ouvert`, sortir de la boucle.
-4. Au tour 3, poser à l'utilisateur une question par finding `ouvert`, avec l'argument du reviewer et celui du correcteur ; faire appliquer sa décision par un sous-agent de correctifs, sans nouveau tour. Sans décision, le verdict passe à ⛔.
+4. Au tour 3, poser à l'utilisateur une question par finding `ouvert`, avec l'argument du reviewer et, le cas échéant, celui du correcteur ; faire appliquer sa décision par un sous-agent de correctifs, sans nouveau tour. Sans décision, le verdict passe à ⛔.
 5. Sinon, lancer le sous-agent de [correctifs](#correctifs), puis le tour suivant.
 
 ## Correctifs

@@ -5,7 +5,7 @@ description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev,
 
 # Délivrer une issue
 
-Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte neuf, et ton contexte ne garde que l'issue, les rapports et le registre des findings. Le diff et le code restent dans les sous-agents, pour que chaque étape démarre avec toute son attention.
+Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte neuf, sauf la boucle de l'étape 2 que tu mènes toi-même, et ton contexte ne garde que l'issue, les rapports et le registre des findings. Le diff et le code restent dans les sous-agents, pour que chaque étape démarre avec toute son attention.
 
 `deliver-issue` s'arrête à la PR draft prête pour la recette de l'utilisateur.
 
@@ -13,7 +13,7 @@ Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte 
 
 Appliquer [la préparation](references/prepare.md) avant tout sous-agent, quelle que soit l'origine du checkout.
 
-La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur la branche cible, que les `.env` requis sont présents, que son env Docker tourne et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
+La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur la branche cible ou avec son rebase confié au développeur, que les `.env` requis sont présents, que son env Docker tourne et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
 
 ## Lancer un sous-agent
 
@@ -34,15 +34,15 @@ L'étape est terminée au critère de fin de la référence.
 
 ## Étape 2 — Review
 
-Appliquer [la boucle de review](references/review-loop.md).
+Appliquer toi-même [la boucle de review](references/review-loop.md), sans sous-agent intermédiaire.
 
 L'étape est terminée au critère de fin de la référence.
 
 ## Étape 3 — Description de la PR
 
-Transmettre au sous-agent l'URL de l'issue et de la PR, le rapport de l'étape 1, le verdict, les findings hors périmètre et l'instruction d'écrire la description de la PR selon `.agents/skills/deliver-issue/references/report.md`, sans pousser de code.
+Transmettre au sous-agent l'URL de l'issue et de la PR, les décisions prises de l'étape 1, les preuves du dernier tour de l'axe Correction, le verdict, les findings hors périmètre et l'instruction d'écrire la description de la PR selon `.agents/skills/deliver-issue/references/report.md`, sans pousser de code.
 
-L'étape est terminée quand la description de la PR commence par le verdict et se termine par `Closes #<numéro>`.
+L'étape est terminée quand la description de la PR commence par le verdict et contient `Closes #<numéro>`.
 
 ## Compte rendu final
 

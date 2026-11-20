@@ -5,7 +5,7 @@ Le rapport de livraison est la description de la PR, écrite une seule fois, en 
 ## Rédaction
 
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture ou son déploiement.
-- Sources : le rapport du dev pour « Critères non satisfaits » et « Décisions prises », les findings hors périmètre pour « Pistes », le diff final pour le reste.
+- Sources : les preuves du dernier tour de l'axe Correction pour « Critères non satisfaits », le rapport du dev pour « Décisions prises », les findings hors périmètre pour « Pistes », le diff final pour le reste.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
 - Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
