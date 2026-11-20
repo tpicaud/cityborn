@@ -73,7 +73,7 @@ export const SignInWithGoogleButton = () => {
       onPress={handlePress}
       disabled={isLoading}
       colorScheme="light"
-      size="wide"
+      size="standard"
     />
   );
 };
