@@ -1,6 +1,7 @@
 'use client';
 
 import type { User } from '@cityborn/api';
+import type { Navigation } from '@cityborn/client/platform';
 import {
   type AccountDeletion,
   useAccountDeletion,
@@ -22,6 +23,7 @@ import { View } from 'tamagui';
 import { frontendClientConfig } from '@/config/client';
 import { EmailVerificationNotice } from '@/features/auth/EmailVerificationNotice';
 import { LegalDocumentLinks } from '@/features/legal-information/LegalDocumentLinks';
+import { useNavigation } from '@/lib/navigation';
 import { EditProfile } from './EditProfile';
 import { GameHistory } from './GameHistory';
 
@@ -30,13 +32,16 @@ type ProfileProps = {
 };
 
 export function Profile({ user }: ProfileProps) {
+  const navigation: Navigation = useNavigation();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const {
     isConfirmationOpen,
     openConfirmation,
     closeConfirmation,
     deleteAccount,
-  }: AccountDeletion = useAccountDeletion();
+  }: AccountDeletion = useAccountDeletion({
+    onAccountDeleted: () => navigation.returnTo('/'),
+  });
 
   useEffect(() => {
     if (!isEditing) return undefined;
