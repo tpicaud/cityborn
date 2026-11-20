@@ -79,6 +79,7 @@ services:
       POSTGRES_DB: cityborn_test
     labels:
       cityborn.checkout: ${CITYBORN_CHECKOUT:-}
+      cityborn.host: ${CITYBORN_HOST:-}
     ports:
       - "127.0.0.1::5432"
     configs:
@@ -92,6 +93,7 @@ services:
     profiles: [worktree]
     labels:
       cityborn.checkout: ${CITYBORN_CHECKOUT:-}
+      cityborn.host: ${CITYBORN_HOST:-}
     ports:
       - "127.0.0.1::6379"
     volumes:

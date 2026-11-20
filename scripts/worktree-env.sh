@@ -15,16 +15,17 @@ Redis, dans un projet Docker Compose à son nom, sur des ports choisis par Docke
                      dans le checkout principal, exécute CMD sans rien changer
   down               arrête l'env du checkout courant
   destroy [CHEMIN]   supprime l'env d'un checkout et ses volumes (courant par défaut)
-  prune              supprime les envs dont le checkout n'existe plus
+  prune              supprime les envs de cette machine dont le checkout n'existe plus
 
 Chaque démarrage d'env lance d'abord prune : l'env d'un worktree supprimé
-disparaît au prochain démarrage d'un autre env.
+disparaît au prochain démarrage d'un autre env de la même machine.
 USAGE
 }
 
 repository_root="$(cd "$(dirname "$0")/.." && pwd -P)"
 compose_file="$repository_root/apps/backend/docker-compose.resources.yml"
 services=(postgis-worktree redis-worktree)
+host_id="$(cat /etc/machine-id 2>/dev/null || hostname)"
 
 checkout_root() {
   local root
@@ -42,55 +43,57 @@ project_name() {
 env_compose() {
   local checkout="$1"
   shift
-  CITYBORN_CHECKOUT="$checkout" docker compose -p "$(project_name "$checkout")" -f "$compose_file" --profile worktree "$@"
+  CITYBORN_CHECKOUT="$checkout" CITYBORN_HOST="$host_id" docker compose -p "$(project_name "$checkout")" -f "$compose_file" --profile worktree "$@"
 }
 
 is_secondary_worktree() {
   local git_dir common_dir
-  git_dir="$(cd "$(git -C "$1" rev-parse --git-dir)" && pwd -P)"
-  common_dir="$(cd "$(git -C "$1" rev-parse --git-common-dir)" && pwd -P)"
+  git_dir="$(cd "$(git -C "$1" rev-parse --absolute-git-dir)" && pwd -P)"
+  common_dir="$(cd "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)" && pwd -P)"
   [ "$git_dir" != "$common_dir" ]
 }
 
 prune_orphan_envs() {
-  docker ps --all --filter label=cityborn.checkout \
+  docker ps --all --filter "label=cityborn.host=$host_id" \
     --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
     sort -u |
     while IFS=$'\t' read -r project checkout; do
       if [ -n "$checkout" ] && [ ! -d "$checkout" ]; then
         echo "Suppression de $project ($checkout introuvable)"
-        CITYBORN_CHECKOUT="$checkout" docker compose -p "$project" -f "$compose_file" --profile worktree --progress quiet down --volumes --remove-orphans ||
+        CITYBORN_CHECKOUT="$checkout" CITYBORN_HOST="$host_id" docker compose -p "$project" -f "$compose_file" --profile worktree --progress quiet down --volumes --remove-orphans ||
           echo "Suppression de $project impossible : relancer pnpm env:prune." >&2
       fi
     done
 }
 
 start_env() {
-  local checkout="$1" lock_file
+  local checkout="$1"
   prune_orphan_envs >&2 || echo "Nettoyage des envs orphelins impossible : relancer pnpm env:prune." >&2
-  lock_file="$(git -C "$checkout" rev-parse --absolute-git-dir)/cityborn-env.lock"
-  if command -v flock >/dev/null; then
-    exec 9>"$lock_file"
-    flock 9
+  if ! env_compose "$checkout" --progress quiet up -d --wait --quiet-pull "${services[@]}" >&2; then
+    sleep 1
+    env_compose "$checkout" --progress quiet up -d --wait --quiet-pull "${services[@]}" >&2
   fi
-  env_compose "$checkout" --progress quiet up -d --wait --quiet-pull "${services[@]}" >&2
-  if command -v flock >/dev/null; then
-    exec 9>&-
-  fi
+  postgres_port="$(published_port "$checkout" postgis-worktree 5432)"
+  redis_port="$(published_port "$checkout" redis-worktree 6379)"
 }
 
 published_port() {
-  local endpoint
+  local endpoint port
   endpoint="$(env_compose "$1" port "$2" "$3")"
-  echo "${endpoint##*:}"
+  port="${endpoint##*:}"
+  if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+    echo "Port publié de $2 introuvable : vérifier que Docker tourne, puis relancer." >&2
+    exit 1
+  fi
+  echo "$port"
 }
 
 postgres_url() {
-  echo "postgresql://cityborn_test:cityborn_test@127.0.0.1:$(published_port "$1" postgis-worktree 5432)/$2"
+  echo "postgresql://cityborn_test:cityborn_test@127.0.0.1:$postgres_port/$1"
 }
 
 redis_url() {
-  echo "redis://127.0.0.1:$(published_port "$1" redis-worktree 6379)/0"
+  echo "redis://127.0.0.1:$redis_port/0"
 }
 
 command="${1:-}"
@@ -101,16 +104,16 @@ case "$command" in
     checkout="$(checkout_root)"
     start_env "$checkout"
     echo "Projet : $(project_name "$checkout")"
-    echo "TEST_DATABASE_URL=$(postgres_url "$checkout" cityborn_test)"
-    echo "TEST_REDIS_URL=$(redis_url "$checkout")"
-    echo "DATABASE_URL (worktree secondaire)=$(postgres_url "$checkout" cityborn_dev)"
+    echo "TEST_DATABASE_URL=$(postgres_url cityborn_test)"
+    echo "TEST_REDIS_URL=$(redis_url)"
+    echo "DATABASE_URL (worktree secondaire)=$(postgres_url cityborn_dev)"
     ;;
   run-test)
     [ "$#" -gt 0 ] || { usage >&2; exit 1; }
     checkout="$(checkout_root)"
     start_env "$checkout"
-    TEST_DATABASE_URL="$(postgres_url "$checkout" cityborn_test)"
-    TEST_REDIS_URL="$(redis_url "$checkout")"
+    TEST_DATABASE_URL="$(postgres_url cityborn_test)"
+    TEST_REDIS_URL="$(redis_url)"
     export TEST_DATABASE_URL TEST_REDIS_URL
     exec "$@"
     ;;
@@ -119,7 +122,7 @@ case "$command" in
     checkout="$(checkout_root)"
     if is_secondary_worktree "$checkout"; then
       start_env "$checkout"
-      DATABASE_URL="$(postgres_url "$checkout" cityborn_dev)"
+      DATABASE_URL="$(postgres_url cityborn_dev)"
       DIRECT_URL="$DATABASE_URL"
       export DATABASE_URL DIRECT_URL
     fi
