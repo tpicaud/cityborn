@@ -17,12 +17,12 @@ afterEach(() => {
 });
 
 describe('formatDate', () => {
-  it('formats a calendar date as a numeric French date', () => {
+  it('formats a calendar date as a short numeric French date', () => {
     setLocalTimeZone('Europe/Paris');
 
     const formattedDate: string = formatDate('2026-10-16');
 
-    assert.equal(formattedDate, '16/10/2026');
+    assert.equal(formattedDate, '16/10/26');
   });
 
   it('keeps a calendar date on the same day west of UTC', () => {
@@ -30,7 +30,7 @@ describe('formatDate', () => {
 
     const formattedDate: string = formatDate('2026-01-06');
 
-    assert.equal(formattedDate, '06/01/2026');
+    assert.equal(formattedDate, '06/01/26');
   });
 
   it('keeps a calendar date on the same day east of UTC', () => {
@@ -38,7 +38,7 @@ describe('formatDate', () => {
 
     const formattedDate: string = formatDate('2026-01-06');
 
-    assert.equal(formattedDate, '06/01/2026');
+    assert.equal(formattedDate, '06/01/26');
   });
 
   it('formats a date-time in the local time zone', () => {
@@ -46,7 +46,7 @@ describe('formatDate', () => {
 
     const formattedDate: string = formatDate('2026-01-06T02:30:00.000Z');
 
-    assert.equal(formattedDate, '05/01/2026');
+    assert.equal(formattedDate, '05/01/26');
   });
 
   it('formats a date-time with an offset in the local time zone', () => {
@@ -54,6 +54,6 @@ describe('formatDate', () => {
 
     const formattedDate: string = formatDate('2026-01-06T20:00:00+00:00');
 
-    assert.equal(formattedDate, '07/01/2026');
+    assert.equal(formattedDate, '07/01/26');
   });
 });

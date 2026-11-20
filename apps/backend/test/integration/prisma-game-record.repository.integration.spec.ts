@@ -83,7 +83,7 @@ describe('PrismaGameRecordRepository', () => {
   });
 
   describe('findRecentByUserId', () => {
-    it('returns only the five newest game records of the requested user', async () => {
+    it('returns only the ten newest game records of the requested user', async () => {
       const user: User = buildUser();
       const otherUser: User = buildUser({
         id: '00000000-0000-4000-8000-000000000002',
@@ -107,7 +107,7 @@ describe('PrismaGameRecordRepository', () => {
         ],
       });
       const recordIds: GameRecordId[] = await Promise.all(
-        Array.from({ length: 6 }, async (_, index: number) => {
+        Array.from({ length: 11 }, async (_, index: number) => {
           const recordData: CreateGameRecord = buildCreateGameRecord();
           const record: Pick<GameRecord, 'id'> =
             await gameRecordRepository.create(recordData, [{ id: user.id }]);
@@ -127,7 +127,7 @@ describe('PrismaGameRecordRepository', () => {
       expect(records?.map(({ id }) => id)).toEqual(
         recordIds.slice(1).reverse(),
       );
-      expect(records?.[0]?.createdAt).toBe('2026-01-06T00:00:00.000Z');
+      expect(records?.[0]?.createdAt).toBe('2026-01-11T00:00:00.000Z');
       expect(others).toEqual([]);
     });
 

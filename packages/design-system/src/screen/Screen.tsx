@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { styled, Text, View } from 'tamagui';
+import { ScrollView, styled, Text, View } from 'tamagui';
 import { IconButton } from '../IconButton';
 import { ScreenFrame } from './ScreenFrame';
 
@@ -9,6 +9,7 @@ type ScreenProps = {
   title?: string;
   onBack?: () => void;
   bottomSafeArea?: boolean;
+  scrollable?: boolean;
   children: ReactNode;
 };
 
@@ -39,6 +40,12 @@ const BackSlot = styled(View, {
   ml: '-2',
 });
 
+const ScrollableContent = styled(View, {
+  px: '4 md:10',
+  pt: '1',
+  pb: '6 md:10',
+});
+
 const ScreenTitle = styled(Text, {
   role: 'heading',
   fontFamily: 'heading',
@@ -53,6 +60,7 @@ export function Screen({
   title,
   onBack,
   bottomSafeArea = false,
+  scrollable = false,
   children,
 }: ScreenProps) {
   const hasHeader: boolean = title !== undefined || onBack !== undefined;
@@ -71,9 +79,21 @@ export function Screen({
               {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
             </View>
           )}
-          <View flex={1} minH="0">
-            {children}
-          </View>
+          {scrollable ? (
+            <ScrollView
+              flex={1}
+              minH="0"
+              mx="-4 md:-10"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <ScrollableContent>{children}</ScrollableContent>
+            </ScrollView>
+          ) : (
+            <View flex={1} minH="0">
+              {children}
+            </View>
+          )}
         </ScreenColumn>
       </ScreenSafeArea>
     </ScreenFrame>
