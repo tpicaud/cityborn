@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Start test databases
+        run: pnpm db:test:start
+
       - name: Verify
         run: pnpm verify
 

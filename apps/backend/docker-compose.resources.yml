@@ -1,4 +1,4 @@
-name: cityborn_resources
+name: cityborn-dev
 
 x-postgis: &postgis
   image: postgis/postgis:16-3.4
@@ -19,7 +19,6 @@ x-redis: &redis
 services:
   postgis:
     <<: *postgis
-    container_name: postgis
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -34,7 +33,6 @@ services:
 
   adminer:
     image: adminer:latest
-    container_name: adminer
     ports:
       - "8080:8080"
     networks:
@@ -45,7 +43,6 @@ services:
 
   redis:
     <<: *redis
-    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -56,7 +53,6 @@ services:
 
   redisinsight:
     image: redis/redisinsight:latest
-    container_name: redisinsight
     environment:
       RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
       RI_REDIS_HOST0: redis
@@ -77,44 +73,38 @@ services:
       POSTGRES_USER: cityborn_test
       POSTGRES_PASSWORD: cityborn_test
       POSTGRES_DB: cityborn_test
+    labels:
+      cityborn.checkout: ${CITYBORN_CHECKOUT:-}
+      cityborn.host: ${CITYBORN_HOST:-}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:${TEST_POSTGRES_PORT:-5433}:5432"
+    configs:
+      - source: worktree-databases
+        target: /docker-entrypoint-initdb.d/worktree-databases.sql
     volumes:
       - postgres-test-data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis-test:
     <<: *redis
     profiles: [test]
+    labels:
+      cityborn.checkout: ${CITYBORN_CHECKOUT:-}
+      cityborn.host: ${CITYBORN_HOST:-}
     ports:
-      - "127.0.0.1:6380:6379"
+      - "127.0.0.1:${TEST_REDIS_PORT:-6380}:6379"
     volumes:
       - redis-test-data:/data
+    restart: unless-stopped
 
-  postgis-recette:
-    <<: *postgis
-    profiles: [recette]
-    environment:
-      POSTGRES_USER: cityborn_recette
-      POSTGRES_PASSWORD: cityborn_recette
-      POSTGRES_DB: cityborn_recette
-    ports:
-      - "127.0.0.1:${RECETTE_POSTGRES_PORT:-5434}:5432"
-    volumes:
-      - postgres-recette-data:/var/lib/postgresql/data
-
-  redis-recette:
-    <<: *redis
-    profiles: [recette]
-    ports:
-      - "127.0.0.1:${RECETTE_REDIS_PORT:-6381}:6379"
-    volumes:
-      - redis-recette-data:/data
+configs:
+  worktree-databases:
+    content: |
+      CREATE DATABASE cityborn_dev;
 
 volumes:
   postgres-test-data:
   redis-test-data:
-  postgres-recette-data:
-  redis-recette-data:
 
 networks:
   pg_network:

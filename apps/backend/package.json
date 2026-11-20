@@ -18,8 +18,8 @@
     "test:all": "pnpm test && pnpm test:int && pnpm test:e2e",
     "test:cov": "jest --selectProjects unit --coverage",
     "test:watch": "jest --selectProjects unit --watch",
-    "db:dev:start": "docker compose -p cityborn_resources -f docker-compose.resources.yml up --build -d --wait postgis redis adminer redisinsight",
-    "db:dev:stop": "docker compose -p cityborn_resources -f docker-compose.resources.yml stop postgis redis adminer redisinsight",
+    "db:dev:start": "docker compose -p cityborn-dev -f docker-compose.resources.yml up --build -d --wait postgis redis adminer redisinsight",
+    "db:dev:stop": "docker compose -p cityborn-dev -f docker-compose.resources.yml stop postgis redis adminer redisinsight",
     "db:dev:up": "prisma migrate deploy",
     "db:dev:migrate": "prisma migrate dev --name",
     "db:dev:reset": "prisma migrate reset && prisma db seed",
@@ -27,8 +27,8 @@
     "format": "biome check --write .",
     "lint": "biome check .",
     "check": "pnpm typecheck && pnpm lint",
-    "db:test:start": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test up -d --wait postgis-test redis-test",
-    "db:test:stop": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test stop postgis-test redis-test"
+    "db:test:start": "docker compose -p cityborn-test -f docker-compose.resources.yml --profile test up -d --wait postgis-test redis-test",
+    "db:test:stop": "docker compose -p cityborn-test -f docker-compose.resources.yml --profile test stop postgis-test redis-test"
   },
   "dependencies": {
     "@axiomhq/pino": "^2.0.0",

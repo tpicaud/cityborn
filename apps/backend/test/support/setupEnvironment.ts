@@ -1,8 +1,20 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { type DotenvParseOutput, parse } from 'dotenv';
+
+const backendEnvPath: string = resolve(__dirname, '../../.env');
+const backendEnv: DotenvParseOutput = existsSync(backendEnvPath)
+  ? parse(readFileSync(backendEnvPath))
+  : {};
+
 export const testDatabaseUrl: string =
   process.env.TEST_DATABASE_URL ??
+  backendEnv.TEST_DATABASE_URL ??
   'postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test';
 export const testRedisUrl: string =
-  process.env.TEST_REDIS_URL ?? 'redis://localhost:6380/0';
+  process.env.TEST_REDIS_URL ??
+  backendEnv.TEST_REDIS_URL ??
+  'redis://localhost:6380/0';
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = testDatabaseUrl;

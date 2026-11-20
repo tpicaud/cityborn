@@ -22,7 +22,7 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 Renseigner ensuite les variables requises dans les fichiers `.env` (demander les valeurs sensibles à l'équipe).
 
-Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du checkout principal puis lance `pnpm install`.
+Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du checkout principal, lance un PostgreSQL et un Redis propres au worktree, écrit leurs URL dans `apps/backend/.env`, puis lance `pnpm install`. Les tests et les commandes `pnpm db:dev:*` du worktree visent ainsi son env Docker, jamais celui du checkout principal. Le script supprime aussi les env Docker des worktrees disparus ; le relancer recrée l'env s'il manque.
 
 ## Lancement
 
@@ -42,11 +42,9 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`). `pnpm db:dev:stop` arrête PostgreSQL et Redis.
 
-`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Dans un worktree préparé par `setup-worktree.sh`, ces ressources tournent déjà. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
 
-`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Il démarre les ressources de test quand le backend est touché.
-
-Pour la recette web isolée, lancer `pnpm recette:prepare` : il réserve un slot libre et affiche `RECETTE_SLOT` et les URL (3100/3101 et backend 4100 pour le slot 0, +10 par slot). Lancer ensuite `RECETTE_SLOT=<slot> pnpm recette:web` (frontend, back-office et backend) ; après arrêt des serveurs, `RECETTE_SLOT=<slot> pnpm recette:stop` arrête PostgreSQL et Redis de recette.
+`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Dans le checkout principal, lancer `pnpm db:test:start` avant.
 
 La seed crée deux comptes :
 

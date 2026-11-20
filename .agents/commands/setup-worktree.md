@@ -1,5 +1,5 @@
 ---
-description: Prépare un worktree Cityborn — conserve les .env présents, complète les manquants et lance pnpm install
+description: Prépare un worktree Cityborn — complète les .env, lance son env Docker et pnpm install
 argument-hint: [chemin du worktree (optionnel, défaut : worktree courant)]
 ---
 
@@ -7,7 +7,8 @@ argument-hint: [chemin du worktree (optionnel, défaut : worktree courant)]
 
 Préparer un worktree existant ou fraîchement créé : conserver ses `.env`,
 compléter les fichiers manquants depuis le checkout principal, vérifier les
-fichiers requis et installer les dépendances.
+fichiers requis, lancer son env Docker de base de données et installer les
+dépendances.
 
 Chemin fourni par l'utilisateur (optionnel) : $ARGUMENTS
 
@@ -28,8 +29,8 @@ existent déjà ; `--skip-install` ne valide pas la préparation complète.
 
 ## Étape 3 — Rendre compte
 
-Lister les fichiers copiés et confirmer que `pnpm install` s'est terminé sans
-erreur. Tout échec bloque le développement : signaler l'erreur telle quelle sans
+Lister les fichiers copiés, l'env Docker lancé et confirmer que `pnpm install`
+s'est terminé sans erreur. Tout échec bloque le développement : signaler l'erreur telle quelle sans
 tenter de contourner (pas de `--force`, pas de suppression de lockfile).
 
 Cette commande ne crée pas de worktree, ne change pas de branche et ne touche

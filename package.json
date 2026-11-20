@@ -47,15 +47,8 @@
     "test:watch": "turbo run test:watch",
     "test:cov": "turbo run test:cov",
     "test:all": "turbo run test:all",
-    "recette:prepare": "bash scripts/recette/launch.sh prepare",
-    "recette:backend": "bash scripts/recette/launch.sh backend",
-    "recette:frontend": "bash scripts/recette/launch.sh frontend",
-    "recette:back-office": "bash scripts/recette/launch.sh back-office",
-    "recette:stop": "bash scripts/recette/launch.sh stop",
-    "recette:captures": "bash scripts/recette/publish-captures.sh",
-    "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
     "check": "pnpm typecheck && pnpm lint",
-    "verify": "pnpm lint && pnpm check:agent-docs && pnpm check:axiom-dashboards && pnpm check:api-compat && turbo run db:test:start --affected --filter=cityborn-backend && turbo run typecheck test:all --affected && turbo run build --affected --filter=cityborn-frontend --filter=cityborn-back-office"
+    "verify": "pnpm lint && pnpm check:agent-docs && pnpm check:axiom-dashboards && pnpm check:api-compat && turbo run typecheck test:all --affected && turbo run build --affected --filter=cityborn-frontend --filter=cityborn-back-office"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",

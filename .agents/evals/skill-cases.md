@@ -11,7 +11,7 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « Ajoute un repository Prisma au domaine game. » | `conventions-backend`, `conventions-testing` |
 | « Renomme le champ `durationMs` des wide events. » | `conventions-backend` seulement |
 | « Ajoute un dashboard Axiom des connexions WebSocket. » | `conventions-backend`, `axiom-building-dashboards` |
-| « Ajoute un test pour `isHostOf` dans `@cityborn/client`. » | `conventions-testing`, sans `execute-ui-scenarios` |
+| « Ajoute un test pour `isHostOf` dans `@cityborn/client`. » | `conventions-testing` |
 | « Ajoute à `@cityborn/client` le chargement du classement. » | `conventions-client` |
 | « Ajoute l'écran de classement au frontend et au mobile. » | `conventions-client-apps`, `conventions-client` |
 | « Ajoute au frontend une page publique `/player/<username>`. » | `conventions-client-apps` |
@@ -21,13 +21,8 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « Explique-moi ce que demande l'issue #400. » | `manage-issue` |
 | « Découpe l'issue #600 en sous-issues. » | `manage-issue`, sans `deliver-issue` |
 | « Ouvre une branche d'intégration pour #500 et rattaches-y #501 et #502. » | `manage-issue`, sans `deliver-issue` |
-| « Développe-moi l'issue #123. » | `deliver-issue`, puis `execute-ui-scenarios` en dernière étape si un parcours Web est jouable |
-| « Développe #501. », sous-issue de #500 sans PR d'intégration | `deliver-issue`, `manage-issue` pour ouvrir l'intégration de #500, puis `execute-ui-scenarios` si un parcours Web est jouable |
-| « Fais la recette web de la PR #300 avec les scénarios de sa description. » | `execute-ui-scenarios`, sans `deliver-issue` |
-| « Fais la recette desktop du back-office avec ces scénarios. » | `execute-ui-scenarios`, sans `deliver-issue` |
-| « Rejoue dans ce checkout les scénarios fournis. » | `execute-ui-scenarios`, sans `deliver-issue` ni `manage-issue` |
-| « Livre une modification mobile. » | `deliver-issue`, sans `execute-ui-scenarios` : aucun parcours Web |
-| « Explique-moi les scénarios de recette de cette PR sans les exécuter. » | Pas de `execute-ui-scenarios` |
+| « Développe-moi l'issue #123. » | `deliver-issue` |
+| « Développe #501. », sous-issue de #500 sans PR d'intégration | `deliver-issue`, `manage-issue` pour ouvrir l'intégration de #500 |
 | « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
 | « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |
 | « Vérifie les dépréciations de l'API. » | `remove-deprecations` |
