@@ -81,11 +81,13 @@ export class PrismaUserRepository implements UserRepository {
   async findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null> {
-    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
-      where: {
-        OR: [{ email: sameEmailAs(identifier) }, { username: identifier }],
-      },
-    });
+    const user: PrismaUser | null =
+      (await this.txHost.tx.user.findFirst({
+        where: { email: sameEmailAs(identifier) },
+      })) ??
+      (await this.txHost.tx.user.findUnique({
+        where: { username: identifier },
+      }));
     return user ? UserMapper.toUserCredentials(user) : null;
   }
 

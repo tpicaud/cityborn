@@ -421,29 +421,6 @@ describe('AuthService account operations', () => {
     });
   });
 
-  describe('getProfile', () => {
-    it('returns the authenticated profile', async () => {
-      const { authService, userService }: ReturnType<typeof buildAuthService> =
-        buildAuthService();
-      const persistedUser: User = buildUser();
-      userService.findByIdentifier.mockResolvedValue(persistedUser);
-
-      await expect(authService.getProfile(persistedUser.id)).resolves.toEqual(
-        expect.objectContaining({ id: persistedUser.id }),
-      );
-    });
-
-    it('rejects a missing profile', async () => {
-      const { authService, userService }: ReturnType<typeof buildAuthService> =
-        buildAuthService();
-      userService.findByIdentifier.mockResolvedValue(null);
-
-      await expect(authService.getProfile('missing')).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_NOT_FOUND },
-      });
-    });
-  });
-
   describe('deleteUser', () => {
     it('deletes the authenticated user', async () => {
       const user: User = buildUser();

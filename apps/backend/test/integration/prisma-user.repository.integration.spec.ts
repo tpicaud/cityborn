@@ -186,6 +186,37 @@ describe('PrismaUserRepository', () => {
         passwordHash: 'hashed-password',
       });
     });
+
+    it("prefers the account owning the email over another account's username", async () => {
+      const bobData: User = buildUser({
+        email: 'bob@example.com',
+        username: 'Alice@Example.com',
+      });
+      const aliceData: User = buildUser({
+        email: 'alice@example.com',
+        username: 'alice',
+      });
+      await userRepository.create({
+        email: bobData.email,
+        username: bobData.username,
+        type: bobData.type,
+        password: 'bob-hashed-password',
+      });
+      const alice: User = await userRepository.create({
+        email: aliceData.email,
+        username: aliceData.username,
+        type: aliceData.type,
+        password: 'alice-hashed-password',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByIdentifier('Alice@Example.com');
+
+      expect(credentials).toMatchObject({
+        authSession: { user: { id: alice.id } },
+        passwordHash: 'alice-hashed-password',
+      });
+    });
   });
 
   describe('findByIdentifier', () => {

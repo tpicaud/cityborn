@@ -267,17 +267,6 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async getProfile(identifier: string): Promise<User> {
-    const user = await this.userService.findByIdentifier(identifier);
-    if (!user)
-      throw new NotFoundException({
-        code: ErrorCode.USER_NOT_FOUND,
-        message: `User not found`,
-      });
-
-    return user;
-  }
-
   async deleteUser(user?: User): Promise<void> {
     if (!user)
       throw new NotFoundException({

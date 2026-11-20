@@ -227,6 +227,40 @@ describe('Production bootstrap', () => {
     }
   });
 
+  it("returns the authenticated user even when another account's email matches its username", async () => {
+    const userRepository: UserRepository = app.get(USER_REPOSITORY);
+    const aliceData: User = buildUser({
+      email: 'alice@example.com',
+      username: 'alice',
+    });
+    const bobData: User = buildUser({
+      email: 'bob@example.com',
+      username: 'Alice@Example.com',
+    });
+    await userRepository.create({
+      email: aliceData.email,
+      username: aliceData.username,
+      type: aliceData.type,
+    });
+    const user: User = await userRepository.create({
+      email: bobData.email,
+      username: bobData.username,
+      type: bobData.type,
+    });
+    const accessToken: string = await createAccessToken(app, user.id);
+
+    const response: request.Response = await request(app.getHttpServer())
+      .get(contract.auth.me.path)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(UserSchema.parse(response.body)).toMatchObject({
+      id: user.id,
+      email: 'bob@example.com',
+      username: 'Alice@Example.com',
+    });
+  });
+
   it('logs the contract action when the rate limit guard rejects a route', async () => {
     const rateLimitService: RateLimitService = app.get(RateLimitService);
     const consumeHttp = jest
