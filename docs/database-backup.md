@@ -164,12 +164,13 @@ Vérifier que l'identité et la phrase de confirmation affichent `staging` et la
 ## Tests du script
 
 ```bash
+pnpm db:test:start
 pnpm test:db-restore
 ```
 
-La suite `apps/backend/test/integration/database-restore.integration.spec.ts` utilise Jest et le harnais d'intégration du backend, dont PostgreSQL et Redis, propres au checkout, démarrent avec la commande. `test:db-restore` sélectionne cette suite ; `pnpm test:int` exécute l'ensemble des tests d'intégration.
+La suite `apps/backend/test/integration/database-restore.integration.spec.ts` utilise Jest et le harnais d'intégration du backend, dont PostgreSQL et Redis doivent être démarrés avec `db:test:start`. `test:db-restore` sélectionne cette suite ; `pnpm test:int` exécute l'ensemble des tests d'intégration.
 
-Les opérations destructives utilisent un PostgreSQL Docker jetable supplémentaire, sans port exposé, distinct de la base de test du harnais. La suite couvre le remplacement, la conservation des objets d'extension et des droits, le rollback sur erreur SQL ou de comptage, le refus d'une dépendance externe, le rôle sans privilèges superutilisateur, le contrôle local d'une archive et le rejet d'un checksum incorrect. Le conteneur supplémentaire est supprimé après les tests ; `pnpm env:down` arrête les services du harnais quand ils ne sont plus nécessaires.
+Les opérations destructives utilisent un PostgreSQL Docker jetable supplémentaire, sans port exposé, distinct de la base partagée du harnais. La suite couvre le remplacement, la conservation des objets d'extension et des droits, le rollback sur erreur SQL ou de comptage, le refus d'une dépendance externe, le rôle sans privilèges superutilisateur, le contrôle local d'une archive et le rejet d'un checksum incorrect. Le conteneur supplémentaire est supprimé après les tests ; `pnpm db:test:stop` arrête les services du harnais quand ils ne sont plus nécessaires.
 
 Avant de livrer une évolution de ce script, suivre l'étape 2 avec une véritable sauvegarde de production et consigner son nom, son SHA-256 et les comptages obtenus. Un ancien test de restauration effectué avec un autre script ne valide pas cette version.
 

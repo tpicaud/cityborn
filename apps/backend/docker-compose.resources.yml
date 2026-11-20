@@ -70,9 +70,9 @@ services:
       - redis
     restart: unless-stopped
 
-  postgis-worktree:
+  postgis-test:
     <<: *postgis
-    profiles: [worktree]
+    profiles: [test]
     environment:
       POSTGRES_USER: cityborn_test
       POSTGRES_PASSWORD: cityborn_test
@@ -81,23 +81,25 @@ services:
       cityborn.checkout: ${CITYBORN_CHECKOUT:-}
       cityborn.host: ${CITYBORN_HOST:-}
     ports:
-      - "127.0.0.1::5432"
+      - "127.0.0.1:${TEST_POSTGRES_PORT:-5433}:5432"
     configs:
       - source: worktree-databases
         target: /docker-entrypoint-initdb.d/worktree-databases.sql
     volumes:
-      - postgres-worktree-data:/var/lib/postgresql/data
+      - postgres-test-data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-  redis-worktree:
+  redis-test:
     <<: *redis
-    profiles: [worktree]
+    profiles: [test]
     labels:
       cityborn.checkout: ${CITYBORN_CHECKOUT:-}
       cityborn.host: ${CITYBORN_HOST:-}
     ports:
-      - "127.0.0.1::6379"
+      - "127.0.0.1:${TEST_REDIS_PORT:-6380}:6379"
     volumes:
-      - redis-worktree-data:/data
+      - redis-test-data:/data
+    restart: unless-stopped
 
 configs:
   worktree-databases:
@@ -105,8 +107,8 @@ configs:
       CREATE DATABASE cityborn_dev;
 
 volumes:
-  postgres-worktree-data:
-  redis-worktree-data:
+  postgres-test-data:
+  redis-test-data:
 
 networks:
   pg_network:

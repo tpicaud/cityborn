@@ -22,7 +22,7 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 Renseigner ensuite les variables requises dans les fichiers `.env` (demander les valeurs sensibles à l'équipe).
 
-Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du checkout principal puis lance `pnpm install`. Les commandes `pnpm db:dev:*` (hors `start` et `stop`) y visent la base `cityborn_dev` de l'env Docker du worktree, jamais celle du checkout principal.
+Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du checkout principal, lance un PostgreSQL et un Redis propres au worktree, écrit leurs URL dans `apps/backend/.env`, puis lance `pnpm install`. Les tests et les commandes `pnpm db:dev:*` du worktree visent ainsi son env Docker, jamais celui du checkout principal. Le script supprime aussi les env Docker des worktrees disparus ; le relancer recrée l'env s'il manque.
 
 ## Lancement
 
@@ -42,11 +42,9 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`). `pnpm db:dev:stop` arrête PostgreSQL et Redis.
 
-`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites.
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Dans un worktree préparé par `setup-worktree.sh`, ces ressources tournent déjà. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
 
-Chaque checkout, principal ou worktree, a son propre env Docker de test : un PostgreSQL et un Redis sur des ports choisis par Docker. `pnpm test:int` et `pnpm test:e2e` le démarrent au besoin ; l'intégration et les e2e partagent sa base, à lancer l'une après l'autre. `pnpm env:up` affiche ses URL, `pnpm env:down` l'arrête, `pnpm env:destroy` le supprime avec ses données et `pnpm env:prune` supprime ceux des worktrees disparus, ce que chaque démarrage d'env fait aussi.
-
-`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés.
+`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Dans le checkout principal, lancer `pnpm db:test:start` avant.
 
 La seed crée deux comptes :
 
