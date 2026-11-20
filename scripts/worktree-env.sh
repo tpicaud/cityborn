@@ -16,6 +16,9 @@ Redis, dans un projet Docker Compose à son nom, sur des ports choisis par Docke
   down               arrête l'env du checkout courant
   destroy [CHEMIN]   supprime l'env d'un checkout et ses volumes (courant par défaut)
   prune              supprime les envs dont le checkout n'existe plus
+
+Chaque démarrage d'env lance d'abord prune : l'env d'un worktree supprimé
+disparaît au prochain démarrage d'un autre env.
 USAGE
 }
 
@@ -49,8 +52,22 @@ is_secondary_worktree() {
   [ "$git_dir" != "$common_dir" ]
 }
 
+prune_orphan_envs() {
+  docker ps --all --filter label=cityborn.checkout \
+    --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
+    sort -u |
+    while IFS=$'\t' read -r project checkout; do
+      if [ -n "$checkout" ] && [ ! -d "$checkout" ]; then
+        echo "Suppression de $project ($checkout introuvable)"
+        CITYBORN_CHECKOUT="$checkout" docker compose -p "$project" -f "$compose_file" --profile worktree --progress quiet down --volumes --remove-orphans ||
+          echo "Suppression de $project impossible : relancer pnpm env:prune." >&2
+      fi
+    done
+}
+
 start_env() {
   local checkout="$1" lock_file
+  prune_orphan_envs >&2 || echo "Nettoyage des envs orphelins impossible : relancer pnpm env:prune." >&2
   lock_file="$(git -C "$checkout" rev-parse --absolute-git-dir)/cityborn-env.lock"
   if command -v flock >/dev/null; then
     exec 9>"$lock_file"
@@ -120,15 +137,7 @@ case "$command" in
     env_compose "$checkout" down --volumes --remove-orphans
     ;;
   prune)
-    docker ps --all --filter label=cityborn.checkout \
-      --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
-      sort -u |
-      while IFS=$'\t' read -r project checkout; do
-        if [ -n "$checkout" ] && [ ! -d "$checkout" ]; then
-          echo "Suppression de $project ($checkout introuvable)"
-          CITYBORN_CHECKOUT="$checkout" docker compose -p "$project" -f "$compose_file" --profile worktree down --volumes --remove-orphans
-        fi
-      done
+    prune_orphan_envs
     ;;
   -h|--help)
     usage
