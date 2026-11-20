@@ -1,22 +1,32 @@
+import { UserFacingError } from '@cityborn/api';
 import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
-import {
-  GoogleSignin,
-  isSuccessResponse,
-} from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Pressable } from 'react-native';
+import {
+  GoogleOneTapSignIn,
+  GoogleSignInButton,
+  isCancelledResponse,
+  isSuccessResponse,
+  type OneTapResponse,
+} from 'react-native-nitro-google-signin';
 import { mobileClientConfig } from '@/config/client';
-import { cn } from '@/lib/classNames';
 
-GoogleSignin.configure({
+GoogleOneTapSignIn.configure({
   webClientId: mobileClientConfig.googleOAuthWebClientId,
   iosClientId: mobileClientConfig.googleOAuthIosClientId,
 });
+
+export async function signOutFromGoogle(): Promise<void> {
+  try {
+    await GoogleOneTapSignIn.signOut();
+  } catch {
+    return;
+  }
+}
 
 export const SignInWithGoogleButton = () => {
   const { reportError }: ErrorReporter = useErrorReporter();
@@ -25,26 +35,30 @@ export const SignInWithGoogleButton = () => {
     useIdentityProviderSignIn({
       onSignedIn: () => router.dismissTo('/'),
     });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const signIn = async () => {
+  const signIn = async (): Promise<void> => {
     try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
+      await GoogleOneTapSignIn.checkPlayServices();
+      const response: OneTapResponse =
+        await GoogleOneTapSignIn.presentExplicitSignIn();
 
-      if (isSuccessResponse(response)) {
-        const userInfo = response.data;
-        const idToken = userInfo.idToken;
-        if (!idToken) return;
+      if (isCancelledResponse(response)) return;
 
-        await signInWithGoogle({ idToken });
+      if (!isSuccessResponse(response)) {
+        reportError(
+          new UserFacingError("Google n'a pas fourni de jeton d'identité."),
+        );
+        return;
       }
+
+      await signInWithGoogle({ idToken: response.data.idToken });
     } catch (error: unknown) {
       reportError(error, 'La connexion avec Google a échoué.');
     }
   };
 
-  const handlePress = async () => {
+  const handlePress = async (): Promise<void> => {
     try {
       setIsLoading(true);
       await signIn();
@@ -54,15 +68,12 @@ export const SignInWithGoogleButton = () => {
   };
 
   return (
-    <Pressable
+    <GoogleSignInButton
+      signInBehavior="none"
       onPress={handlePress}
       disabled={isLoading}
-      className={cn(isLoading ? 'opacity-50' : 'opacity-100')}
-    >
-      <Image
-        source={require('../../assets/images/google/android_light_rd_ctn.png')}
-        resizeMode="contain"
-      />
-    </Pressable>
+      colorScheme="light"
+      size="wide"
+    />
   );
 };
