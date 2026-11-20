@@ -42,6 +42,35 @@ describe('selectVersionsToCheck', () => {
     );
   });
 
+  it('keeps published versions until a draft is released', () => {
+    const versions: ManifestEntry[] = [
+      { versionNumber: 4, releasedAt: '2026-09-25T00:00:00.000Z' },
+      { versionNumber: 5, releasedAt: '2026-10-23T00:00:00.000Z' },
+      { versionNumber: 6, releasedAt: '2026-11-04T00:00:00.000Z' },
+      { versionNumber: 7, releasedAt: '2026-11-06T00:00:00.000Z', draft: true },
+    ];
+
+    const selected: ManifestEntry[] = selectVersionsToCheck(
+      versions,
+      { min_days_supported: 30, min_num_of_version_supported: 3 },
+      new Date('2026-11-06T12:00:00.000Z'),
+    );
+    const selectedAfterRelease: ManifestEntry[] = selectVersionsToCheck(
+      versions.map((entry) => ({ ...entry, draft: false })),
+      { min_days_supported: 30, min_num_of_version_supported: 3 },
+      new Date('2026-11-06T12:00:00.000Z'),
+    );
+
+    assert.deepEqual(
+      selected.map((entry) => entry.versionNumber),
+      [7, 6, 5, 4],
+    );
+    assert.deepEqual(
+      selectedAfterRelease.map((entry) => entry.versionNumber),
+      [7, 6, 5],
+    );
+  });
+
   it('retires versions at or below the deprecation floor despite the support policy', () => {
     const versions: ManifestEntry[] = [
       { versionNumber: 1, releasedAt: '2026-10-01T00:00:00.000Z' },

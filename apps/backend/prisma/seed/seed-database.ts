@@ -1,6 +1,7 @@
 import { type CreateUser, CreateUserSchema } from '@cityborn/api';
 import type { Prisma, PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../../src/auth/password-hashing';
+import { defaultThemeIcon } from '../../src/theme/default-theme';
 
 type Position = [number, number];
 
@@ -31,6 +32,7 @@ type SeedPack = {
   id: string;
   name: string;
   description: string;
+  image: string;
   personalities: SeedPersonality[];
 };
 
@@ -81,6 +83,7 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000001',
     name: 'Cinéma',
     description: 'Des stars du grand écran.',
+    image: 'https://placehold.co/600x400/png?text=Cinema',
     personalities: [
       {
         name: 'Marion Cotillard',
@@ -102,6 +105,7 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000002',
     name: 'Pop',
     description: 'Des icônes de la musique pop.',
+    image: 'https://placehold.co/400x400/png?text=Pop',
     personalities: [
       {
         name: 'Lady Gaga',
@@ -228,6 +232,7 @@ async function seedPack({
       id: pack.id,
       name: pack.name,
       description: pack.description,
+      image: pack.image,
       isPublished: true,
       themeId,
       guessObjects: { connect: guessObjects },
@@ -235,8 +240,8 @@ async function seedPack({
     update: {
       name: pack.name,
       description: pack.description,
+      image: pack.image,
       isPublished: true,
-      parentId: null,
       themeId,
       guessObjects: { set: guessObjects },
     },
@@ -252,7 +257,10 @@ async function seedTheme(
   });
   return (
     existingTheme ??
-    tx.theme.create({ data: { name: SEED_THEME_NAME }, select: { id: true } })
+    tx.theme.create({
+      data: { name: SEED_THEME_NAME, icon: defaultThemeIcon },
+      select: { id: true },
+    })
   );
 }
 

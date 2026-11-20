@@ -4,7 +4,6 @@ import type {
   FullPack,
   Pack,
   PackId,
-  PackTree,
   UpdatePack,
 } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
@@ -21,7 +20,7 @@ type PackUpdate = {
 };
 
 export interface PackApi {
-  getPackTrees(): Promise<PackTree[]>;
+  getPublishedPacks(): Promise<Pack[]>;
   getPacks(): Promise<Pack[]>;
   getFullPack(packId: PackId): Promise<FullPack | null>;
   createPack(pack: CreatePack): Promise<Pack>;
@@ -31,8 +30,8 @@ export interface PackApi {
 
 export function createPackApi(contractClient: PackContractClient): PackApi {
   return {
-    async getPackTrees() {
-      return unwrapApiResponse(await contractClient.pack.getPackTrees({}));
+    async getPublishedPacks() {
+      return unwrapApiResponse(await contractClient.pack.getPacks({}));
     },
 
     async getPacks() {

@@ -11,6 +11,7 @@ import type {
 import {
   applyGameConfigChanges,
   GameStatus,
+  SessionMode,
   SessionStatus,
   type sessionWsChannel,
   sessionWsEvent,
@@ -55,6 +56,7 @@ import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
 import { isHostOf, withStatus } from './sessionState';
+import { usePlayerDepartures } from './usePlayerDepartures';
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
@@ -67,6 +69,7 @@ export type SessionController = {
   localPlayerID: PlayerId | undefined;
   isAdmitting: boolean;
   isHost: boolean;
+  isLaunchingQuickPlay: boolean;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
@@ -78,12 +81,29 @@ export type SessionController = {
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
   exitGame: () => Promise<void>;
+  leaveGame: () => Promise<void>;
+  departedPlayerIDs: PlayerId[];
 };
 
 type SessionSnapshot = {
   session: Session;
   receivedAt: number;
 };
+
+export async function enterSession({
+  session,
+  playerID,
+  join,
+  startGame,
+}: {
+  session: Pick<Session, 'quickPlay'>;
+  playerID: PlayerId;
+  join: (playerID: PlayerId) => Promise<void>;
+  startGame: () => Promise<void>;
+}): Promise<void> {
+  await join(playerID);
+  if (session.quickPlay) await startGame();
+}
 
 export function useSessionController({
   sessionID,
@@ -95,6 +115,9 @@ export function useSessionController({
   const { reportError }: ErrorReporter = useErrorReporter();
   const [snapshot, setSnapshot] = useState<SessionSnapshot>();
   const session: Session | undefined = snapshot?.session;
+  const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
+    useState<boolean>(true);
+  const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
   const [admission, setAdmission] = useState<SessionAdmission>({
     status: 'idle',
   });
@@ -251,6 +274,10 @@ export function useSessionController({
     [session, emit, user?.id],
   );
 
+  const startGame: SessionController['startGame'] = useCallback(async () => {
+    await emit(sessionWsEvent.startGame);
+  }, [emit]);
+
   useEffect(() => {
     if (
       connectionStatus !== 'connected' ||
@@ -260,8 +287,29 @@ export function useSessionController({
     )
       return;
 
-    join(automaticPlayerID);
-  }, [connectionStatus, session, automaticPlayerID, join]);
+    enterSession({
+      session,
+      playerID: automaticPlayerID,
+      join,
+      startGame: async () => {
+        if (!joinedPlayer.current) return;
+        await startGame();
+      },
+    })
+      .catch((error: unknown) => {
+        reportError(error);
+        if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+      })
+      .finally(() => setIsQuickPlayLaunchPending(false));
+  }, [
+    connectionStatus,
+    session,
+    automaticPlayerID,
+    join,
+    startGame,
+    reportError,
+    navigation,
+  ]);
 
   useEffect(() => {
     if (error === undefined) return;
@@ -299,10 +347,6 @@ export function useSessionController({
     });
   };
 
-  const startGame = async () => {
-    await emit(sessionWsEvent.startGame);
-  };
-
   const guess = async (coordinates: Coord | undefined) => {
     await emit(sessionWsEvent.submitGuess, {
       guess: createGuessSubmission(coordinates),
@@ -334,12 +378,20 @@ export function useSessionController({
     navigation.returnTo('/');
   };
 
+  const leaveGame: () => Promise<void> = async () => {
+    await emit(sessionWsEvent.leaveGame);
+    joinedPlayer.current = null;
+    navigation.returnTo('/');
+  };
+
   return {
     session,
     sessionReceivedAt: snapshot?.receivedAt,
     localPlayerID,
     isAdmitting,
     isHost: isHostOf(session, localPlayerID),
+    isLaunchingQuickPlay:
+      isQuickPlayLaunchPending && session?.quickPlay === true,
     connectionStatus,
     retryConnection,
     join,
@@ -354,5 +406,7 @@ export function useSessionController({
     endGame: reportActionErrors({ action: endGame, reportError }),
     playAgain: reportActionErrors({ action: playAgain, reportError }),
     exitGame: reportActionErrors({ action: exitGame, reportError }),
+    leaveGame: reportActionErrors({ action: leaveGame, reportError }),
+    departedPlayerIDs,
   };
 }

@@ -22,15 +22,20 @@ import {
   type ThemeEditorState,
   themeEditorReducer,
 } from './themeEditorState';
-import { createThemeMutations, type ThemeMutations } from './themeMutations';
+import {
+  createThemeMutations,
+  type ThemeFormInput,
+  type ThemeMutations,
+} from './themeMutations';
 export type ThemesManagement = ThemeMutations & {
   themes: AdminTheme[];
   state: ThemeEditorState;
-  creationForm: UseFormReturn<SaveTheme>;
-  renameForm: UseFormReturn<SaveTheme>;
-  startRenaming: (theme: AdminTheme) => void;
+  creationForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme>;
+  editForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme>;
+  startEditing: (theme: AdminTheme) => void;
   confirmDeletion: (id: ThemeId) => void;
   cancel: () => void;
+  isMoving: boolean;
   isDeleting: boolean;
   isLoading: boolean;
   loadError: string | null;
@@ -48,12 +53,18 @@ export function useThemesManagement(): ThemesManagement {
     themeEditorReducer,
     initialThemeEditorState,
   );
+  const [isMoving, setIsMoving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const creationForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
-    resolver: zodResolver(SaveThemeSchema),
-    defaultValues: { name: '' },
-  });
-  const renameForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
+  const creationForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme> =
+    useForm<ThemeFormInput, undefined, SaveTheme>({
+      resolver: zodResolver(SaveThemeSchema),
+      defaultValues: { name: '' },
+    });
+  const editForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme> = useForm<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
@@ -62,15 +73,16 @@ export function useThemesManagement(): ThemesManagement {
     themes,
     state,
     creationForm,
-    renameForm,
+    editForm,
+    isMoving,
     isDeleting,
     isLoading: query.isPending,
     loadError: query.isError ? resolveErrorMessage(query.error) : null,
     reload: () => {
       query.refetch();
     },
-    startRenaming: (theme) => {
-      renameForm.reset({ name: theme.name });
+    startEditing: (theme) => {
+      editForm.reset({ name: theme.name, icon: theme.icon.name });
       dispatch({ type: 'edit', id: theme.id });
     },
     confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),
@@ -81,8 +93,9 @@ export function useThemesManagement(): ThemesManagement {
       themes,
       editedThemeId: state.editedThemeId,
       creationForm,
-      renameForm,
+      editForm,
       dispatch,
+      setIsMoving,
       setIsDeleting,
     }),
   };

@@ -22,11 +22,18 @@ import {
   AdvancedMarkerAnchorPoint,
   APIProvider,
   Map as GoogleMap,
+  type MapProps as GoogleMapProps,
   type MapMouseEvent,
   useMap,
 } from '@vis.gl/react-google-maps';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
+
+type MapEdge = 'top' | 'right' | 'bottom' | 'left';
+
+const MAP_EDGES: MapEdge[] = ['top', 'right', 'bottom', 'left'];
+const RESULT_MARKER_MARGIN: number = 48;
+const RESULT_MINIMUM_HALF_SPAN: number = 0.15;
 
 type GameMapProps = {
   googleMapsApiKey: string;
@@ -54,17 +61,19 @@ const GameMap: React.FC<GameMapProps> = ({
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,
-    minZoom: 2,
-    defaultLogo: false,
-    restriction: {
-      latLngBounds: {
-        north: 85,
-        south: -85,
-        west: -180,
-        east: 180,
-      },
-    },
-  };
+    minZoom: currentRound.status === RoundStatus.SHOWING_RESULTS ? 0 : 2,
+    restriction:
+      currentRound.status === RoundStatus.SHOWING_RESULTS
+        ? null
+        : {
+            latLngBounds: {
+              north: 85,
+              south: -85,
+              west: -180,
+              east: 180,
+            },
+          },
+  } satisfies GoogleMapProps;
 
   const handleMapClick = (event: MapMouseEvent) => {
     if (!event.detail.latLng) return;
@@ -198,25 +207,71 @@ const ZoomToBounds: React.FC<{ answer: Coord; guess?: Coord }> = ({
   answer,
   guess,
 }) => {
-  const map = useMap();
+  const map: google.maps.Map | null = useMap();
+  const answerLat: number = answer.lat;
+  const answerLng: number = answer.lng;
+  const guessLat: number | undefined = guess?.lat;
+  const guessLng: number | undefined = guess?.lng;
 
   useEffect(() => {
-    if (map) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
+    if (!map) return;
 
-      if (guess) {
-        bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
-      }
-
-      const padding = { top: 100, right: 25, bottom: 25, left: 25 };
-
-      setTimeout(() => {
-        map.fitBounds(bounds, padding);
-        map.panToBounds(bounds, padding);
-      }, 100);
+    const bounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+    bounds.extend({
+      lat: answerLat - RESULT_MINIMUM_HALF_SPAN,
+      lng: answerLng - RESULT_MINIMUM_HALF_SPAN,
+    });
+    bounds.extend({
+      lat: answerLat + RESULT_MINIMUM_HALF_SPAN,
+      lng: answerLng + RESULT_MINIMUM_HALF_SPAN,
+    });
+    if (guessLat !== undefined && guessLng !== undefined) {
+      bounds.extend({ lat: guessLat, lng: guessLng });
     }
-  }, [guess, answer, map]);
+
+    const mapElement: HTMLElement = map.getDiv();
+    const overlays: { edge: MapEdge; element: Element }[] = MAP_EDGES.flatMap(
+      (edge) =>
+        Array.from(
+          document.querySelectorAll(`[data-result-map-overlay="${edge}"]`),
+          (element) => ({ edge, element }),
+        ),
+    );
+
+    const fitBounds = (): void => {
+      const mapRectangle: DOMRect = mapElement.getBoundingClientRect();
+      const padding: Record<MapEdge, number> = {
+        top: RESULT_MARKER_MARGIN,
+        right: RESULT_MARKER_MARGIN,
+        bottom: RESULT_MARKER_MARGIN,
+        left: RESULT_MARKER_MARGIN,
+      };
+      overlays.forEach(({ edge, element }) => {
+        const overlay: DOMRect = element.getBoundingClientRect();
+        const covered: Record<MapEdge, number> = {
+          top: overlay.bottom - mapRectangle.top,
+          right: mapRectangle.right - overlay.left,
+          bottom: mapRectangle.bottom - overlay.top,
+          left: overlay.right - mapRectangle.left,
+        };
+        padding[edge] = Math.max(
+          padding[edge],
+          covered[edge] + RESULT_MARKER_MARGIN,
+        );
+      });
+      map.fitBounds(bounds, padding);
+    };
+
+    const observer: ResizeObserver = new ResizeObserver(fitBounds);
+    observer.observe(mapElement);
+    overlays.forEach(({ element }) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [map, answerLat, answerLng, guessLat, guessLng]);
 
   return null;
 };

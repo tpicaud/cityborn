@@ -13,3 +13,5 @@ redis-data
 /.restore-safety/
 /backups/
 /.claude/worktrees/
+
+coverage

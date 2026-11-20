@@ -10,17 +10,27 @@ export interface EventMap {
 
   session_created: {
     mode: SessionMode;
+    quickPlay: boolean;
   };
   game_started: {
     mode: SessionMode;
+    quickPlay: boolean;
     packs: GameConfigPack[];
     numberOfPlayers: number;
   };
   game_finished: {
     gameId: string;
     mode: SessionMode;
+    quickPlay: boolean;
     numberOfPlayers: number;
     average_score: number;
+  };
+  game_abandoned: {
+    gameId: string;
+    mode: SessionMode;
+    quickPlay: boolean;
+    round: number;
+    score: number;
   };
 }
 

@@ -5,9 +5,7 @@ import {
   buildAdminTheme,
   buildFullPack,
   buildGuessObject,
-  buildPack,
   type FullPack,
-  type Pack,
   type PackId,
   PackIdSchema,
 } from '@cityborn/api';
@@ -17,19 +15,17 @@ import {
   type QueryObserverResult,
 } from '@tanstack/react-query';
 import type { PackApi } from '../../domains/pack/packApi';
-import {
-  fullPackQueryOptions,
-  packsQueryOptions,
-} from '../../domains/pack/packQueries';
+import { fullPackQueryOptions } from '../../domains/pack/packQueries';
 import type { ThemeApi } from '../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
 import {
   type PackEditorState,
+  selectPackImagePreview,
   synchronizePackDraft,
   toPackEditorState,
 } from './packEditorState';
 
-type PackReads = Pick<PackApi, 'getFullPack' | 'getPacks'>;
+type PackReads = Pick<PackApi, 'getFullPack'>;
 
 type PackEditorObservation = {
   queryClient: QueryClient;
@@ -39,7 +35,6 @@ type PackEditorObservation = {
 
 type PackEditorObservers = {
   fullPackObserver: QueryObserver<FullPack | null>;
-  packsObserver: QueryObserver<Pack[]>;
   themesObserver: QueryObserver<AdminTheme[]>;
 };
 
@@ -51,18 +46,16 @@ const editedPack: FullPack = buildFullPack({
   isPublished: false,
 });
 
-const packs: Pack[] = [
-  buildPack({ id: editedPackId, name: 'Paris', isPublished: false }),
-];
-
 const themes: AdminTheme[] = [buildAdminTheme()];
 
 const networkError: TypeError = new TypeError('Network request failed');
 
 const loadedThemeApi: ThemeApi = {
+  getPlayableThemes: unexpectedCall,
   getThemes: async () => themes,
   createTheme: unexpectedCall,
   updateTheme: unexpectedCall,
+  moveTheme: unexpectedCall,
   deleteTheme: unexpectedCall,
 };
 
@@ -70,10 +63,10 @@ function unexpectedCall(): never {
   throw new Error('unexpected pack call');
 }
 
-function createFakePackApi({ getFullPack, getPacks }: PackReads): PackApi {
+function createFakePackApi({ getFullPack }: PackReads): PackApi {
   return {
-    getPackTrees: unexpectedCall,
-    getPacks,
+    getPublishedPacks: unexpectedCall,
+    getPacks: unexpectedCall,
     getFullPack,
     createPack: unexpectedCall,
     updatePack: unexpectedCall,
@@ -97,9 +90,6 @@ async function loadPackEditorIgnoringFailure({
       })
       .catch(() => null),
     queryClient
-      .query({ ...packsQueryOptions(packApi), staleTime: 0 })
-      .catch(() => null),
-    queryClient
       .query({ ...themesQueryOptions(themeApi), staleTime: 0 })
       .catch(() => null),
   ]);
@@ -115,7 +105,6 @@ function createPackEditorObservers({
       queryClient,
       fullPackQueryOptions({ packApi, packId: editedPackId }),
     ),
-    packsObserver: new QueryObserver(queryClient, packsQueryOptions(packApi)),
     themesObserver: new QueryObserver(
       queryClient,
       themesQueryOptions(themeApi),
@@ -125,12 +114,10 @@ function createPackEditorObservers({
 
 function readPackEditorState({
   fullPackObserver,
-  packsObserver,
   themesObserver,
 }: PackEditorObservers): PackEditorState {
   return toPackEditorState({
     fullPackQuery: fullPackObserver.getCurrentResult(),
-    packsQuery: packsObserver.getCurrentResult(),
     themesQuery: themesObserver.getCurrentResult(),
   });
 }
@@ -139,7 +126,6 @@ describe('toPackEditorState', () => {
   it('reports a pack answered as not found as missing', async (context: TestContext) => {
     const packApi: PackApi = createFakePackApi({
       getFullPack: async () => null,
-      getPacks: async () => packs,
     });
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
@@ -152,28 +138,9 @@ describe('toPackEditorState', () => {
     assert.deepEqual(packEditorState, { status: 'missing' });
   });
 
-  it('reports a failed first load of the pack list as failed', async (context: TestContext) => {
-    const packApi: PackApi = createFakePackApi({
-      getFullPack: async () => editedPack,
-      getPacks: async () => {
-        throw networkError;
-      },
-    });
-    const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
-    await loadPackEditorIgnoringFailure({ queryClient, packApi });
-
-    const packEditorState: PackEditorState = readPackEditorState(
-      createPackEditorObservers({ queryClient, packApi }),
-    );
-
-    assert.deepEqual(packEditorState, { status: 'failed' });
-  });
-
   it('reports a failed first load of the themes as failed', async (context: TestContext) => {
     const packApi: PackApi = createFakePackApi({
       getFullPack: async () => editedPack,
-      getPacks: async () => packs,
     });
     const themeApi: ThemeApi = {
       ...loadedThemeApi,
@@ -197,7 +164,6 @@ describe('toPackEditorState', () => {
       editedPack;
     const packApi: PackApi = createFakePackApi({
       getFullPack: () => fullPackResponse(),
-      getPacks: async () => packs,
     });
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
@@ -214,7 +180,6 @@ describe('toPackEditorState', () => {
     assert.deepEqual(packEditorState, {
       status: 'loaded',
       pack: editedPack,
-      packs,
       themes,
     });
   });
@@ -226,7 +191,6 @@ describe('toPackEditorState', () => {
     };
     const packApi: PackApi = createFakePackApi({
       getFullPack: () => fullPackResponse(),
-      getPacks: async () => packs,
     });
     const queryClient: QueryClient = new QueryClient();
     await loadPackEditorIgnoringFailure({ queryClient, packApi });
@@ -299,6 +263,24 @@ describe('synchronizePackDraft', () => {
     assert.deepEqual(pack, { ...refreshedPack, name: 'Unsaved name' });
   });
 
+  it('keeps an unsaved image when another field is refreshed', () => {
+    const refreshedPack: FullPack = buildFullPack({
+      ...editedPack,
+      name: 'Paris refreshed',
+    });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: { ...editedPack, image: 'https://example.com/unsaved.png' },
+      loadedPack: editedPack,
+      editedPack: refreshedPack,
+    });
+
+    assert.deepEqual(pack, {
+      ...refreshedPack,
+      image: 'https://example.com/unsaved.png',
+    });
+  });
+
   it('keeps a theme selected while a refresh is in flight', () => {
     const draft: FullPack = buildFullPack({
       ...editedPack,
@@ -325,5 +307,44 @@ describe('synchronizePackDraft', () => {
     });
 
     assert.deepEqual(pack, nextPack);
+  });
+});
+
+describe('selectPackImagePreview', () => {
+  const storedPack: FullPack = buildFullPack({
+    ...editedPack,
+    image: 'https://example.com/stored.png',
+  });
+
+  it('previews the image typed in the draft', () => {
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...storedPack, image: 'https://example.com/typed.png' },
+      editedPack: storedPack,
+    });
+
+    assert.equal(imagePreview, 'https://example.com/typed.png');
+  });
+
+  it('previews the stored image when the draft image is cleared', () => {
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...storedPack, image: '' },
+      editedPack: storedPack,
+    });
+
+    assert.equal(imagePreview, 'https://example.com/stored.png');
+  });
+
+  it('previews no image when the pack has none', () => {
+    const packWithoutImage: FullPack = buildFullPack({
+      ...editedPack,
+      image: undefined,
+    });
+
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...packWithoutImage, image: '' },
+      editedPack: packWithoutImage,
+    });
+
+    assert.equal(imagePreview, undefined);
   });
 });

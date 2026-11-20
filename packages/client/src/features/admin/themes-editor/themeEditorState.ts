@@ -11,6 +11,7 @@ type ThemeEditorAction =
   | { type: 'cancel' }
   | { type: 'creationError'; message: string | null }
   | { type: 'rowError'; id: ThemeId; message: string }
+  | { type: 'moved'; id: ThemeId }
   | { type: 'saved'; id: ThemeId };
 export const initialThemeEditorState: ThemeEditorState = {
   editedThemeId: null,
@@ -45,6 +46,11 @@ export function themeEditorReducer(
       return {
         ...state,
         rowErrors: { ...state.rowErrors, [action.id]: action.message },
+      };
+    case 'moved':
+      return {
+        ...state,
+        rowErrors: { ...state.rowErrors, [action.id]: undefined },
       };
     case 'saved':
       return {

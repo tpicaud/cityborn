@@ -9,13 +9,13 @@ describe('createEvent', () => {
     const event = createEvent({
       visitorId: 'visitor-1',
       name: 'session_created',
-      properties: { mode: SessionMode.SOLO },
+      properties: { mode: SessionMode.SOLO, quickPlay: false },
     });
 
     expect(event).toEqual({
       visitorId: 'visitor-1',
       name: 'session_created',
-      properties: { mode: SessionMode.SOLO },
+      properties: { mode: SessionMode.SOLO, quickPlay: false },
     });
   });
 });
@@ -27,7 +27,7 @@ describe('EventService.trackEvent', () => {
     const event = createEvent({
       visitorId: 'visitor-1',
       name: 'session_created',
-      properties: { mode: SessionMode.SOLO },
+      properties: { mode: SessionMode.SOLO, quickPlay: false },
     });
     eventRepository.create.mockResolvedValue({
       id: 'event-1',

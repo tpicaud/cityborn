@@ -36,7 +36,11 @@ import type {
 } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
-import { type JoinedSession, SessionService } from './session.service';
+import {
+  type JoinedSession,
+  type LeaveGameResult,
+  SessionService,
+} from './session.service';
 import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
@@ -243,6 +247,24 @@ export class SessionGateway
       visitorId,
     );
     this.enrichGame(session);
+    this.broadcastSession(session);
+  }
+
+  @WsMessage(sessionWsChannel, 'leaveGame')
+  async leaveGame(
+    @ConnectedSocket() socket: AppSocket,
+    @CurrentVisitorId() visitorId: VisitorId | undefined,
+  ): Promise<void> {
+    const { playerID, sessionID }: SocketPlayer = this.resolvePlayer(socket);
+    const { session, gameId }: LeaveGameResult =
+      await this.sessionService.leaveGame({
+        playerID,
+        sessionID,
+        visitorId,
+      });
+    this.wideEventService.enrichBusinessContext({ gameId });
+    socket.data.player = null;
+    await socket.leave(sessionID);
     this.broadcastSession(session);
   }
 

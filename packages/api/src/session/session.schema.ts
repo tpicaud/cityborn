@@ -25,7 +25,12 @@ export enum SessionStatus {
 export const SessionModeSchema = z.nativeEnum(SessionMode);
 export const SessionStatusSchema = z.nativeEnum(SessionStatus);
 
-export const CreateSessionSchema = z.object({ mode: SessionModeSchema });
+export const CreateSessionSchema = z
+  .object({ mode: SessionModeSchema, quickPlay: z.boolean().optional() })
+  .refine(({ mode, quickPlay }) => !quickPlay || mode === SessionMode.SOLO, {
+    message: 'La partie rapide se joue en solo',
+    path: ['quickPlay'],
+  });
 export const SessionReconnectTokenSchema = z
   .string()
   .min(1)
@@ -42,6 +47,7 @@ export const SessionSchema = z.object({
   hostID: SessionHostIdSchema,
   mode: SessionModeSchema,
   status: SessionStatusSchema,
+  quickPlay: z.boolean().optional(),
   gameConfig: GameConfigSchema,
   players: z.array(SessionPlayerSchema),
   currentGame: GameSchema.optional(),

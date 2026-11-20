@@ -9,7 +9,10 @@ export default function GuessObjectCard({
   guessObject,
 }: Readonly<{ guessObject: RoundGuessObject }>) {
   return (
-    <Card className="absolute top-0 right-0 my-14 mx-5 w-[10%] min-w-[6em]">
+    <Card
+      data-result-map-overlay="right"
+      className="absolute top-0 right-0 my-14 mx-5 w-[10%] min-w-[6em]"
+    >
       <CardMedia
         component="img"
         image={guessObject.image}

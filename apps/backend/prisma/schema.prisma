@@ -120,8 +120,10 @@ model GuessObject {
 }
 
 model Theme {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  icon     Json
+  position Int    @default(0)
 
   packs Pack[]
 }
@@ -131,15 +133,12 @@ model Pack {
   name        String
   isPublished Boolean @default(false)
   description String?
-  parentId    String? @db.Uuid
-  themeId     String  @default("244b803a-63aa-460a-a40d-4eea0ec2be50") @db.Uuid
+  image       String?
+  themeId     String  @default(dbgenerated("'244b803a-63aa-460a-a40d-4eea0ec2be50'::uuid")) @db.Uuid
 
-  parent       Pack?         @relation("PackChildren", fields: [parentId], references: [id])
-  children     Pack[]        @relation("PackChildren")
   theme        Theme         @relation(fields: [themeId], references: [id])
   guessObjects GuessObject[] @relation("PackGuessObjects")
 
-  @@index([parentId])
   @@index([themeId])
 }
 

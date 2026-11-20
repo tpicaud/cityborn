@@ -1,4 +1,4 @@
-import type { AdminTheme, SaveTheme, Theme, ThemeId } from '@cityborn/api';
+import type { AdminTheme, Theme, ThemeIcon, ThemeId } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma, type Theme as PrismaTheme } from '@prisma/client';
@@ -10,6 +10,12 @@ import {
   ThemeNameAlreadyExistsError,
   type ThemeRepository,
 } from './theme.repository';
+
+const themeOrder: Prisma.ThemeOrderByWithRelationInput[] = [
+  { position: 'asc' },
+  { name: 'asc' },
+];
+
 @Injectable()
 export class PrismaThemeRepository implements ThemeRepository {
   constructor(
@@ -19,7 +25,7 @@ export class PrismaThemeRepository implements ThemeRepository {
     const themes: (PrismaTheme & { _count: { packs: number } })[] =
       await this.txHost.tx.theme.findMany({
         include: { _count: { select: { packs: true } } },
-        orderBy: { name: 'asc' },
+        orderBy: themeOrder,
       });
     return themes.map((theme) => ({
       ...ThemeMapper.toTheme(theme),
@@ -27,24 +33,45 @@ export class PrismaThemeRepository implements ThemeRepository {
       isDefault: theme.id === defaultThemeId,
     }));
   }
+  async findPlayable(): Promise<Theme[]> {
+    const themes: PrismaTheme[] = await this.txHost.tx.theme.findMany({
+      where: { packs: { some: { isPublished: true } } },
+      orderBy: themeOrder,
+    });
+    return themes.map((theme) => ThemeMapper.toTheme(theme));
+  }
   async findById(id: ThemeId): Promise<Theme | null> {
     const theme: PrismaTheme | null = await this.txHost.tx.theme.findUnique({
       where: { id },
     });
     return theme ? ThemeMapper.toTheme(theme) : null;
   }
-  async create(data: SaveTheme): Promise<Theme> {
-    return this.save(() => this.txHost.tx.theme.create({ data }));
+  async create(data: { name: string; icon: ThemeIcon }): Promise<Theme> {
+    return this.save(async () => {
+      const lastPosition: number | null = (
+        await this.txHost.tx.theme.aggregate({ _max: { position: true } })
+      )._max.position;
+      return this.txHost.tx.theme.create({
+        data: { ...data, position: (lastPosition ?? -1) + 1 },
+      });
+    });
   }
   async update({
     id,
     theme,
   }: {
     id: ThemeId;
-    theme: SaveTheme;
+    theme: { name: string; icon?: ThemeIcon };
   }): Promise<Theme> {
     return this.save(() =>
       this.txHost.tx.theme.update({ where: { id }, data: theme }),
+    );
+  }
+  async reorder(ids: ThemeId[]): Promise<void> {
+    await Promise.all(
+      ids.map((id, position) =>
+        this.txHost.tx.theme.update({ where: { id }, data: { position } }),
+      ),
     );
   }
   async countPacks(id: ThemeId): Promise<number> {

@@ -5,7 +5,6 @@ import {
   type GuessObject,
   type GuessObjectDraft,
   type GuessObjectId,
-  type Pack,
   type PackId,
   type Theme,
   type UpdatePack,
@@ -23,7 +22,6 @@ import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   fullPackQueryOptions,
-  packsQueryOptions,
   removeDeletedPack,
 } from '../../domains/pack/packQueries';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
@@ -35,6 +33,7 @@ import { saveGuessObject } from './guessObjectSave';
 import { savePack } from './pack-save/savePack';
 import {
   type PackEditorState,
+  selectPackImagePreview,
   synchronizePackDraft,
   toPackEditorState,
 } from './packEditorState';
@@ -58,11 +57,12 @@ export type PackEditorOptions = {
 };
 
 type PackFields = Partial<
-  Pick<FullPack, 'name' | 'description' | 'parentId' | 'themeId'>
+  Pick<FullPack, 'name' | 'description' | 'image' | 'themeId'>
 >;
 
 export type PackEditor = {
   pack: FullPack;
+  imagePreview: string | undefined;
   isSaving: boolean;
   updatePack: (fields: PackFields) => void;
   savePack: () => Promise<void>;
@@ -106,9 +106,6 @@ export function usePackEditorLoad({
   const fullPackQuery: UseQueryResult<FullPack | null> = useQuery(
     fullPackQueryOptions({ packApi, packId }),
   );
-  const packsQuery: UseQueryResult<Pack[]> = useQuery(
-    packsQueryOptions(packApi),
-  );
   const themesQuery: UseQueryResult<Theme[]> = useQuery(
     themesQueryOptions(themeApi),
   );
@@ -116,12 +113,10 @@ export function usePackEditorLoad({
   return {
     packEditorState: toPackEditorState({
       fullPackQuery,
-      packsQuery,
       themesQuery,
     }),
     retry: () => {
       fullPackQuery.refetch();
-      packsQuery.refetch();
       themesQuery.refetch();
     },
   };
@@ -157,7 +152,7 @@ export function usePackEditor({
           id: pack.id,
           name: pack.name,
           description: pack.description,
-          parentId: pack.parentId,
+          image: pack.image || undefined,
           themeId: pack.themeId,
           isPublished: pack.isPublished,
           ...changes,
@@ -265,6 +260,7 @@ export function usePackEditor({
 
   return {
     pack,
+    imagePreview: selectPackImagePreview({ pack, editedPack }),
     isSaving,
     updatePack: (fields: PackFields) =>
       setPack((currentPack: FullPack) => ({

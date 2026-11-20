@@ -18,3 +18,9 @@ assignees: ''
 ## 🚫 Hors périmètre
 
 <!-- Ce que la feature ne fait pas -->
+
+## ✅ Critères d'acceptation
+
+<!--
+- [ ] Un résultat que le joueur ou l'admin constate, une case par résultat
+-->

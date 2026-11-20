@@ -6,6 +6,7 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
+  type GameId,
   type Guess,
   type GuessSubmission,
   type PlayerId,
@@ -50,6 +51,11 @@ export type JoinedSession = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
+export type LeaveGameResult = {
+  session: Session;
+  gameId: GameId;
+};
+
 @Injectable()
 export class SessionService {
   private readonly prefix = 'session:';
@@ -88,6 +94,7 @@ export class SessionService {
 
   async create({
     mode,
+    quickPlay = false,
     visitorId,
   }: CreateSession & { visitorId?: string }): Promise<Session> {
     const newSession: Session = {
@@ -95,6 +102,7 @@ export class SessionService {
       hostID: '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
+      quickPlay,
       gameConfig: defaultGameConfig,
       players: [],
     };
@@ -108,6 +116,7 @@ export class SessionService {
           visitorId,
           properties: {
             mode,
+            quickPlay,
           },
         }),
       );
@@ -218,6 +227,7 @@ export class SessionService {
         });
 
       session.gameConfig = gameConfig;
+      session.quickPlay = false;
       return session;
     });
   }
@@ -244,6 +254,7 @@ export class SessionService {
         gameConfig: session.gameConfig,
         players: session.players,
         mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
       });
 
@@ -357,12 +368,13 @@ export class SessionService {
         return this.projectSession(session);
       }
 
-      await this.gameService.endGame(
-        updatedGame,
-        session.players,
-        session.mode,
+      await this.gameService.endGame({
+        game: updatedGame,
+        players: session.players,
+        mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
-      );
+      });
 
       const finishedGameSession: Session = {
         ...session,
@@ -371,6 +383,66 @@ export class SessionService {
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
       return this.projectSession(finishedGameSession);
+    });
+  }
+
+  async leaveGame({
+    playerID,
+    sessionID,
+    visitorId,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    visitorId?: string;
+  }): Promise<LeaveGameResult> {
+    return await this.updateSession(sessionID, async (session) => {
+      if (!session.currentGame)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_NO_CURRENT_GAME,
+          message: `No current game in this session`,
+        });
+      const game: Game = session.currentGame;
+
+      const playerExists: boolean = session.players.some(
+        (player) => player.username === playerID,
+      );
+      if (!playerExists)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+          message: `Player not found in session`,
+        });
+
+      session.players = session.players.filter(
+        (player) => player.username !== playerID,
+      );
+      this.reassignHostAfterRemoval(session, playerID);
+
+      const remainingGame: Game = await this.gameService.abandonGame({
+        game,
+        playerID,
+        connectedPlayerIDs: session.players
+          .filter((player) => player.connected)
+          .map((player) => player.username),
+        mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
+        visitorId,
+      });
+      await this.redisService.hdel(
+        this.getReconnectTokenHashesKey(sessionID),
+        playerID,
+      );
+
+      if (session.players.length === 0) {
+        session.status = SessionStatus.IN_LOBBY;
+        session.currentGame = undefined;
+        return { session, gameId: game.id };
+      }
+
+      session.currentGame = remainingGame;
+      return {
+        session: await this.projectSession(session),
+        gameId: game.id,
+      };
     });
   }
 
@@ -387,6 +459,7 @@ export class SessionService {
       gameConfig,
       players: [this.buildSoloPlayer(user)],
       mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
     });
   }
@@ -411,12 +484,13 @@ export class SessionService {
         results: { [soloPlayer.username]: soloPlayerResults },
       },
     };
-    await this.gameService.endGame(
-      soloGame,
-      [soloPlayer],
-      SessionMode.SOLO,
+    await this.gameService.endGame({
+      game: soloGame,
+      players: [soloPlayer],
+      mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
-    );
+    });
   }
 
   ///////////////////////

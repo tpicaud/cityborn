@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "typecheck": "next typegen && tsc --noEmit",
-    "dev": "pnpm check-env:development && dotenv -c development -- next dev",
-    "build": "pnpm check-env:production && next build --turbopack",
-    "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
-    "check-env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
+    "dev": "pnpm check:env:development && dotenv -c development -- next dev",
+    "build": "pnpm check:env:production && next build --turbopack",
+    "check:env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
+    "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
-    "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check"
+    "lint": "biome check .",
+    "check": "pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.26",
@@ -32,7 +32,7 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-hook-form": "^7.86.0",
-    "swagger-ui-react": "^5.32.4",
+    "swagger-ui-react": "^5.34.1",
     "tailwind-merge": "^3.5.0",
     "zod": "^3.25.76"
   },

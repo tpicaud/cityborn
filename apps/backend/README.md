@@ -45,7 +45,7 @@ $ pnpm run start
 $ pnpm run dev
 
 # production mode
-$ pnpm run start:prod
+$ pnpm run start:production
 ```
 
 ## Run tests

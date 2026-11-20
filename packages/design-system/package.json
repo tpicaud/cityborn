@@ -7,7 +7,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
-    "check": "biome check ."
+    "lint": "biome check .",
+    "check": "pnpm typecheck && pnpm lint"
   },
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.33.2",

@@ -1,4 +1,5 @@
 import type { Pack, Theme } from '@cityborn/api';
+import { PackImagePreview } from '../pack-image-preview';
 import { ThemeBadge } from '../theme-badge';
 
 export function PacksList({
@@ -21,7 +22,7 @@ export function PacksList({
           type="button"
           onClick={() => onPackSelect(pack)}
           className={`w-full h-full text-left
-                                flex flex-row justify-between p-3 bg-neutral-700
+                                flex flex-row justify-between gap-3 p-3 bg-neutral-700
                                 rounded-xl border border-solid
                                 ${pack.isPublished ? 'border-green-600' : 'border-orange-500'}
                                 hover:outline-2 hover:outline-orange-100 hover:border-transparent
@@ -47,6 +48,7 @@ export function PacksList({
               )}
             </div>
           </div>
+          <PackImagePreview image={pack.image} size={64} />
         </button>
       ))}
     </div>

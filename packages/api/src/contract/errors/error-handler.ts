@@ -59,6 +59,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Erreur lors de la récupération de la phrase de fin.',
   [ErrorCode.GAME_NO_ACTIVE_ROUND]: 'Aucun round actif dans la partie.',
   [ErrorCode.GAME_CREATION_FAILED]: 'Erreur lors de la création de la partie.',
+  [ErrorCode.GAME_NO_PUBLISHED_PACK]:
+    "Aucun pack n'est disponible pour lancer une partie.",
 
   // Guess objects
   [ErrorCode.GUESS_OBJECTS_NOT_FOUND]: 'Aucun objet trouvé.',
@@ -75,8 +77,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 
   // Pack
   [ErrorCode.PACK_NOT_FOUND]: 'Aucun pack trouvé pour cet identifiant.',
-  [ErrorCode.PACK_HAS_CHILDREN]:
-    'Ce pack contient des sous-packs et ne peut pas être supprimé.',
+  [ErrorCode.PACK_IMAGE_REQUIRED]:
+    'Ajoutez un visuel au pack avant de le publier.',
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
 
@@ -86,6 +88,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.THEME_DEFAULT_NOT_DELETABLE]:
     'Le thème par défaut ne peut pas être supprimé.',
   [ErrorCode.THEME_NOT_FOUND]: 'Aucun thème trouvé pour cet identifiant.',
+  [ErrorCode.THEME_ICON_NOT_FOUND]: 'Cette icône est introuvable sur Iconify.',
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

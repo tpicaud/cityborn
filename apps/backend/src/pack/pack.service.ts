@@ -22,6 +22,21 @@ import {
   type PackRepository,
 } from './repositories/pack.repository';
 
+function toLeafPackTree(pack: Pack): PackTree {
+  return { ...pack, children: [] };
+}
+
+function ensurePublishedPackHasImage({
+  isPublished,
+  image,
+}: Pick<Pack, 'isPublished' | 'image'>): void {
+  if (!isPublished || image !== undefined) return;
+  throw new BadRequestException({
+    code: ErrorCode.PACK_IMAGE_REQUIRED,
+    message: 'A pack cannot be published without an image',
+  });
+}
+
 @Injectable()
 export class PackService {
   constructor(
@@ -32,11 +47,13 @@ export class PackService {
   ) {}
 
   async findTrees(): Promise<PackTree[]> {
-    return this.packRepository.findTree({});
+    const packs: Pack[] = await this.findAll();
+    return packs.map(toLeafPackTree);
   }
 
   async findPublishedTrees(): Promise<PackTree[]> {
-    return this.packRepository.findTree({ isPublished: true });
+    const packs: Pack[] = await this.findPublished();
+    return packs.map(toLeafPackTree);
   }
 
   async findAll(): Promise<Pack[]> {
@@ -69,10 +86,12 @@ export class PackService {
   }
 
   async create(data: CreatePack): Promise<Pack> {
+    ensurePublishedPackHasImage(data);
     return this.packRepository.create(data);
   }
 
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
+    await this.ensureUpdatedPackHasImageIfPublished({ packId, data });
     if (data.themeId !== undefined) {
       await this.themeService.findById(data.themeId);
     }
@@ -97,18 +116,22 @@ export class PackService {
   async delete(id: PackId): Promise<void> {
     const pack: FullPack = await this.findFullById(id);
 
-    const childrenCount: number = await this.packRepository.countChildren(id);
-    if (childrenCount > 0) {
-      throw new BadRequestException({
-        code: ErrorCode.PACK_HAS_CHILDREN,
-        message: `Pack with id ${id} has children and cannot be deleted`,
-      });
-    }
-
     await this.packRepository.delete(id);
     await this.deleteOrphanGuessObjects(
       pack.guessObjects.map((guessObject) => guessObject.id),
     );
+  }
+
+  private async ensureUpdatedPackHasImageIfPublished({
+    packId,
+    data,
+  }: {
+    packId: PackId;
+    data: UpdatePack;
+  }): Promise<void> {
+    if (!data.isPublished || data.image !== undefined) return;
+    const pack: Pack = await this.findById(packId);
+    ensurePublishedPackHasImage({ isPublished: true, image: pack.image });
   }
 
   private async findOne({

@@ -1,11 +1,17 @@
 import {
   API_CURRENT_VERSION_HEADER_NAME,
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+  buildFullGuessObject,
+  buildGame,
   buildSession,
   buildUser,
+  buildWorldLocation,
+  type CreateWorldLocation,
+  CreateWorldLocationSchema,
   contract,
   ErrorCode,
   getApiVersionInfo,
+  type Session,
   SessionSchema,
   type User,
   UserSchema,
@@ -72,6 +78,81 @@ describe('Production bootstrap', () => {
       statusCode: 400,
       code: ErrorCode.BAD_REQUEST,
       fieldErrors: [{ path: 'mode', message: expect.any(String) }],
+    });
+  });
+
+  it('rejects a body over 100kb outside the geometry routes', async () => {
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createSession.path)
+      .send({ mode: 'solo', padding: 'x'.repeat(200_000) })
+      .expect(413);
+
+    expect(response.body).toMatchObject({
+      statusCode: 413,
+      code: ErrorCode.BAD_REQUEST,
+      message: 'Request body too large',
+    });
+  });
+
+  it('parses a country-sized geometry on world location creation', async () => {
+    const worldLocation: CreateWorldLocation = CreateWorldLocationSchema.parse(
+      buildWorldLocation({
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            Array.from({ length: 80_000 }, (_, index: number) => [
+              73.5 + index / 100_000,
+              39.3812345,
+            ]),
+          ],
+        },
+      }),
+    );
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.admin.worldLocation.createWorldLocation.path)
+      .send(worldLocation)
+      .expect(401);
+
+    expect(response.body).toMatchObject({
+      statusCode: 401,
+      code: ErrorCode.USER_TOKEN_MISSING,
+    });
+  });
+
+  it('parses a replayed game with its geometries on game creation', async () => {
+    const session: Session = buildSession({
+      currentGame: buildGame({
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [
+            buildFullGuessObject({
+              world_location: buildWorldLocation({
+                geometry: {
+                  type: 'Polygon',
+                  coordinates: [
+                    Array.from({ length: 40_000 }, (_, index: number) => [
+                      120.1 + index / 100_000,
+                      30.2512345,
+                    ]),
+                  ],
+                },
+              }),
+            }),
+          ],
+        },
+      }),
+    });
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createGame.path)
+      .send(session)
+      .expect(404);
+
+    expect(response.body).toMatchObject({
+      statusCode: 404,
+      code: ErrorCode.GAME_NO_PUBLISHED_PACK,
     });
   });
 

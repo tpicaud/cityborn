@@ -12,6 +12,7 @@ import { searchAdminContract } from '../search/search.admin.contract';
 import { sentenceContract } from '../sentence/sentence.contract';
 import { sessionContract } from '../session/session.contract';
 import { themeAdminContract } from '../theme/theme.admin.contract';
+import { themeContract } from '../theme/theme.contract';
 import { userContract } from '../user/user.contract';
 import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
 import type { ApiDomain } from './api-domain';
@@ -37,6 +38,7 @@ const publicRouters = {
   pack: packContract,
   guessObjects: guessObjectContract,
   sentence: sentenceContract,
+  theme: themeContract,
 } satisfies ApiDomainRouters;
 
 const adminRouters = {

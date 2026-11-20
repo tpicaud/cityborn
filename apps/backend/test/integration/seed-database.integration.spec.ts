@@ -18,6 +18,7 @@ type SeededAccount = {
 type SeededPackSummary = {
   name: string;
   isPublished: boolean;
+  image: string | undefined;
   personalities: string[];
 };
 
@@ -72,7 +73,7 @@ describe('seedDatabase', () => {
     expect(passwordMatches).toEqual([true, true]);
   });
 
-  it('publishes two packs of two personalities within one theme', async () => {
+  it('publishes two illustrated packs of two personalities within one theme', async () => {
     await seedDatabase(prisma);
 
     const packs: FullPack[] = await packRepository.findFullBy({
@@ -85,6 +86,7 @@ describe('seedDatabase', () => {
           (pack: FullPack): SeededPackSummary => ({
             name: pack.name,
             isPublished: pack.isPublished,
+            image: pack.image,
             personalities: pack.guessObjects.map(({ name }) => name).sort(),
           }),
         )
@@ -95,11 +97,13 @@ describe('seedDatabase', () => {
       {
         name: 'Cinéma',
         isPublished: true,
+        image: 'https://placehold.co/600x400/png?text=Cinema',
         personalities: ['Leonardo DiCaprio', 'Marion Cotillard'],
       },
       {
         name: 'Pop',
         isPublished: true,
+        image: 'https://placehold.co/400x400/png?text=Pop',
         personalities: ['Adele', 'Lady Gaga'],
       },
     ]);

@@ -1,6 +1,8 @@
-export const testDatabaseUrl =
+export const testDatabaseUrl: string =
+  process.env.TEST_DATABASE_URL ??
   'postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test';
-export const testRedisUrl = 'redis://localhost:6380/0';
+export const testRedisUrl: string =
+  process.env.TEST_REDIS_URL ?? 'redis://localhost:6380/0';
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = testDatabaseUrl;

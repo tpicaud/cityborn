@@ -44,7 +44,7 @@ Le handshake est transverse à toutes les gateways et ignore les channels : il n
 
 ## Dashboards Axiom
 
-Les dashboards lisent les champs des wide events ; leur fonctionnement est décrit dans [la doc d'observabilité](../../../../docs/observability/README.md#dashboards).
+Les dashboards lisent les champs des wide events ; leur fonctionnement est décrit dans [la doc d'observabilité](../../../../docs/observability.md#dashboards).
 
 - Un champ, ou une valeur bornée comme `event`, `outcome` ou `domain`, renommé, supprimé ou dont le sens change : reprendre dans la même PR chaque requête de `infra/axiom/dashboards/` qui le lit.
 - Un dashboard se crée ou se modifie d'abord dans son fichier de `infra/axiom/dashboards/`, puis s'essaie par un déploiement `dev`.

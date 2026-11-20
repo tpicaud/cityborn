@@ -4,7 +4,6 @@ import type {
   GuessObjectId,
   Pack,
   PackId,
-  PackTree,
   UpdatePack,
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
@@ -13,35 +12,11 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { PackMapper } from '../mappers/pack.mapper';
 import type { PackFilter, PackRepository } from './pack.repository';
 
-const TREE_DEPTH = 6;
-
-type PackChildrenInclude = {
-  children: true | { include: PackChildrenInclude };
-};
-
-function buildChildrenInclude(depth: number): PackChildrenInclude {
-  if (depth <= 1) return { children: true };
-  return { children: { include: buildChildrenInclude(depth - 1) } };
-}
-
 @Injectable()
 export class PrismaPackRepository implements PackRepository {
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
-
-  async findTree(filter: Pick<PackFilter, 'isPublished'>): Promise<PackTree[]> {
-    const roots = await this.txHost.tx.pack.findMany({
-      where: {
-        parentId: null,
-        ...(filter.isPublished !== undefined && {
-          isPublished: filter.isPublished,
-        }),
-      },
-      include: buildChildrenInclude(TREE_DEPTH),
-    });
-    return PackMapper.toPackTrees(roots);
-  }
 
   async findBy(filter: PackFilter): Promise<Pack[]> {
     const packs = await this.txHost.tx.pack.findMany({
@@ -69,7 +44,7 @@ export class PrismaPackRepository implements PackRepository {
   }
 
   async create(data: CreatePack): Promise<Pack> {
-    const { guessObjectsIds, ...packData } = data;
+    const { guessObjectsIds, parentId, ...packData } = data;
     const pack = await this.txHost.tx.pack.create({
       data: {
         ...packData,
@@ -82,7 +57,7 @@ export class PrismaPackRepository implements PackRepository {
   }
 
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
-    const { connectIds, disconnectIds, id, ...packData } = data;
+    const { connectIds, disconnectIds, id, parentId, ...packData } = data;
 
     const relationUpdate: {
       connect?: { id: GuessObjectId }[];
@@ -103,10 +78,6 @@ export class PrismaPackRepository implements PackRepository {
       include: { guessObjects: { include: { world_location: true } } },
     });
     return PackMapper.toPack(updated_pack);
-  }
-
-  async countChildren(id: PackId): Promise<number> {
-    return this.txHost.tx.pack.count({ where: { parentId: id } });
   }
 
   async countByGuessObjectId(id: GuessObjectId): Promise<number> {

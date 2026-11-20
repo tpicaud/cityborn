@@ -38,7 +38,7 @@ if [ ! -d "$target" ]; then
 fi
 
 target_root="$(git -C "$target" rev-parse --show-toplevel)"
-main_root="$(git -C "$target" worktree list --porcelain | awk '/^worktree /{print substr($0, 10); exit}')"
+main_root="$(git -C "$target" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}')"
 
 if [ ! -d "$main_root" ]; then
   echo "Checkout principal introuvable : $main_root" >&2

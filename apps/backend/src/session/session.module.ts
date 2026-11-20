@@ -5,6 +5,7 @@ import { GameRecordModule } from '../game-record/game-record.module';
 import { GuessObjectModule } from '../guess-object/guess-object.module';
 import { IdModule } from '../id/id.module';
 import { LockModule } from '../lock/lock.module';
+import { PackModule } from '../pack/pack.module';
 import { RedisModule } from '../redis/redis.module';
 import { SessionController } from './session.controller';
 import { SessionGateway } from './session.gateway';
@@ -22,6 +23,7 @@ import {
     GuessObjectModule,
     GameRecordModule,
     EventModule,
+    PackModule,
   ],
   controllers: [SessionController],
   providers: [

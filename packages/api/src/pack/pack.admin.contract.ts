@@ -18,8 +18,14 @@ const c = initContract();
 
 export const packAdminContract = c.router(
   {
+    /**
+     * @deprecated Utiliser `getAllPacks` à la place. Conservé pour la
+     * compatibilité du contrat publié.
+     * @deprecatedSince 2026-11-04
+     */
     getPackTrees: {
       method: 'GET',
+      deprecated: true,
       path: '/tree',
       responses: { 200: PackTreesSchema },
     },

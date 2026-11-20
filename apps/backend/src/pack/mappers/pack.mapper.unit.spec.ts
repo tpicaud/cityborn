@@ -2,7 +2,6 @@ import {
   buildTheme,
   type FullPack,
   type Pack,
-  type PackTree,
   type Theme,
 } from '@cityborn/api';
 import type {
@@ -10,7 +9,7 @@ import type {
   Pack as PrismaPack,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
-import { PackMapper, type PrismaPackNode } from './pack.mapper';
+import { PackMapper } from './pack.mapper';
 
 const theme: Theme = buildTheme();
 
@@ -21,7 +20,7 @@ describe('PackMapper.toPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
-      parentId: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -32,9 +31,24 @@ describe('PackMapper.toPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: undefined,
-      parentId: undefined,
+      image: undefined,
       themeId: theme.id,
     });
+  });
+
+  it('maps the stored image', () => {
+    const prismaPack: PrismaPack = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      image: 'https://example.com/monuments.png',
+      themeId: theme.id,
+    };
+
+    const pack: Pack = PackMapper.toPack(prismaPack);
+
+    expect(pack.image).toBe('https://example.com/monuments.png');
   });
 });
 
@@ -45,7 +59,7 @@ describe('PackMapper.toPacks', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
-      parentId: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -67,13 +81,13 @@ describe('PackMapper.toPacks', () => {
 });
 
 describe('PackMapper.toFullPack', () => {
-  it('maps loaded guess objects', () => {
+  it('maps the stored image and loaded guess objects', () => {
     const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
       description: null,
-      parentId: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -103,7 +117,7 @@ describe('PackMapper.toFullPack', () => {
     const input: Parameters<typeof PackMapper.toFullPack>[0] = {
       ...prismaPack,
       description: 'Places to visit',
-      parentId: '00000000-0000-4000-8000-000000000011',
+      image: 'https://example.com/monuments.png',
       guessObjects: [
         { ...prismaGuessObject, world_location: prismaWorldLocation },
       ],
@@ -113,7 +127,7 @@ describe('PackMapper.toFullPack', () => {
 
     expect(pack).toMatchObject({
       description: 'Places to visit',
-      parentId: '00000000-0000-4000-8000-000000000011',
+      image: 'https://example.com/monuments.png',
       guessObjects: [
         {
           id: '00000000-0000-4000-8000-000000000020',
@@ -129,7 +143,7 @@ describe('PackMapper.toFullPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
-      parentId: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -146,7 +160,7 @@ describe('PackMapper.toFullPacks', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
-      parentId: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -191,70 +205,6 @@ describe('PackMapper.toFullPacks', () => {
     ).toEqual([
       ['00000000-0000-4000-8000-000000000010', 0],
       ['pack-2', 1],
-    ]);
-  });
-});
-
-describe('PackMapper.toPackTree', () => {
-  it('maps nested children recursively', () => {
-    const prismaPack: PrismaPack = {
-      id: '00000000-0000-4000-8000-000000000010',
-      name: 'Monuments',
-      isPublished: true,
-      description: null,
-      parentId: null,
-      themeId: theme.id,
-    };
-
-    const child: PrismaPackNode = {
-      ...prismaPack,
-      id: 'pack-child',
-      name: 'Landmarks',
-      parentId: '00000000-0000-4000-8000-000000000010',
-      children: [],
-    };
-    const root: PrismaPackNode = {
-      ...prismaPack,
-      children: [child],
-    };
-
-    const tree: PackTree = PackMapper.toPackTree(root);
-
-    expect(tree.children).toEqual([
-      {
-        id: 'pack-child',
-        name: 'Landmarks',
-        isPublished: true,
-        description: undefined,
-        parentId: '00000000-0000-4000-8000-000000000010',
-        themeId: theme.id,
-        children: [],
-      },
-    ]);
-  });
-});
-
-describe('PackMapper.toPackTrees', () => {
-  it('maps every root tree', () => {
-    const prismaPack: PrismaPack = {
-      id: '00000000-0000-4000-8000-000000000010',
-      name: 'Monuments',
-      isPublished: true,
-      description: null,
-      parentId: null,
-      themeId: theme.id,
-    };
-
-    const roots: PrismaPackNode[] = [
-      { ...prismaPack, children: [] },
-      { ...prismaPack, id: 'pack-2', children: [] },
-    ];
-
-    const trees: PackTree[] = PackMapper.toPackTrees(roots);
-
-    expect(trees.map(({ id }) => id)).toEqual([
-      '00000000-0000-4000-8000-000000000010',
-      'pack-2',
     ]);
   });
 });

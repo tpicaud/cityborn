@@ -3,6 +3,11 @@ export {
   type SessionInvitationOptions,
   useSessionInvitation,
 } from './invitation/useSessionInvitation';
+export {
+  type PackImageFallback,
+  type PackImageFallbackOptions,
+  usePackImageFallback,
+} from './pack-image-fallback/usePackImageFallback';
 export { type PlayerNameForm, usePlayerNameForm } from './playerNameForm';
 export {
   formatSessionCodeInput,

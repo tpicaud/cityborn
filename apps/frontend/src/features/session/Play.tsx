@@ -21,6 +21,7 @@ export default function Play() {
       formState: { errors },
     },
     playSolo,
+    launchQuickPlay,
     playMulti,
     joinSession,
   }: SessionLauncher = useSessionLauncher({ navigation });
@@ -70,7 +71,7 @@ export default function Play() {
           </p>
         )}
       </form>
-      <div className="flex flex-row gap-2 items-center justify-between w-full">
+      <div className="grid grid-cols-2 gap-2 w-full">
         <LoadingButton
           variant="contained"
           color="primary"
@@ -86,6 +87,14 @@ export default function Play() {
           onClick={playMulti}
         >
           <b>MULTI</b>
+        </LoadingButton>
+        <LoadingButton
+          variant="contained"
+          color="primary"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
+          onClick={launchQuickPlay}
+        >
+          <b>PARTIE RAPIDE</b>
         </LoadingButton>
       </div>
       <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
