@@ -12,6 +12,13 @@ export const tamaguiConfig = createTamagui({
   fonts,
   tokens: {
     ...v6Config.tokens,
+    space: { ...v6Config.tokens.space, '0.75': 3 },
+    borderWidth: {
+      ...v6Config.tokens.borderWidth,
+      '1.5': 1.5,
+      '2.5': 2.5,
+      3: 3,
+    },
     boxShadow: { ...v6Config.tokens.boxShadow, ...shadows },
     textShadow: textShadows,
   },

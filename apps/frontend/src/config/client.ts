@@ -5,6 +5,10 @@ const frontendClientConfigSchema = z.object({
   restBackendUrl: z.string().url(),
   websocketBackendUrl: z.string().url().default('ws://localhost:4000'),
   googleOAuthWebClientId: z.string().trim().min(1),
+  appVersion: z.preprocess(
+    (value: unknown) => (value === '' ? undefined : value),
+    z.string().trim().min(1).optional(),
+  ),
 });
 
 export type FrontendClientConfig = z.infer<typeof frontendClientConfigSchema>;
@@ -15,4 +19,5 @@ export const frontendClientConfig: FrontendClientConfig =
     restBackendUrl: process.env.NEXT_PUBLIC_REST_BACKEND_URL,
     websocketBackendUrl: process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL,
     googleOAuthWebClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    appVersion: process.env.NEXT_PUBLIC_APP_VERSION,
   });

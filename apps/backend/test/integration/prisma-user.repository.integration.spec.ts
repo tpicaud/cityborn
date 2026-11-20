@@ -85,6 +85,32 @@ describe('PrismaUserRepository', () => {
 
       expect(await userRepository.findById(user.id)).toBeNull();
     });
+
+    it('removes the email verification tokens of the deleted user', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+      await infrastructure.prisma.emailVerificationToken.create({
+        data: {
+          token: 'verification-token',
+          email: userData.email,
+          userId: user.id,
+          expiresAt: new Date(Date.UTC(2026, 0, 1)),
+        },
+      });
+
+      await userRepository.delete(user.id);
+
+      expect(await userRepository.findById(user.id)).toBeNull();
+      expect(
+        await infrastructure.prisma.emailVerificationToken.count({
+          where: { userId: user.id },
+        }),
+      ).toBe(0);
+    });
   });
 
   describe('findById', () => {
