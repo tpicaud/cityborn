@@ -168,7 +168,10 @@ describe('UserService.updateEmail', () => {
       buildUserService();
     const user: User = buildUser({ isVerified: false });
     userRepository.findByEmail.mockResolvedValue(
-      buildUser({ email: 'other@cityborn.test' }),
+      buildUser({
+        id: '00000000-0000-4000-8000-000000000002',
+        email: 'Other@cityborn.test',
+      }),
     );
 
     await expect(
@@ -177,6 +180,29 @@ describe('UserService.updateEmail', () => {
       response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
     });
     expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it("persists a letter-case change of the account's own email", async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({
+      isVerified: false,
+      email: 'Alice@cityborn.test',
+    });
+    const updatedUser: User = buildUser({
+      isVerified: false,
+      email: 'alice@cityborn.test',
+    });
+    userRepository.findByEmail.mockResolvedValue(user);
+    userRepository.updateEmail.mockResolvedValue(updatedUser);
+
+    await expect(
+      userService.updateEmail({ user, email: 'alice@cityborn.test' }),
+    ).resolves.toEqual(updatedUser);
+    expect(userRepository.updateEmail).toHaveBeenCalledWith({
+      userId: user.id,
+      email: 'alice@cityborn.test',
+    });
   });
 
   it('keeps the user when the email is unchanged', async () => {
@@ -287,6 +313,21 @@ describe('UserService.validateIdentifiers', () => {
     userRepository.findByIdentifiers.mockResolvedValue({
       username: username('other'),
       email: 'alice@cityborn.test',
+    });
+
+    await expect(
+      userService.validateIdentifiers(username('alice'), 'alice@cityborn.test'),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
+    });
+  });
+
+  it('rejects an existing email written with other letter cases', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    userRepository.findByIdentifiers.mockResolvedValue({
+      username: username('other'),
+      email: 'Alice@cityborn.test',
     });
 
     await expect(
