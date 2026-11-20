@@ -6,7 +6,7 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import type { User as PrismaUser } from '@prisma/client';
+import type { Prisma, User as PrismaUser } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
@@ -16,6 +16,10 @@ import type {
   UserCredentials,
   UserRepository,
 } from './user.repository';
+
+function sameEmailAs(email: string): Prisma.StringFilter<'User'> {
+  return { in: [email], mode: 'insensitive' };
+}
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -52,29 +56,24 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findCredentialsByEmail(email: string): Promise<UserCredentials | null> {
-    const exactMatch: PrismaUser | null = await this.txHost.tx.user.findUnique({
-      where: { email },
+    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
+      where: { email: sameEmailAs(email) },
     });
-    if (exactMatch) return UserMapper.toUserCredentials(exactMatch);
-    const matches: PrismaUser[] = await this.txHost.tx.user.findMany({
-      where: { email: { in: [email], mode: 'insensitive' } },
-      take: 2,
-    });
-    const user: PrismaUser | undefined =
-      matches.length === 1 ? matches[0] : undefined;
     return user ? UserMapper.toUserCredentials(user) : null;
   }
 
   async findByIdentifier(identifier: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ email: identifier }, { username: identifier }] },
+      where: {
+        OR: [{ email: sameEmailAs(identifier) }, { username: identifier }],
+      },
     });
     return user ? UserMapper.toUser(user) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
-      where: { email },
+    const user: PrismaUser | null = await this.txHost.tx.user.findFirst({
+      where: { email: sameEmailAs(email) },
     });
     return user ? UserMapper.toUser(user) : null;
   }
@@ -83,7 +82,9 @@ export class PrismaUserRepository implements UserRepository {
     identifier: string,
   ): Promise<UserCredentials | null> {
     const user = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ email: identifier }, { username: identifier }] },
+      where: {
+        OR: [{ email: sameEmailAs(identifier) }, { username: identifier }],
+      },
     });
     return user ? UserMapper.toUserCredentials(user) : null;
   }
@@ -108,7 +109,7 @@ export class PrismaUserRepository implements UserRepository {
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null> {
     const existingUser = await this.txHost.tx.user.findFirst({
-      where: { OR: [{ username }, { email }] },
+      where: { OR: [{ username }, { email: sameEmailAs(email) }] },
     });
     return existingUser
       ? {
