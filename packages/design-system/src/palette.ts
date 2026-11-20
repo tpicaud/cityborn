@@ -76,6 +76,9 @@ const componentColors = {
   'banner-title-rim': 'rgba(255, 255, 255, 0.24)',
   'banner-score-shade': 'rgba(0, 0, 0, 0.08)',
   'banner-score-rim': 'rgba(255, 255, 255, 0.47)',
+  'score-pill-unit': 'rgba(255, 255, 255, 0.36)',
+  'score-table-row': '#185067',
+  'score-table-highlight': 'rgba(255, 152, 64, 0.16)',
 } as const;
 
 type GradientStops = readonly [string, ...string[], string];
@@ -91,6 +94,7 @@ export const gradients = {
   'card-fade': [cardFillAt(0), ...cardFadeInnerStops, cardFill],
   'card-edge': ['rgba(0, 61, 87, 0)', '#009380'],
   'green-blue': ['#00FF88 14%', '#00A9FE'],
+  'clouds-fade': ['rgba(0, 45, 82, 0.27)', '#00304F'],
 } as const satisfies Record<string, GradientStops>;
 
 type GradientName = keyof typeof gradients;

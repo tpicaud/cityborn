@@ -122,7 +122,11 @@ export function useGameRound({
     if (preGuess) await handleGuess(preGuess);
   }, [handleGuess, handleNextRound, preGuess, roundAction?.kind]);
 
-  const showOverlay: boolean = shouldShowRoundOverlay(state, roundStatus);
+  const showOverlay: boolean = shouldShowRoundOverlay({
+    state,
+    roundStatus,
+    gameStatus: game.status,
+  });
 
   return {
     mapProps,

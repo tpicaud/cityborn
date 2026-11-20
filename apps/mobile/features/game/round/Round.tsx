@@ -15,6 +15,7 @@ import {
   PortraitCard,
   ScoreBanner,
 } from '@cityborn/design-system';
+import type { ReactNode } from 'react';
 import RoundMap from './RoundMap';
 import { RoundStartCountdown } from './RoundStartCountdown';
 import { RoundTimer } from './RoundTimer';
@@ -26,9 +27,14 @@ type RoundProps = {
   handleGuess: (coordinates: Coord | undefined) => Promise<void>;
   handleNextRound: () => Promise<void>;
   onOpenOptions: (() => void) | undefined;
+  finalResults: ReactNode;
 };
 
-export function Round({ onOpenOptions, ...gameRoundOptions }: RoundProps) {
+export function Round({
+  onOpenOptions,
+  finalResults,
+  ...gameRoundOptions
+}: RoundProps) {
   const { game, localPlayerID }: GameRoundOptions = gameRoundOptions;
   const gameRound: GameRound = useGameRound(gameRoundOptions);
   const roundAction: RoundAction | undefined = gameRound.roundAction;
@@ -76,9 +82,10 @@ export function Round({ onOpenOptions, ...gameRoundOptions }: RoundProps) {
         ) : undefined
       }
       overlay={
-        gameRound.showCountdown ? (
+        finalResults ??
+        (gameRound.showCountdown ? (
           <RoundStartCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
-        ) : undefined
+        ) : undefined)
       }
     />
   );

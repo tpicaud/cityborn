@@ -33,6 +33,10 @@ export const shadows = {
   'glow-cta-halo-tablet': 'inset 0 0 16px 0 rgba(255, 255, 255, 0.3)',
   'banner-plate-blue':
     '2px 5px 7.3px 0 rgba(0, 0, 0, 0.54), 0 4px 0 0 #013463, inset -1px 1px 0 0 #A6F8FF',
+  'trophy-card': '0 4px 2px 0 rgba(0, 0, 0, 0.25)',
+  'trophy-card-tablet': '0 7px 3px 0 rgba(0, 0, 0, 0.25)',
+  'score-pill': '0 1px 2.3px 0 rgba(0, 0, 0, 0.25)',
+  'score-pill-tablet': '0 2px 3.8px 0 rgba(0, 0, 0, 0.25)',
   'banner-plate-yellow':
     '-1px 5px 7.3px 0 rgba(0, 0, 0, 0.54), 0 4px 0 0 #FF9500, inset 0 2px 0 0 #FFF9A6',
 } as const;

@@ -7,7 +7,7 @@ import {
 } from '@cityborn/client/game';
 import {
   ActionPrompt,
-  Button as DesignSystemButton,
+  Button,
   LoadingScreen,
   Screen,
 } from '@cityborn/design-system';
@@ -17,11 +17,8 @@ import {
 } from 'expo-router';
 import { useCallback } from 'react';
 import { View } from 'tamagui';
-import Button from '@/components/ui/Button';
-import Dialog from '@/components/ui/Dialog';
-import { View as LegacyView } from '@/components/ui/native/NativeComponents';
 import { GameOptions } from './GameOptions';
-import Results from './Results';
+import { Results } from './Results';
 import { Round } from './round/Round';
 
 export const Game = ({
@@ -55,7 +52,7 @@ export const Game = ({
     return (
       <Screen bottomSafeArea>
         <ActionPrompt prompt="La partie est déjà en cours">
-          <DesignSystemButton compact label="Menu" onPress={handleExitGame} />
+          <Button compact label="Menu" onPress={handleExitGame} />
         </ActionPrompt>
       </Screen>
     );
@@ -71,35 +68,19 @@ export const Game = ({
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
         onOpenOptions={gameDisplay.showOptions ? optionsMenu.open : undefined}
+        finalResults={
+          gameDisplay.showResults ? (
+            <Results
+              game={game}
+              localPlayerID={activePlayerID}
+              isHost={isHost}
+              handlePlayAgain={handlePlayAgain}
+              handleExitGame={handleExitGame}
+            />
+          ) : undefined
+        }
       />
       {gameDisplay.showOptions && <GameOptions optionsMenu={optionsMenu} />}
-
-      {gameDisplay.showResults && (
-        <LegacyView>
-          <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
-            <LegacyView className="flex-1 w-full">
-              <Results game={game} localPlayerID={activePlayerID} />
-            </LegacyView>
-            <LegacyView className="flex gap-4 items-center justify-center">
-              <Button
-                variant="filled"
-                size="large"
-                label="Rejouer"
-                onPress={async () => {
-                  await handlePlayAgain();
-                }}
-              />
-              <Button
-                variant="default"
-                label="Menu"
-                onPress={async () => {
-                  await handleExitGame();
-                }}
-              />
-            </LegacyView>
-          </Dialog>
-        </LegacyView>
-      )}
     </View>
   );
 };
