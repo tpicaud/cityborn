@@ -94,6 +94,9 @@ fi
 
 cd "$main_root"
 
+bash "$main_root/scripts/worktree-env.sh" destroy "$worktree_root" ||
+  echo "Env Docker du worktree non supprimé : lancer pnpm env:prune plus tard." >&2
+
 git -C "$main_root" worktree remove --force "$worktree_root"
 git -C "$main_root" worktree prune
 
