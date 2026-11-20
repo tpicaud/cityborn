@@ -98,18 +98,24 @@ compose_file="$target_root/apps/backend/docker-compose.resources.yml"
 backend_env="$target_root/apps/backend/.env"
 host_id="$(cat /etc/machine-id 2>/dev/null || hostname)"
 worktree_name="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
-project="cityborn-env-${worktree_name%-}-$(printf '%s' "$target_root" | cksum | cut -d ' ' -f 1)"
+project="cityborn-wt-${worktree_name%-}"
 
 docker ps --all --filter "label=cityborn.host=$host_id" \
   --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
   sort -u |
   while IFS=$'\t' read -r orphan_project orphan_checkout; do
-    if [ ! -d "$orphan_checkout" ]; then
-      echo "  env supprimé $orphan_project ($orphan_checkout introuvable)"
+    if [ ! -d "$orphan_checkout" ] || { [ "$orphan_checkout" = "$target_root" ] && [ "$orphan_project" != "$project" ]; }; then
+      echo "  env supprimé $orphan_project ($orphan_checkout)"
       docker compose -p "$orphan_project" -f "$compose_file" --profile test down --volumes --remove-orphans >/dev/null 2>&1 ||
         echo "  suppression impossible : $orphan_project" >&2
     fi
   done
+
+project_owner="$(docker ps --all --filter "label=com.docker.compose.project=$project" --format '{{.Label "cityborn.checkout"}}' | head -n 1)"
+if [ -n "$project_owner" ] && [ "$project_owner" != "$target_root" ]; then
+  echo "L'env Docker $project appartient déjà à $project_owner : renommer le dossier de l'un des deux worktrees." >&2
+  exit 1
+fi
 
 published_port() {
   docker compose -p "$project" -f "$compose_file" --profile test port "$1" "$2" 2>/dev/null | sed 's/.*://' || true

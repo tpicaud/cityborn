@@ -1,4 +1,4 @@
-name: cityborn_resources
+name: cityborn-dev
 
 x-postgis: &postgis
   image: postgis/postgis:16-3.4
@@ -19,7 +19,6 @@ x-redis: &redis
 services:
   postgis:
     <<: *postgis
-    container_name: postgis
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -34,7 +33,6 @@ services:
 
   adminer:
     image: adminer:latest
-    container_name: adminer
     ports:
       - "8080:8080"
     networks:
@@ -45,7 +43,6 @@ services:
 
   redis:
     <<: *redis
-    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -56,7 +53,6 @@ services:
 
   redisinsight:
     image: redis/redisinsight:latest
-    container_name: redisinsight
     environment:
       RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
       RI_REDIS_HOST0: redis
