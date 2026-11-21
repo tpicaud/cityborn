@@ -1,0 +1,328 @@
+import assert from 'node:assert/strict';
+import { describe, it, type TestContext } from 'node:test';
+import {
+  ApiResponseError,
+  buildCatalogSection,
+  type CatalogSection,
+  CatalogSectionMoveDirection,
+  ErrorCode,
+  type SaveCatalogSection,
+  SaveCatalogSectionSchema,
+} from '@cityborn/api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import { createFormControl } from 'react-hook-form';
+import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
+import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
+import {
+  type CatalogSectionEditorState,
+  catalogSectionEditorReducer,
+  initialCatalogSectionEditorState,
+} from './catalogSectionEditorState';
+import {
+  type CatalogSectionFormInput,
+  type CatalogSectionMutations,
+  createCatalogSectionMutations,
+} from './catalogSectionMutations';
+
+type CatalogSectionForm = ReturnType<
+  typeof createFormControl<
+    CatalogSectionFormInput,
+    undefined,
+    SaveCatalogSection
+  >
+>;
+
+type MutationsFixture = {
+  queryClient: QueryClient;
+  sectionsKey: QueryKey;
+  creationForm: CatalogSectionForm;
+  editForm: CatalogSectionForm;
+  mutations: CatalogSectionMutations;
+  state: CatalogSectionEditorState;
+};
+
+const news: CatalogSection = buildCatalogSection({
+  id: '00000000-0000-4000-8000-000000000060',
+  name: 'Nouveautés',
+});
+const events: CatalogSection = buildCatalogSection({
+  id: '00000000-0000-4000-8000-000000000061',
+  name: 'Événements',
+});
+const duplicateNameError: ApiResponseError = new ApiResponseError({
+  code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS,
+  statusCode: 409,
+  message: 'duplicate name',
+});
+
+function unexpectedCall(): never {
+  throw new Error('unexpected catalog section call');
+}
+
+function createCatalogSectionForm(context: TestContext): CatalogSectionForm {
+  const form: CatalogSectionForm = createFormControl<
+    CatalogSectionFormInput,
+    undefined,
+    SaveCatalogSection
+  >({
+    resolver: zodResolver(SaveCatalogSectionSchema),
+    defaultValues: { name: '' },
+  });
+  context.after(
+    form.subscribe({ formState: { values: true }, callback: () => undefined }),
+  );
+  return form;
+}
+
+function createMutationsFixture({
+  context,
+  catalogSectionApi: overrides,
+  sections = [news, events],
+  state = initialCatalogSectionEditorState,
+}: {
+  context: TestContext;
+  catalogSectionApi: Partial<CatalogSectionApi>;
+  sections?: CatalogSection[];
+  state?: CatalogSectionEditorState;
+}): MutationsFixture {
+  const catalogSectionApi: CatalogSectionApi = {
+    getCatalogSections: unexpectedCall,
+    createCatalogSection: unexpectedCall,
+    renameCatalogSection: unexpectedCall,
+    moveCatalogSection: unexpectedCall,
+    deleteCatalogSection: unexpectedCall,
+    ...overrides,
+  };
+  const queryClient: QueryClient = new QueryClient();
+  context.after(() => queryClient.clear());
+  const sectionsKey: QueryKey =
+    catalogSectionsQueryOptions(catalogSectionApi).queryKey;
+  queryClient.setQueryData(sectionsKey, sections);
+  const creationForm: CatalogSectionForm = createCatalogSectionForm(context);
+  const editForm: CatalogSectionForm = createCatalogSectionForm(context);
+  let currentState: CatalogSectionEditorState = state;
+  const mutations: CatalogSectionMutations = createCatalogSectionMutations({
+    catalogSectionApi,
+    queryClient,
+    sections,
+    editedSectionId: state.editedSectionId,
+    creationForm,
+    editForm,
+    dispatch: (action) => {
+      currentState = catalogSectionEditorReducer(currentState, action);
+    },
+    setIsMoving: () => undefined,
+    setIsDeleting: () => undefined,
+  });
+  return {
+    queryClient,
+    sectionsKey,
+    creationForm,
+    editForm,
+    mutations,
+    get state() {
+      return currentState;
+    },
+  };
+}
+
+describe('createCatalogSectionMutations', () => {
+  it('appends a created section at the end of the list and clears the input', async (context: TestContext) => {
+    const classics: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000062',
+      name: 'Classiques',
+    });
+    let submitted: SaveCatalogSection | undefined;
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      catalogSectionApi: {
+        createCatalogSection: async (section: SaveCatalogSection) => {
+          submitted = section;
+          return classics;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', '  Classiques  ');
+
+    await fixture.mutations.createCatalogSection();
+
+    assert.deepEqual(submitted, { name: 'Classiques' });
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+      classics,
+    ]);
+    assert.equal(fixture.creationForm.getValues('name'), '');
+  });
+
+  it('keeps the input and the list after a rejected creation', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      catalogSectionApi: {
+        createCatalogSection: async () => {
+          throw duplicateNameError;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', 'nouveautés');
+
+    await fixture.mutations.createCatalogSection();
+
+    assert.equal(fixture.creationForm.getValues('name'), 'nouveautés');
+    assert.equal(fixture.state.creationError, 'Cette section existe déjà');
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
+  });
+
+  it('shows a renamed section in place and closes its edit', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      state: {
+        ...initialCatalogSectionEditorState,
+        editedSectionId: events.id,
+      },
+      catalogSectionApi: {
+        renameCatalogSection: async ({ id, section }) => ({
+          id,
+          name: section.name,
+        }),
+      },
+    });
+    fixture.editForm.setValue('name', 'Évènements');
+
+    await fixture.mutations.renameCatalogSection();
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      { ...events, name: 'Évènements' },
+    ]);
+    assert.equal(fixture.state.editedSectionId, null);
+  });
+
+  it('keeps the edit open and the name unchanged after a rejected rename', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      state: {
+        ...initialCatalogSectionEditorState,
+        editedSectionId: events.id,
+      },
+      catalogSectionApi: {
+        renameCatalogSection: async () => {
+          throw duplicateNameError;
+        },
+      },
+    });
+    fixture.editForm.setValue('name', 'NOUVEAUTÉS');
+
+    await fixture.mutations.renameCatalogSection();
+
+    assert.equal(fixture.state.editedSectionId, events.id);
+    assert.equal(
+      fixture.state.rowErrors[events.id],
+      'Cette section existe déjà',
+    );
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
+  });
+
+  it('shows the order returned for a moved section', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      catalogSectionApi: {
+        moveCatalogSection: async ({ id, move }) => {
+          assert.equal(id, events.id);
+          assert.deepEqual(move, { direction: CatalogSectionMoveDirection.UP });
+          return [events, news];
+        },
+      },
+    });
+
+    await fixture.mutations.moveCatalogSection({
+      section: events,
+      direction: CatalogSectionMoveDirection.UP,
+    });
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      events,
+      news,
+    ]);
+  });
+
+  it('keeps the order and shows the error on the row after a rejected move', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      catalogSectionApi: {
+        moveCatalogSection: async () => {
+          throw new TypeError('Network request failed');
+        },
+      },
+    });
+
+    await fixture.mutations.moveCatalogSection({
+      section: events,
+      direction: CatalogSectionMoveDirection.UP,
+    });
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
+    assert.equal(
+      fixture.state.rowErrors[events.id],
+      "Quelque chose s'est mal passé.",
+    );
+  });
+
+  it('removes a deleted section and closes its confirmation', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      state: {
+        ...initialCatalogSectionEditorState,
+        deletionSectionId: events.id,
+      },
+      catalogSectionApi: {
+        deleteCatalogSection: async (id) => {
+          assert.equal(id, events.id);
+        },
+      },
+    });
+
+    await fixture.mutations.deleteCatalogSection(events);
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+    ]);
+    assert.equal(fixture.state.deletionSectionId, null);
+  });
+
+  it('keeps the section and shows the error after a rejected deletion', async (context: TestContext) => {
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      state: {
+        ...initialCatalogSectionEditorState,
+        deletionSectionId: events.id,
+      },
+      catalogSectionApi: {
+        deleteCatalogSection: async () => {
+          throw new TypeError('Network request failed');
+        },
+      },
+    });
+
+    await fixture.mutations.deleteCatalogSection(events);
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
+    assert.equal(
+      fixture.state.rowErrors[events.id],
+      "Quelque chose s'est mal passé.",
+    );
+  });
+});
