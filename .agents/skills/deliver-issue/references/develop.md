@@ -1,6 +1,6 @@
 # Développer une issue
 
-Tu portes l'issue de bout en bout, en auteur du changement, dans le worktree transmis et sur la branche liée. L'orchestrateur te désigne à chaque reprise les sections à appliquer ; chaque rapport donne en plus chaque vérification en échec ou non exécutée, avec la raison.
+Travailler dans le worktree transmis, sur la branche liée. L'orchestrateur désigne les sections à appliquer ; chaque rapport donne en plus chaque vérification en échec ou non exécutée, avec la raison.
 
 ## Mettre la branche à jour
 
@@ -37,7 +37,7 @@ Le rapport donne la preuve de chaque critère, les critères à vérifier en rec
 
 ## Corriger
 
-Pour chaque finding transmis :
+Charger les skills de conventions des périmètres touchés, puis, pour chaque finding transmis :
 
 1. Le vérifier dans le code, gravité comprise ; un finding s'accepte sur preuve, jamais pour clore la boucle.
 2. S'il est fondé, appliquer le plus petit correctif : supprimer ou restreindre plutôt qu'ajouter verrou, cache, helper ou option.

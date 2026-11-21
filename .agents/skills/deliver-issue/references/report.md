@@ -1,11 +1,11 @@
 # Rapport de livraison
 
-Le rapport de livraison est la description de la PR, écrite une seule fois par le développeur, à la livraison, sur le dernier commit. Son lecteur est le dev qui fait la recette puis merge : le rapport lui dit si la PR est prête, ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
+Le rapport de livraison est la description de la PR, écrite une seule fois, à la livraison, sur le dernier commit. Son lecteur est le dev qui fait la recette puis merge : le rapport lui dit si la PR est prête, ce qui a été fait et comment ça fonctionne, sans qu'il ait besoin du diff.
 
 ## Rédaction
 
 - Le relecteur a lu l'issue : chaque phrase lui apprend ce que ni l'issue ni « En bref » ne disent, et oriente sa relecture ou son déploiement.
-- Sources : les éléments de review transmis par l'orchestrateur pour le verdict et « Pistes », les preuves du dernier tour de l'axe Correction pour « Critères non satisfaits » et « À vérifier en recette », tes décisions pour « Décisions prises », le diff final pour le reste.
+- Sources : les éléments de review transmis par l'orchestrateur pour le verdict et « Pistes », les preuves du dernier tour de l'axe Correction pour « Critères non satisfaits » et « À vérifier en recette », les décisions transmises du développement pour « Décisions prises », le diff final pour le reste.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
 - Le rapport est télégraphique : une phrase tient en environ 120 caractères, un paragraphe sur une seule ligne.
 - Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
