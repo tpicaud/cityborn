@@ -67,6 +67,7 @@ export default function Session({ sessionID }: SessionProps) {
           session={sessionController.session}
           handleUpdateGameConfig={sessionController.updateGameConfig}
           handleStartGame={sessionController.startGame}
+          handleKickPlayer={sessionController.kickPlayer}
           handleJoinSession={sessionController.join}
         />
       )}

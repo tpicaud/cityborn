@@ -18,6 +18,7 @@ import {
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
+  UserFacingError,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
@@ -60,6 +61,7 @@ export type SessionController = {
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
+  kickPlayer: (kickedPlayerID: PlayerId) => Promise<void>;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
   guess: (coordinates: Coord | undefined) => Promise<void>;
@@ -70,6 +72,9 @@ export type SessionController = {
   leaveGame: () => Promise<void>;
   departedPlayerIDs: PlayerId[];
 };
+
+const kickedFromLobbyMessage: string =
+  "L'hôte t'a sorti du lobby. Tu peux revenir avec le code, s'il veut bien de toi.";
 
 type JoinedPlayer = {
   playerID: PlayerId;
@@ -160,6 +165,16 @@ export function useSessionController({
     [sessionChannel],
   );
 
+  useEffect(
+    () =>
+      sessionChannel?.on(sessionWsServerEvent.kicked, () => {
+        joinedPlayer.current = null;
+        reportError(new UserFacingError(kickedFromLobbyMessage));
+        navigation.returnTo('/');
+      }),
+    [sessionChannel, reportError, navigation],
+  );
+
   const emit: SessionChannel['emit'] = useCallback(
     (event, ...payload) =>
       requireOpenedSessionChannel({ sessionChannel, event }).emit(
@@ -235,6 +250,12 @@ export function useSessionController({
     await emit(sessionWsEvent.updateHost, { newHostID });
   };
 
+  const kickPlayer: SessionController['kickPlayer'] = async (
+    kickedPlayerID: PlayerId,
+  ) => {
+    await emit(sessionWsEvent.kickPlayer, { kickedPlayerID });
+  };
+
   const updateGameConfig = async (changes: GameConfigChanges) => {
     const current = requireSession('Updating game config');
     await emit(sessionWsEvent.updateGameConfig, {
@@ -286,6 +307,7 @@ export function useSessionController({
     retryConnection,
     join: reportActionErrors({ action: join, reportError }),
     updateHost: reportActionErrors({ action: updateHost, reportError }),
+    kickPlayer: reportActionErrors({ action: kickPlayer, reportError }),
     updateGameConfig: reportActionErrors({
       action: updateGameConfig,
       reportError,

@@ -22,6 +22,11 @@ export {
   usePackSelection,
 } from './usePackSelection';
 export {
+  type PlayerKick,
+  type PlayerKickOptions,
+  usePlayerKick,
+} from './usePlayerKick';
+export {
   type SessionController,
   type SessionControllerOptions,
   useSessionController,
