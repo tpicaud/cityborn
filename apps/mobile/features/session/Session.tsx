@@ -35,12 +35,20 @@ export default function Session({ sessionID }: SessionProps) {
 
   return (
     <View className="flex-1">
-      {sessionController.session.status === SessionStatus.IN_GAME &&
-      sessionController.session.currentGame ? (
+      {sessionController.isAdmitting ? (
+        <View className="flex-1 items-center justify-center">
+          <LoaderIcon />
+          <Text>Connexion à la partie</Text>
+        </View>
+      ) : sessionController.localPlayerID &&
+        sessionController.session.status === SessionStatus.IN_GAME &&
+        sessionController.session.currentGame ? (
         <Game
           localPlayerID={sessionController.localPlayerID}
           isHost={sessionController.isHost}
+          isConnectionReady={sessionController.connectionStatus === 'connected'}
           game={sessionController.session.currentGame}
+          gameReceivedAt={sessionController.sessionReceivedAt}
           handleGuess={sessionController.guess}
           handleNextRound={sessionController.nextRound}
           handleEndGame={sessionController.endGame}

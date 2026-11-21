@@ -10,11 +10,8 @@ export {
   type RoundResult,
 } from './roundResult';
 export {
-  type Countdown,
-  type CountdownOptions,
   type RoundTimer,
   type RoundTimerOptions,
-  useCountdown,
   useRoundTimer,
 } from './roundTimer';
 export {

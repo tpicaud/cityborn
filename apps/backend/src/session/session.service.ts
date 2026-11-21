@@ -12,6 +12,8 @@ import {
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
+  type Round,
+  RoundStatus,
   type Session,
   type SessionId,
   SessionIdSchema,
@@ -124,7 +126,7 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return this.hideRoundGuesses(await this.requireSession(sessionID));
+    return this.projectSession(await this.requireSession(sessionID));
   }
 
   async join(
@@ -259,7 +261,7 @@ export class SessionService {
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
       await this.startRoundClock({ sessionID, timer: game.config.timer });
-      return this.hideRoundGuesses(session);
+      return this.projectSession(session);
     });
   }
 
@@ -333,7 +335,7 @@ export class SessionService {
         coordinates: isLate ? undefined : guess.coordinates,
         connectedPlayerIDs,
       });
-      return this.hideRoundGuesses(session);
+      return this.projectSession(session);
     });
   }
 
@@ -363,7 +365,7 @@ export class SessionService {
       if (!isGameOver) {
         session.currentGame = updatedGame;
         await this.startRoundClock({ sessionID, timer: game.config.timer });
-        return this.hideRoundGuesses(session);
+        return this.projectSession(session);
       }
 
       await this.gameService.endGame({
@@ -380,7 +382,7 @@ export class SessionService {
       };
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
-      return this.hideRoundGuesses(finishedGameSession);
+      return this.projectSession(finishedGameSession);
     });
   }
 
@@ -437,7 +439,10 @@ export class SessionService {
       }
 
       session.currentGame = remainingGame;
-      return { session: this.hideRoundGuesses(session), gameId: game.id };
+      return {
+        session: await this.projectSession(session),
+        gameId: game.id,
+      };
     });
   }
 
@@ -521,7 +526,7 @@ export class SessionService {
 
       if (session.hostID === '') session.hostID = playerID;
 
-      return this.hideRoundGuesses(session);
+      return this.projectSession(session);
     });
   }
 
@@ -595,7 +600,7 @@ export class SessionService {
       if (session.hostID === '')
         session.hostID =
           session.players.find((player) => player.connected)?.username ?? '';
-      return this.hideRoundGuesses(session);
+      return this.projectSession(session);
     });
   }
 
@@ -619,14 +624,35 @@ export class SessionService {
     );
   }
 
-  private hideRoundGuesses(session: Session): Session {
+  private async projectSession(session: Session): Promise<Session> {
     if (!session.currentGame) return session;
+
+    const game: Game = this.gameService.hideGuessingRoundGuesses(
+      session.currentGame,
+    );
+    const round: Round | undefined = game.state.currentRound;
+    if (round?.status !== RoundStatus.GUESSING)
+      return { ...session, currentGame: game };
+
+    const roundDeadline: string | null = await this.redisService.get(
+      this.getRoundDeadlineKey(session.id),
+    );
+    if (roundDeadline === null || !Number.isFinite(Number(roundDeadline)))
+      return { ...session, currentGame: game };
 
     return {
       ...session,
-      currentGame: this.gameService.hideGuessingRoundGuesses(
-        session.currentGame,
-      ),
+      currentGame: {
+        ...game,
+        state: {
+          ...game.state,
+          currentRound: {
+            ...round,
+            endsAt: Number(roundDeadline) - this.ROUND_NETWORK_TOLERANCE_MS,
+            serverTime: Date.now(),
+          },
+        },
+      },
     };
   }
 

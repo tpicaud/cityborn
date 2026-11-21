@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  buildGame,
   buildSession,
   type PlayerId,
   PlayerIdSchema,
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { isHostOf, withStatus } from './sessionState';
+import { hasSessionStarted, isHostOf, withStatus } from './sessionState';
 
 const citizen: PlayerId = PlayerIdSchema.parse('citizen');
 const otherPlayer: PlayerId = PlayerIdSchema.parse('other');
@@ -49,5 +50,23 @@ describe('isHostOf', () => {
     const isHost: boolean = isHostOf(undefined, citizen);
 
     assert.equal(isHost, false);
+  });
+});
+
+describe('hasSessionStarted', () => {
+  it('recognizes the game status or an existing game', () => {
+    assert.equal(
+      hasSessionStarted(buildSession({ status: SessionStatus.IN_GAME })),
+      true,
+    );
+    assert.equal(
+      hasSessionStarted(buildSession({ currentGame: buildGame() })),
+      true,
+    );
+  });
+
+  it('keeps a lobby or a missing session open for admission', () => {
+    assert.equal(hasSessionStarted(buildSession()), false);
+    assert.equal(hasSessionStarted(undefined), false);
   });
 });

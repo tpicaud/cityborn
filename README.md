@@ -97,3 +97,5 @@ cityborn/
 ├── lint-rules/          # Règles Biome du monorepo (plugins GritQL)
 └── scripts/             # Scripts du monorepo
 ```
+
+[Invitations à une partie multijoueur](docs/multiplayer-invitations.md).

@@ -11,7 +11,12 @@ import RoundCountdown from './RoundCountdown';
 
 type GuessProps = Pick<
   GameComponentProps,
-  'game' | 'isHost' | 'handleGuess' | 'handleNextRound'
+  | 'game'
+  | 'gameReceivedAt'
+  | 'isHost'
+  | 'isConnectionReady'
+  | 'handleGuess'
+  | 'handleNextRound'
 > & {
   localPlayerID: PlayerId;
 };
@@ -19,13 +24,17 @@ type GuessProps = Pick<
 const Guess: React.FC<GuessProps> = ({
   localPlayerID,
   game,
+  gameReceivedAt,
+  isConnectionReady,
   isHost,
   handleGuess,
   handleNextRound,
 }) => {
   const gameRound: GameRound = useGameRound({
     game,
+    gameReceivedAt,
     localPlayerID,
+    isConnectionReady,
     handleGuess,
   });
 
@@ -35,24 +44,24 @@ const Guess: React.FC<GuessProps> = ({
         <GameMap mapProps={gameRound.mapProps} />
       </View>
 
-      {gameRound.showCountdown && (
+      {gameRound.countdown > 0 && (
         <View className="absolute inset-0 z-20">
-          <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
+          <RoundCountdown count={gameRound.countdown} />
         </View>
       )}
 
-      {gameRound.showOverlay && (
+      {gameRound.countdown === 0 && (
         <View
           className="absolute inset-0 z-10 bg-transparent"
           pointerEvents="box-none"
         >
           <Overlay
             localPlayerID={localPlayerID}
-            preGuess={gameRound.preGuess}
+            endsAt={gameRound.endsAt}
+            canGuess={gameRound.canGuess}
             game={game}
             isHost={isHost}
-            handleGuess={handleGuess}
-            handleIsTimeUp={gameRound.handleIsTimeUp}
+            submitPreGuess={gameRound.submitPreGuess}
             handleNextRound={handleNextRound}
           />
         </View>

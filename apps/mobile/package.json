@@ -12,7 +12,9 @@
     "android": "pnpm check:env:client:development && expo run:android",
     "ios": "pnpm check:env:client:development && expo run:ios",
     "web": "pnpm check:env:client:development && expo start --web",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm typecheck:app && pnpm typecheck:test",
+    "typecheck:app": "tsc --noEmit -p tsconfig.json",
+    "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
     "check:env": "dotenv -c development -- pnpm check:env:all",
     "check:env:all": "pnpm check:env:build && pnpm check:env:client",
     "check:env:build": "node config/build.js",
@@ -20,7 +22,9 @@
     "check:env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint"
+    "check": "pnpm typecheck && pnpm lint",
+    "test": "node --experimental-test-module-mocks --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test 'lib/**/*.test.ts'",
+    "test:all": "pnpm test"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

@@ -11,9 +11,11 @@ import {
   type PlayerConnectionStatus,
   type PlayerNameForm,
   playerConnectionStatus,
+  type SessionInvitation,
   sortPlayersConnectedFirst,
   usePackSelection,
   usePlayerNameForm,
+  useSessionInvitation,
 } from '@cityborn/client/session';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -29,11 +31,11 @@ import {
   Typography,
 } from '@mui/material';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
 import IconButton from '@/components/ui/buttons/IconButton';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
+import { sharing } from '@/lib/sharing/sharing';
 import { PackThemeFilters } from './PackThemeFilters';
 import { PackVisual } from './PackVisual';
 
@@ -72,7 +74,8 @@ export const Lobby = ({
   handleStartGame,
   handleJoinSession,
 }: LobbyComponentProps) => {
-  const [copied, setCopied] = useState(false);
+  const { invite, copyCode, result, codeCopied }: SessionInvitation =
+    useSessionInvitation({ session, sharing });
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const navigation = useNavigation();
   const {
@@ -86,12 +89,6 @@ export const Lobby = ({
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(session.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const submitPlayerName = playerNameForm.handleSubmit(async ({ playerID }) => {
     await handleJoinSession?.(playerID);
@@ -142,7 +139,10 @@ export const Lobby = ({
                   input: {
                     readOnly: true,
                     endAdornment: (
-                      <IconButton onClick={handleCopy}>
+                      <IconButton
+                        onClick={copyCode}
+                        aria-label="Copier le code"
+                      >
                         <ContentCopyIcon />
                       </IconButton>
                     ),
@@ -150,9 +150,24 @@ export const Lobby = ({
                 }}
               />
 
-              {copied && (
+              {localPlayerID && (
+                <LoadingButton
+                  variant="contained"
+                  color="primary"
+                  onClick={invite}
+                  sx={{ mt: 1 }}
+                >
+                  Inviter
+                </LoadingButton>
+              )}
+              {result === 'copied' && (
                 <Typography variant="caption" color="success.main">
-                  Copié !
+                  Lien copié !
+                </Typography>
+              )}
+              {codeCopied && (
+                <Typography variant="caption" color="success.main">
+                  Code copié !
                 </Typography>
               )}
             </div>

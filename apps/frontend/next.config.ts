@@ -13,8 +13,11 @@ export default function createNextConfig(phase: string): NextConfig {
 
   if (phase !== PHASE_DEVELOPMENT_SERVER) return nextConfig;
 
+  const webAppUrl: string | undefined = process.env.NEXT_PUBLIC_WEB_APP_URL;
+
   return {
     ...nextConfig,
+    allowedDevOrigins: webAppUrl ? [new URL(webAppUrl).hostname] : [],
     rewrites: async () => [
       { source: '/session/solo/:sessionId', destination: '/session' },
       { source: '/session/multi/:sessionId', destination: '/session' },
