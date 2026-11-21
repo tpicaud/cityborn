@@ -8,9 +8,12 @@ Usage: scripts/setup-worktree.sh [chemin_du_worktree] [--skip-install]
 Sans argument, prépare le worktree courant.
   - conserve les .env présents et copie seulement les manquants depuis le principal
   - vérifie les .env requis des apps
-  - supprime les env Docker des worktrees disparus
-  - lance le PostgreSQL et le Redis du worktree, et écrit leurs URL dans apps/backend/.env
+  - supprime les env de dev des worktrees disparus et libère leur slot
+  - attribue au worktree le premier slot libre à partir de 1, gardé dans .cityborn-slot
+  - écrit les ports et URL du slot dans les .env des apps
+  - lance l'env de dev du worktree (scripts/dev-env.sh start)
   - exécute `pnpm install` dans le worktree (sauf --skip-install)
+  - migre et seede sa base cityborn_dev
 USAGE
 }
 
@@ -94,81 +97,132 @@ if [ "$missing_env" = true ]; then
   exit 1
 fi
 
-compose_file="$target_root/apps/backend/docker-compose.resources.yml"
-backend_env="$target_root/apps/backend/.env"
-host_id="$(cat /etc/machine-id 2>/dev/null || hostname)"
-worktree_name="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
-project="cityborn-${worktree_name%-}"
-case "$project" in
-  cityborn-dev|cityborn-test)
-    echo "Le dossier du worktree ne peut pas s'appeler dev ni test : $project est l'env Docker du checkout principal." >&2
-    exit 1
-    ;;
-esac
+. "$target_root/scripts/dev-env.sh"
 
-docker ps --all --filter "label=cityborn.host=$host_id" \
-  --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
-  sort -u |
-  while IFS=$'\t' read -r orphan_project orphan_checkout; do
-    if [ ! -d "$orphan_checkout" ] || { [ "$orphan_checkout" = "$target_root" ] && [ "$orphan_project" != "$project" ]; }; then
-      echo "  env supprimé $orphan_project ($orphan_checkout)"
-      docker compose -p "$orphan_project" -f "$compose_file" --profile test down --volumes --remove-orphans >/dev/null 2>&1 ||
-        echo "  suppression impossible : $orphan_project" >&2
+host_id="$(dev_env_host_id)"
+
+checkout_envs() {
+  docker ps --all --filter "label=cityborn.host=$host_id" \
+    --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}	{{.Label "cityborn.slot"}}' |
+    sort -u
+}
+
+remove_env() {
+  echo "  env supprimé $1 ($2)"
+  docker compose -p "$1" down --volumes --remove-orphans >/dev/null 2>&1 ||
+    echo "  suppression impossible : $1" >&2
+}
+
+checkout_envs | while IFS=$'\t' read -r env_project env_checkout _; do
+  [ -d "$env_checkout" ] || remove_env "$env_project" "$env_checkout"
+done
+
+used_slots="$(
+  {
+    git -C "$target_root" worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}' |
+      while IFS= read -r checkout; do
+        [ "$checkout" = "$target_root" ] || [ ! -d "$checkout" ] || dev_env_read_slot "$checkout"
+      done
+    checkout_envs | awk -F '\t' -v target="$target_root" '$2 != target { print $3 }'
+  } | sort -u
+)"
+
+slot="$(dev_env_read_slot "$target_root")"
+if [ -z "$slot" ] || grep -qx "$slot" <<< "$used_slots"; then
+  slot=""
+  for candidate in $(seq 1 "$DEV_ENV_MAX_SLOT"); do
+    if ! grep -qx "$candidate" <<< "$used_slots"; then
+      slot="$candidate"
+      break
     fi
   done
-
-project_owner="$(docker ps --all --filter "label=com.docker.compose.project=$project" --format '{{.Label "cityborn.checkout"}}' | head -n 1)"
-if [ -n "$project_owner" ] && [ "$project_owner" != "$target_root" ]; then
-  echo "L'env Docker $project appartient déjà à $project_owner : renommer le dossier de l'un des deux worktrees." >&2
+fi
+if [ -z "$slot" ]; then
+  echo "Aucun slot libre parmi 1 à $DEV_ENV_MAX_SLOT : supprimer un worktree inutilisé." >&2
   exit 1
 fi
 
-published_port() {
-  docker compose -p "$project" -f "$compose_file" --profile test port "$1" "$2" 2>/dev/null | sed 's/.*://' || true
-}
+checkout_envs | while IFS=$'\t' read -r env_project env_checkout _; do
+  if [ "$env_checkout" = "$target_root" ] && [ "$env_project" != "$(dev_env_project "$slot")" ]; then
+    remove_env "$env_project" "$env_checkout"
+  fi
+done
 
-free_port() {
-  local port
-  while :; do
-    port=$((20000 + RANDOM % 20000))
-    if [ "$port" != "${1:-}" ] && ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
-      echo "$port"
-      return
-    fi
-  done
-}
+echo "$slot" > "$target_root/$DEV_ENV_SLOT_FILE"
+echo "Slot        : $slot"
 
-postgres_port="$(published_port postgis-test 5432)"
-postgres_port="${postgres_port:-$(free_port)}"
-redis_port="$(published_port redis-test 6379)"
-redis_port="${redis_port:-$(free_port "$postgres_port")}"
-
-echo "Env Docker  : $project (PostgreSQL $postgres_port, Redis $redis_port)"
-CITYBORN_CHECKOUT="$target_root" CITYBORN_HOST="$host_id" TEST_POSTGRES_PORT="$postgres_port" TEST_REDIS_PORT="$redis_port" \
-  docker compose -p "$project" -f "$compose_file" --profile test --progress quiet \
-  up -d --wait --quiet-pull --remove-orphans postgis-test redis-test
-
-set_backend_env() {
-  if grep -q "^$1=" "$backend_env"; then
-    sed -i.bak "s|^$1=.*|$1=$2|" "$backend_env"
-    rm -f "$backend_env.bak"
+set_env() {
+  local file="$1" key="$2" value="$3"
+  if grep -q "^$key=" "$file"; then
+    KEY="$key" VALUE="$value" awk 'index($0, ENVIRON["KEY"] "=") == 1 { print ENVIRON["KEY"] "=" ENVIRON["VALUE"]; next } { print }' \
+      "$file" > "$file.tmp"
+    mv "$file.tmp" "$file"
   else
-    [ -z "$(tail -c 1 "$backend_env")" ] || echo >> "$backend_env"
-    echo "$1=$2" >> "$backend_env"
+    [ -z "$(tail -c 1 "$file")" ] || echo >> "$file"
+    echo "$key=$value" >> "$file"
   fi
 }
 
-postgres_url="postgresql://cityborn_test:cityborn_test@127.0.0.1:$postgres_port"
-set_backend_env DATABASE_URL "$postgres_url/cityborn_dev"
-set_backend_env DIRECT_URL "$postgres_url/cityborn_dev"
-set_backend_env TEST_DATABASE_URL "$postgres_url/cityborn_test"
-set_backend_env TEST_REDIS_URL "redis://127.0.0.1:$redis_port/0"
+shift_env_ports() {
+  local file="$1" key="$2" value shifted="" port default_port
+  value="$(grep -m 1 "^$key=" "$file" | cut -d= -f2-)" || return 0
+  while [[ "$value" =~ :([0-9]+) ]]; do
+    port="${BASH_REMATCH[1]}"
+    shifted+="${value%%"${BASH_REMATCH[0]}"*}:"
+    value="${value#*"${BASH_REMATCH[0]}"}"
+    for default_port in "$DEV_ENV_BACKEND_PORT" "$DEV_ENV_FRONTEND_PORT" "$DEV_ENV_BACK_OFFICE_PORT" "$DEV_ENV_METRO_PORT"; do
+      if [ $(((port - default_port) % 10)) -eq 0 ] && [ "$port" -ge "$default_port" ] &&
+        [ "$port" -le "$(dev_env_port "$default_port" "$DEV_ENV_MAX_SLOT")" ]; then
+        port="$(dev_env_port "$default_port" "$slot")"
+        break
+      fi
+    done
+    shifted+="$port"
+  done
+  set_env "$file" "$key" "$shifted$value"
+}
 
+backend_port="$(dev_env_port "$DEV_ENV_BACKEND_PORT" "$slot")"
+frontend_port="$(dev_env_port "$DEV_ENV_FRONTEND_PORT" "$slot")"
+back_office_port="$(dev_env_port "$DEV_ENV_BACK_OFFICE_PORT" "$slot")"
+postgres_port="$(dev_env_port "$DEV_ENV_POSTGRES_PORT" "$slot")"
+redis_port="$(dev_env_port "$DEV_ENV_REDIS_PORT" "$slot")"
+
+backend_env="$target_root/apps/backend/.env"
+set_env "$backend_env" PORT "$backend_port"
+shift_env_ports "$backend_env" CORS_ORIGIN
+set_env "$backend_env" BACK_OFFICE_ORIGIN "http://localhost:$back_office_port"
+set_env "$backend_env" FRONTEND_URL "http://localhost:$frontend_port"
+set_env "$backend_env" DATABASE_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
+set_env "$backend_env" DIRECT_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
+set_env "$backend_env" REDIS_URL "redis://localhost:$redis_port/0"
+set_env "$backend_env" TEST_DATABASE_URL "postgresql://cityborn_test:cityborn_test@localhost:$postgres_port/cityborn_test"
+set_env "$backend_env" TEST_REDIS_URL "redis://localhost:$redis_port/1"
+
+frontend_env="$target_root/apps/frontend/.env"
+set_env "$frontend_env" PORT "$frontend_port"
+set_env "$frontend_env" NEXT_PUBLIC_REST_BACKEND_URL "http://localhost:$backend_port"
+set_env "$frontend_env" NEXT_PUBLIC_WEBSOCKET_BACKEND_URL "ws://localhost:$backend_port"
+
+back_office_env="$target_root/apps/back-office/.env"
+set_env "$back_office_env" PORT "$back_office_port"
+set_env "$back_office_env" NEXT_PUBLIC_REST_BACKEND_URL "http://localhost:$backend_port"
+
+mobile_env="$target_root/apps/mobile/.env"
+set_env "$mobile_env" RCT_METRO_PORT "$(dev_env_port "$DEV_ENV_METRO_PORT" "$slot")"
+shift_env_ports "$mobile_env" EXPO_PUBLIC_REST_BACKEND_URL
+shift_env_ports "$mobile_env" EXPO_PUBLIC_WEBSOCKET_BACKEND_URL
+
+dev_env_start "$target_root"
+
+cd "$target_root"
 if [ "$skip_install" = true ]; then
   echo "pnpm install ignoré (--skip-install)."
-  exit 0
+else
+  echo "pnpm install…"
+  pnpm install
 fi
 
-echo "pnpm install…"
-cd "$target_root"
-pnpm install
+echo "Migrations et seed de cityborn_dev…"
+pnpm --dir apps/backend exec prisma migrate deploy
+pnpm --dir apps/backend exec prisma db seed

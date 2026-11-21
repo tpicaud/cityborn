@@ -10,11 +10,11 @@ const backendEnv: DotenvParseOutput = existsSync(backendEnvPath)
 export const testDatabaseUrl: string =
   process.env.TEST_DATABASE_URL ??
   backendEnv.TEST_DATABASE_URL ??
-  'postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test';
+  'postgresql://cityborn_test:cityborn_test@localhost:5432/cityborn_test';
 export const testRedisUrl: string =
   process.env.TEST_REDIS_URL ??
   backendEnv.TEST_REDIS_URL ??
-  'redis://localhost:6380/0';
+  'redis://localhost:6379/1';
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = testDatabaseUrl;

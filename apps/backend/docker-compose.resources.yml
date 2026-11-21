@@ -1,110 +1,50 @@
-name: cityborn-dev
-
-x-postgis: &postgis
-  image: postgis/postgis:16-3.4
-  healthcheck:
-    test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB']
-    interval: 1s
-    timeout: 5s
-    retries: 30
-
-x-redis: &redis
-  image: redis:8-alpine
-  healthcheck:
-    test: [CMD, redis-cli, ping]
-    interval: 1s
-    timeout: 5s
-    retries: 30
+x-checkout-labels: &checkout-labels
+  cityborn.checkout: ${CITYBORN_CHECKOUT:-}
+  cityborn.host: ${CITYBORN_HOST:-}
+  cityborn.slot: ${CITYBORN_SLOT:-0}
 
 services:
-  postgis:
-    <<: *postgis
+  postgres:
+    image: postgis/postgis:16-3.4
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_DB: cityborn_dev
+    labels: *checkout-labels
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
+    configs:
+      - source: test-database
+        target: /docker-entrypoint-initdb.d/20_test_database.sql
     volumes:
-      - ./docker-data:/var/lib/postgresql/data
-    networks:
-      - pg_network
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 1s
+      timeout: 5s
+      retries: 30
     restart: unless-stopped
-
-  adminer:
-    image: adminer:latest
-    ports:
-      - "8080:8080"
-    networks:
-      - pg_network
-    restart: unless-stopped
-    depends_on:
-      - postgis
 
   redis:
-    <<: *redis
+    image: redis:8-alpine
+    labels: *checkout-labels
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - ./redis-data:/data
-    networks:
-      - pg_network
-    restart: unless-stopped
-
-  redisinsight:
-    image: redis/redisinsight:latest
-    environment:
-      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
-      RI_REDIS_HOST0: redis
-      RI_REDIS_PORT0: 6379
-      RI_REDIS_ALIAS0: local
-    ports:
-      - "5540:5540"
-    networks:
-      - pg_network
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  postgis-test:
-    <<: *postgis
-    profiles: [test]
-    environment:
-      POSTGRES_USER: cityborn_test
-      POSTGRES_PASSWORD: cityborn_test
-      POSTGRES_DB: cityborn_test
-    labels:
-      cityborn.checkout: ${CITYBORN_CHECKOUT:-}
-      cityborn.host: ${CITYBORN_HOST:-}
-    ports:
-      - "127.0.0.1:${TEST_POSTGRES_PORT:-5433}:5432"
-    configs:
-      - source: worktree-databases
-        target: /docker-entrypoint-initdb.d/worktree-databases.sql
-    volumes:
-      - postgres-test-data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  redis-test:
-    <<: *redis
-    profiles: [test]
-    labels:
-      cityborn.checkout: ${CITYBORN_CHECKOUT:-}
-      cityborn.host: ${CITYBORN_HOST:-}
-    ports:
-      - "127.0.0.1:${TEST_REDIS_PORT:-6380}:6379"
-    volumes:
-      - redis-test-data:/data
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 5s
+      retries: 30
     restart: unless-stopped
 
 configs:
-  worktree-databases:
+  test-database:
     content: |
-      CREATE DATABASE cityborn_dev;
+      CREATE ROLE cityborn_test LOGIN PASSWORD 'cityborn_test';
+      CREATE DATABASE cityborn_test OWNER cityborn_test TEMPLATE template_postgis;
 
 volumes:
-  postgres-test-data:
-  redis-test-data:
-
-networks:
-  pg_network:
+  postgres-data:
+  redis-data:

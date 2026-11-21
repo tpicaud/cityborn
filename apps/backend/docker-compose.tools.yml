@@ -1,0 +1,25 @@
+name: cityborn-tools
+
+services:
+  adminer:
+    image: adminer:latest
+    environment:
+      ADMINER_DEFAULT_SERVER: host.docker.internal:5432
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    environment:
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
+      RI_REDIS_HOST0: host.docker.internal
+      RI_REDIS_PORT0: 6379
+      RI_REDIS_ALIAS0: local
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "5540:5540"
+    restart: unless-stopped

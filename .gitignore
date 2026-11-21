@@ -1,7 +1,6 @@
 node_modules
 dist
-docker-data
-redis-data
+.cityborn-slot
 .turbo
 *.tsbuildinfo
 
