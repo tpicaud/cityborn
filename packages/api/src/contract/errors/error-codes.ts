@@ -1,4 +1,5 @@
 import { AuthErrorCode } from '../../auth/auth.error-codes';
+import { CatalogSectionErrorCode } from '../../catalog-section/catalog-section.error-codes';
 import { TechnicalErrorCode } from '../../errors/technical.error-codes';
 import { GameErrorCode } from '../../game/game.error-codes';
 import { GuessObjectErrorCode } from '../../guess-object/guess-object.error-codes';
@@ -21,6 +22,7 @@ export const ErrorCode = Object.freeze({
   ...WorldLocationErrorCode,
   ...PackErrorCode,
   ...ThemeErrorCode,
+  ...CatalogSectionErrorCode,
   ...TechnicalErrorCode,
 });
 

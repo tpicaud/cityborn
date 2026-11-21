@@ -1,0 +1,244 @@
+import {
+  buildCatalogSection,
+  type CatalogSection,
+  CatalogSectionMoveDirection,
+  ErrorCode,
+} from '@cityborn/api';
+import { createMock, type DeepMocked } from '@golevelup/ts-jest';
+import { CatalogSectionService } from './catalog-section.service';
+import {
+  CatalogSectionNameAlreadyExistsError,
+  type CatalogSectionRepository,
+} from './repositories/catalog-section.repository';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyKey: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
+
+function buildCatalogSectionService() {
+  const catalogSectionRepository: DeepMocked<CatalogSectionRepository> =
+    createMock<CatalogSectionRepository>();
+  const catalogSectionService: CatalogSectionService =
+    new CatalogSectionService(catalogSectionRepository);
+
+  return { catalogSectionRepository, catalogSectionService };
+}
+
+const news: CatalogSection = buildCatalogSection({
+  id: '00000000-0000-4000-8000-000000000060',
+  name: 'Nouveautés',
+});
+const events: CatalogSection = buildCatalogSection({
+  id: '00000000-0000-4000-8000-000000000061',
+  name: 'Évènements',
+});
+const classics: CatalogSection = buildCatalogSection({
+  id: '00000000-0000-4000-8000-000000000062',
+  name: 'Classiques',
+});
+
+describe('CatalogSectionService.create', () => {
+  it('translates a name conflict', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.create.mockRejectedValue(
+      new CatalogSectionNameAlreadyExistsError(),
+    );
+
+    await expect(
+      catalogSectionService.create({ name: 'évènements' }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS },
+    });
+  });
+});
+
+describe('CatalogSectionService.rename', () => {
+  it('returns the renamed section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.rename.mockResolvedValue({
+      ...events,
+      name: 'Événements',
+    });
+
+    const section: CatalogSection = await catalogSectionService.rename({
+      id: events.id,
+      section: { name: 'Événements' },
+    });
+
+    expect(section).toEqual({ id: events.id, name: 'Événements' });
+    expect(catalogSectionRepository.rename).toHaveBeenCalledWith({
+      id: events.id,
+      name: 'Événements',
+    });
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.rename.mockResolvedValue(null);
+
+    await expect(
+      catalogSectionService.rename({
+        id: events.id,
+        section: { name: 'Événements' },
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+    });
+  });
+
+  it('translates a name conflict', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.rename.mockRejectedValue(
+      new CatalogSectionNameAlreadyExistsError(),
+    );
+
+    await expect(
+      catalogSectionService.rename({
+        id: events.id,
+        section: { name: 'NOUVEAUTÉS' },
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS },
+    });
+  });
+});
+
+describe('CatalogSectionService.move', () => {
+  it('swaps a section with the previous one', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.findAll.mockResolvedValue([
+      news,
+      events,
+      classics,
+    ]);
+
+    const sections: CatalogSection[] = await catalogSectionService.move({
+      id: events.id,
+      direction: CatalogSectionMoveDirection.UP,
+    });
+
+    expect(sections).toEqual([events, news, classics]);
+    expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
+      events.id,
+      news.id,
+      classics.id,
+    ]);
+  });
+
+  it('swaps a section with the next one', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.findAll.mockResolvedValue([
+      news,
+      events,
+      classics,
+    ]);
+
+    const sections: CatalogSection[] = await catalogSectionService.move({
+      id: events.id,
+      direction: CatalogSectionMoveDirection.DOWN,
+    });
+
+    expect(sections).toEqual([news, classics, events]);
+    expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
+      news.id,
+      classics.id,
+      events.id,
+    ]);
+  });
+
+  it('keeps the order when the section is already at the edge', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.findAll.mockResolvedValue([news, events]);
+
+    const sections: CatalogSection[] = await catalogSectionService.move({
+      id: events.id,
+      direction: CatalogSectionMoveDirection.DOWN,
+    });
+
+    expect(sections).toEqual([news, events]);
+    expect(catalogSectionRepository.reorder).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.findAll.mockResolvedValue([news]);
+
+    await expect(
+      catalogSectionService.move({
+        id: events.id,
+        direction: CatalogSectionMoveDirection.UP,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+    });
+  });
+});
+
+describe('CatalogSectionService.delete', () => {
+  it('deletes an existing section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.delete.mockResolvedValue(true);
+
+    await catalogSectionService.delete(events.id);
+
+    expect(catalogSectionRepository.delete).toHaveBeenCalledWith(events.id);
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.delete.mockResolvedValue(false);
+
+    await expect(catalogSectionService.delete(events.id)).rejects.toMatchObject(
+      {
+        response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+      },
+    );
+  });
+});

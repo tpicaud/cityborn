@@ -1,4 +1,8 @@
 export {
+  type CatalogSectionsManagement,
+  useCatalogSectionsManagement,
+} from './catalog-sections-editor/useCatalogSectionsManagement';
+export {
   type PackCatalog,
   type PackCreation,
   type PackCreationOptions,

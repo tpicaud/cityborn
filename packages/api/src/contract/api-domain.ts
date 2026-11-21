@@ -1,5 +1,6 @@
 export const API_DOMAINS = [
   'auth',
+  'catalog-section',
   /**
    * @deprecated Utiliser `pack` à la place. Conservé pour les routes
    * `/category` dépréciées.
