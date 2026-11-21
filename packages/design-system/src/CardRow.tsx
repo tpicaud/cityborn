@@ -167,7 +167,7 @@ export function CardRow({ title, children }: CardRowProps) {
         outlineColor="focus-visible:white"
         outlineStyle="focus-visible:solid"
         outlineWidth="focus-visible:0.5"
-        outlineOffset="-2px"
+        outlineOffset="-0.5"
         style={{ flexGrow: 0, flexShrink: 0 }}
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
