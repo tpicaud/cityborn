@@ -1,16 +1,16 @@
-import {
-  type CatalogSection,
-  type CatalogSectionId,
-  type CatalogSectionMoveDirection,
-  resolveErrorMessage,
-  type SaveCatalogSection,
-  type SaveCatalogSectionSchema,
+import type {
+  CatalogSection,
+  CatalogSectionId,
+  CatalogSectionMoveDirection,
+  SaveCatalogSection,
+  SaveCatalogSectionSchema,
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 import type { z } from 'zod';
 import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
 import { updateCatalogSectionsCache } from '../../../domains/catalog-section/catalogSectionQueries';
+import type { ReportError } from '../../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../../shared/formSubmitHandler';
 import type { catalogSectionEditorReducer } from './catalogSectionEditorState';
 
@@ -38,6 +38,7 @@ export function createCatalogSectionMutations({
   creationForm,
   editForm,
   dispatch,
+  reportError,
   setIsMoving,
   setIsDeleting,
 }: {
@@ -47,13 +48,13 @@ export function createCatalogSectionMutations({
   creationForm: CatalogSectionForm;
   editForm: CatalogSectionForm;
   dispatch: (action: Parameters<typeof catalogSectionEditorReducer>[1]) => void;
+  reportError: ReportError;
   setIsMoving: (isMoving: boolean) => void;
   setIsDeleting: (isDeleting: boolean) => void;
 }): CatalogSectionMutations {
   return {
     createCatalogSection: creationForm.handleSubmit(
       async (data: SaveCatalogSection) => {
-        dispatch({ type: 'creationError', message: null });
         try {
           const section: CatalogSection =
             await catalogSectionApi.createCatalogSection(data);
@@ -63,10 +64,7 @@ export function createCatalogSectionMutations({
           });
           creationForm.reset();
         } catch (error: unknown) {
-          dispatch({
-            type: 'creationError',
-            message: resolveErrorMessage(error),
-          });
+          reportError(error);
         }
       },
     ),
@@ -84,13 +82,9 @@ export function createCatalogSectionMutations({
                 section.id === id ? renamedSection : section,
               ),
           });
-          dispatch({ type: 'saved', id });
+          dispatch({ type: 'saved' });
         } catch (error: unknown) {
-          dispatch({
-            type: 'rowError',
-            id,
-            message: resolveErrorMessage(error),
-          });
+          reportError(error);
         }
       },
     ),
@@ -106,13 +100,8 @@ export function createCatalogSectionMutations({
           queryClient,
           update: () => movedSections,
         });
-        dispatch({ type: 'moved', id: section.id });
       } catch (error: unknown) {
-        dispatch({
-          type: 'rowError',
-          id: section.id,
-          message: resolveErrorMessage(error),
-        });
+        reportError(error);
       } finally {
         setIsMoving(false);
       }
@@ -126,13 +115,9 @@ export function createCatalogSectionMutations({
           update: (sections) =>
             sections.filter((item) => item.id !== section.id),
         });
-        dispatch({ type: 'saved', id: section.id });
+        dispatch({ type: 'saved' });
       } catch (error: unknown) {
-        dispatch({
-          type: 'rowError',
-          id: section.id,
-          message: resolveErrorMessage(error),
-        });
+        reportError(error);
       } finally {
         setIsDeleting(false);
       }
