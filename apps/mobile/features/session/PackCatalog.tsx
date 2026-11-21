@@ -1,4 +1,9 @@
-import type { Pack, Theme, ThemeIcon } from '@cityborn/api';
+import {
+  allPacksCatalogSectionName,
+  type Pack,
+  type Theme,
+  type ThemeIcon,
+} from '@cityborn/api';
 import {
   type PackImageFallback,
   type ThemeFilteredPacks,
@@ -85,7 +90,10 @@ export function PackCatalog({
         {packs.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardRow key={selectedTheme?.id ?? 'all'} title="Tous les packs">
+          <CardRow
+            key={selectedTheme?.id ?? 'all'}
+            title={allPacksCatalogSectionName}
+          >
             {packs.map((pack: Pack) => (
               <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
             ))}
