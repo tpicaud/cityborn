@@ -1,5 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { authContract } from '../auth/auth.contract';
+import { catalogSectionAdminContract } from '../catalog-section/catalog-section.admin.contract';
 import { gameRecordContract } from '../game-record/game-record.contract';
 import { deprecatedUserGameRecordContract } from '../game-record/game-record.deprecated.contract';
 import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
@@ -42,6 +43,7 @@ const publicRouters = {
 } satisfies ApiDomainRouters;
 
 const adminRouters = {
+  catalogSection: catalogSectionAdminContract,
   guessObjects: guessObjectAdminContract,
   pack: packAdminContract,
   search: searchAdminContract,
