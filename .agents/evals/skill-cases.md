@@ -23,7 +23,7 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « Ouvre une branche d'intégration pour #500 et rattaches-y #501 et #502. » | `manage-issue`, sans `deliver-issue` |
 | « Développe-moi l'issue #123. » | `deliver-issue` |
 | « Développe #501. », sous-issue de #500 sans PR d'intégration | `deliver-issue`, `manage-issue` pour ouvrir l'intégration de #500 |
-| « Fais la review de la PR #300. » | `review-pr`, puis, dans l'axe Conventions, les skills de conventions des périmètres du diff |
+| « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
 | « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |
 | « Vérifie les dépréciations de l'API. » | `remove-deprecations` |
 | « Nettoie toutes les dépréciations éligibles. » | `remove-deprecations` |
