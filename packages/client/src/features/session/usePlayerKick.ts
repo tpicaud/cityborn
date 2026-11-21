@@ -8,29 +8,40 @@ export type PlayerKickOptions = {
 };
 
 export type PlayerKick = {
-  pendingPlayerID: PlayerId | undefined;
+  isConfirmationOpen: boolean;
+  targetPlayerID: PlayerId | undefined;
   requestKick: (playerID: PlayerId) => void;
   cancelKick: () => void;
   confirmKick: () => Promise<void>;
 };
 
 export function usePlayerKick({ kickPlayer }: PlayerKickOptions): PlayerKick {
-  const [pendingPlayerID, setPendingPlayerID] = useState<PlayerId>();
+  const [targetPlayerID, setTargetPlayerID] = useState<PlayerId>();
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState<boolean>(false);
 
   const requestKick: PlayerKick['requestKick'] = useCallback(
-    (playerID: PlayerId) => setPendingPlayerID(playerID),
+    (playerID: PlayerId) => {
+      setTargetPlayerID(playerID);
+      setIsConfirmationOpen(true);
+    },
     [],
   );
   const cancelKick: PlayerKick['cancelKick'] = useCallback(
-    () => setPendingPlayerID(undefined),
+    () => setIsConfirmationOpen(false),
     [],
   );
 
   const confirmKick: PlayerKick['confirmKick'] = useCallback(async () => {
-    if (!pendingPlayerID) return;
-    await kickPlayer(pendingPlayerID);
-    setPendingPlayerID(undefined);
-  }, [kickPlayer, pendingPlayerID]);
+    if (!targetPlayerID) return;
+    await kickPlayer(targetPlayerID);
+    setIsConfirmationOpen(false);
+  }, [kickPlayer, targetPlayerID]);
 
-  return { pendingPlayerID, requestKick, cancelKick, confirmKick };
+  return {
+    isConfirmationOpen,
+    targetPlayerID,
+    requestKick,
+    cancelKick,
+    confirmKick,
+  };
 }

@@ -172,7 +172,8 @@ export function MultiLobby({
         </View>
       </View>
       <PlayerKickDialog
-        playerID={playerKick.pendingPlayerID}
+        isOpen={playerKick.isConfirmationOpen}
+        playerID={playerKick.targetPlayerID}
         onCancel={playerKick.cancelKick}
         onConfirm={playerKick.confirmKick}
       />

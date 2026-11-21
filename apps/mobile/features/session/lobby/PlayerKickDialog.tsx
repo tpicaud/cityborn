@@ -4,19 +4,21 @@ import Dialog from '@/components/ui/Dialog';
 import { View } from '@/components/ui/native/NativeComponents';
 
 type PlayerKickDialogProps = {
+  isOpen: boolean;
   playerID: PlayerId | undefined;
   onCancel: () => void;
   onConfirm: () => Promise<void>;
 };
 
 export function PlayerKickDialog({
+  isOpen,
   playerID,
   onCancel,
   onConfirm,
 }: PlayerKickDialogProps) {
   return (
     <Dialog
-      visible={playerID !== undefined}
+      visible={isOpen}
       onClose={onCancel}
       message={`Exclure ${playerID} du lobby ?`}
       className="h-auto"

@@ -305,7 +305,8 @@ export const Lobby = ({
       </div>
 
       <PlayerKickDialog
-        playerID={playerKick.pendingPlayerID}
+        isOpen={playerKick.isConfirmationOpen}
+        playerID={playerKick.targetPlayerID}
         onCancel={playerKick.cancelKick}
         onConfirm={playerKick.confirmKick}
       />
