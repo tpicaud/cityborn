@@ -16,7 +16,9 @@ const SESSION_TTL_SECONDS: number = 10 * 60;
 const StoredSessionSchema: z.ZodType<StoredSession, z.ZodTypeDef, unknown> =
   z.object({
     session: SessionSchema,
-    reconnectTokenHashes: z.record(PlayerIdSchema, z.string()),
+    reconnectTokenHashes: z
+      .array(z.tuple([PlayerIdSchema, z.string()]))
+      .transform((entries) => Object.fromEntries(entries)),
     roundDeadline: z.number().nullable(),
   });
 
@@ -37,7 +39,12 @@ export class RedisSessionRepository implements SessionRepository {
       .multi()
       .set(
         `${SESSION_KEY_PREFIX}${storedSession.session.id}`,
-        JSON.stringify(storedSession),
+        JSON.stringify({
+          ...storedSession,
+          reconnectTokenHashes: Object.entries(
+            storedSession.reconnectTokenHashes,
+          ),
+        }),
         'EX',
         SESSION_TTL_SECONDS,
       )

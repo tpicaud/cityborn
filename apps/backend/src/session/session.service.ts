@@ -688,8 +688,10 @@ export class SessionService {
   }): SessionReconnectToken {
     const reconnectToken: SessionReconnectToken =
       SessionReconnectTokenSchema.parse(randomBytes(32).toString('base64url'));
-    storedSession.reconnectTokenHashes[playerID] =
-      this.hashReconnectToken(reconnectToken);
+    storedSession.reconnectTokenHashes = {
+      ...storedSession.reconnectTokenHashes,
+      [playerID]: this.hashReconnectToken(reconnectToken),
+    };
     return reconnectToken;
   }
 

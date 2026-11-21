@@ -1154,6 +1154,29 @@ describe('SessionService connection operations', () => {
       );
     });
 
+    it('reconnects a guest player named __proto__ with the token issued when joining', async () => {
+      const session: Session = buildSession({ players: [] });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('__proto__'),
+      );
+
+      const result: Session = await sessionService.reconnectPlayer(
+        session.id,
+        playerId('__proto__'),
+        reconnectToken,
+      );
+
+      expect(result.players[0]).toEqual(
+        expect.objectContaining({
+          username: playerId('__proto__'),
+          connected: true,
+        }),
+      );
+    });
+
     it('rejects reconnecting a guest player with the token of another player', async () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
