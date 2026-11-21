@@ -83,7 +83,7 @@ export class SessionGateway
 
   private resolvePlayer(socket: AppSocket): SocketPlayer {
     const { player } = socket.data;
-    if (!player)
+    if (!player || !socket.rooms.has(player.sessionID))
       throw new NotFoundException({
         code: ErrorCode.CONNECTION_NOT_FOUND,
         message: 'No connection associated with this socket',
@@ -353,7 +353,9 @@ export class SessionGateway
     try {
       const presentPlayers: SocketPlayer[] = (
         await this.io.fetchSockets()
-      ).flatMap(({ data }) => (data.player ? [data.player] : []));
+      ).flatMap(({ data, rooms }) =>
+        data.player && rooms.has(data.player.sessionID) ? [data.player] : [],
+      );
       const sessionIDs: SessionId[] =
         await this.sessionService.pruneExpiredSessionsAndListIDs();
       await Promise.all(

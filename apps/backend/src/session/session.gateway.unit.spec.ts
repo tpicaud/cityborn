@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {
   buildSession,
+  ErrorCode,
   GameIdSchema,
   PlayerIdSchema,
   type Session,
@@ -47,6 +48,8 @@ describe('SessionGateway message mapping', () => {
 
 type SessionRoom = ReturnType<AppServer['to']>;
 
+const socketID: string = 'socket-1';
+
 describe('SessionGateway.leaveGame', () => {
   it('detaches the socket from the session before broadcasting it to the remaining players', async () => {
     const session: Session = buildSession();
@@ -72,6 +75,7 @@ describe('SessionGateway.leaveGame', () => {
     gateway.io = io;
     const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
       data: { player: { sessionID: session.id, playerID: session.hostID } },
+      rooms: new Set([session.id]),
     });
     socket.leave.mockImplementation(async () => {
       actions.push('leave');
@@ -107,6 +111,7 @@ describe('SessionGateway.leaveGame', () => {
     gateway.io = createMock<AppServer>();
     const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
       data: { player: { sessionID: session.id, playerID: session.hostID } },
+      rooms: new Set([session.id]),
     });
 
     await gateway.leaveGame(socket, undefined);
@@ -160,6 +165,7 @@ describe('SessionGateway.kickPlayer', () => {
     gateway.io = io;
     const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
       data: { player: { sessionID: session.id, playerID: session.hostID } },
+      rooms: new Set([session.id]),
     });
 
     await gateway.kickPlayer(socket, {
@@ -197,6 +203,7 @@ describe('SessionGateway.kickPlayer', () => {
     gateway.io = io;
     const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
       data: { player: { sessionID: session.id, playerID: 'bob' } },
+      rooms: new Set([session.id]),
     });
 
     await expect(
@@ -207,6 +214,32 @@ describe('SessionGateway.kickPlayer', () => {
 
     expect(io.in).not.toHaveBeenCalled();
     expect(io.to).not.toHaveBeenCalled();
+  });
+});
+
+describe('SessionGateway.submitGuess', () => {
+  it('rejects a socket detached from the session room', async () => {
+    const session: Session = buildSession();
+    const sessionService: DeepMocked<SessionService> =
+      createMock<SessionService>();
+    const gateway: SessionGateway = new SessionGateway(
+      sessionService,
+      createMock<WideEventService>(),
+      createMock<WsWideEventLifecycle>(),
+      sessionPresenceTiming,
+    );
+    const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
+      data: { player: { sessionID: session.id, playerID: 'bob' } },
+      rooms: new Set([socketID]),
+    });
+
+    await expect(
+      gateway.submitGuess(socket, { guess: {} }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CONNECTION_NOT_FOUND },
+    });
+
+    expect(sessionService.submitGuess).not.toHaveBeenCalled();
   });
 });
 
@@ -287,6 +320,37 @@ describe('SessionGateway.afterInit', () => {
       2,
     );
     expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('counts as present only the sockets still in their session room', async () => {
+    const {
+      gateway,
+      sessionService,
+      io,
+    }: ReturnType<typeof buildPresenceGateway> = buildPresenceGateway();
+    const session: Session = buildSession();
+    sessionService.pruneExpiredSessionsAndListIDs.mockResolvedValue([
+      session.id,
+    ]);
+    sessionService.reconcilePlayerPresence.mockResolvedValue(null);
+    io.fetchSockets.mockResolvedValue([
+      createMock<SessionRemoteSocket>({
+        data: { player: { sessionID: session.id, playerID: session.hostID } },
+        rooms: new Set([socketID, session.id]),
+      }),
+      createMock<SessionRemoteSocket>({
+        data: { player: { sessionID: session.id, playerID: 'bob' } },
+        rooms: new Set([socketID]),
+      }),
+    ]);
+
+    gateway.afterInit();
+    await jest.advanceTimersByTimeAsync(presenceReconciliationIntervalMs);
+
+    expect(sessionService.reconcilePlayerPresence).toHaveBeenCalledWith({
+      sessionID: session.id,
+      presentPlayerIDs: [session.hostID],
+    });
   });
 
   it('retries a pass that failed', async () => {
