@@ -11,7 +11,7 @@ DEV_ENV_POSTGRES_PORT=5432
 DEV_ENV_REDIS_PORT=6379
 
 dev_env_main_root() {
-  git -C "$1" worktree list --porcelain | awk '/^worktree / {print substr($0, 10); exit}'
+  git -C "$1" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}'
 }
 
 dev_env_host_id() {
@@ -24,6 +24,18 @@ dev_env_project() {
 
 dev_env_port() {
   echo $(($1 + 10 * $2))
+}
+
+dev_env_rebase_port() {
+  local port="$1" slot="$2" default_port
+  for default_port in "$DEV_ENV_BACKEND_PORT" "$DEV_ENV_FRONTEND_PORT" "$DEV_ENV_BACK_OFFICE_PORT" "$DEV_ENV_METRO_PORT"; do
+    if [ $(((port - default_port) % 10)) -eq 0 ] && [ "$port" -ge "$default_port" ] &&
+      [ "$port" -le "$(dev_env_port "$default_port" "$DEV_ENV_MAX_SLOT")" ]; then
+      dev_env_port "$default_port" "$slot"
+      return
+    fi
+  done
+  echo "$port"
 }
 
 dev_env_read_slot() {
@@ -77,6 +89,66 @@ dev_env_start() {
     echo "Outils      : Adminer http://localhost:8080, RedisInsight http://localhost:5540"
     dev_env_tools "$checkout" --progress quiet up -d --wait --quiet-pull --remove-orphans
   fi
+}
+
+dev_env_checkout_envs() {
+  docker ps --all --filter "label=cityborn.host=$(dev_env_host_id)" \
+    --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}	{{.Label "cityborn.slot"}}' |
+    sort -u
+}
+
+dev_env_remove() {
+  echo "  env supprimé $1 ($2)"
+  docker compose -p "$1" down --volumes --remove-orphans >/dev/null 2>&1 ||
+    echo "  suppression impossible : $1" >&2
+}
+
+dev_env_free_slot() {
+  local checkout="$1" used_slots slot candidate
+  used_slots="$(
+    {
+      git -C "$checkout" worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}' |
+        while IFS= read -r other; do
+          [ "$other" = "$checkout" ] || [ ! -d "$other" ] || dev_env_read_slot "$other"
+        done
+      dev_env_checkout_envs | awk -F '\t' -v checkout="$checkout" '$2 != checkout { print $3 }'
+    } | sort -u
+  )"
+  slot="$(dev_env_read_slot "$checkout")"
+  if [ -n "$slot" ] && ! grep -qx "$slot" <<< "$used_slots"; then
+    echo "$slot"
+    return
+  fi
+  for candidate in $(seq 1 "$DEV_ENV_MAX_SLOT"); do
+    if ! grep -qx "$candidate" <<< "$used_slots"; then
+      echo "$candidate"
+      return
+    fi
+  done
+  echo "Aucun slot libre parmi 1 à $DEV_ENV_MAX_SLOT : supprimer un worktree inutilisé." >&2
+  return 1
+}
+
+dev_env_provision() {
+  local checkout="$1" slot
+  (
+    flock -n 9 || {
+      echo "Attente de la fin d'un autre setup-worktree.sh…"
+      flock 9
+    }
+    dev_env_checkout_envs | while IFS=$'\t' read -r project owner _; do
+      [ -d "$owner" ] || dev_env_remove "$project" "$owner"
+    done
+    slot="$(dev_env_free_slot "$checkout")"
+    dev_env_checkout_envs | while IFS=$'\t' read -r project owner _; do
+      if [ "$owner" = "$checkout" ] && [ "$project" != "$(dev_env_project "$slot")" ]; then
+        dev_env_remove "$project" "$owner"
+      fi
+    done
+    echo "$slot" > "$checkout/$DEV_ENV_SLOT_FILE"
+    echo "Slot        : $slot"
+    dev_env_start "$checkout"
+  ) 9> "$(git -C "$checkout" rev-parse --path-format=absolute --git-common-dir)/cityborn-dev-env.lock"
 }
 
 dev_env_stop() {

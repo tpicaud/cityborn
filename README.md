@@ -46,8 +46,9 @@ Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable
 
 - copie les `.env` manquants depuis le principal ;
 - supprime l'env des worktrees disparus, ce qui libère leur slot ;
-- attribue le slot et écrit ses ports et URL dans les `.env` des apps, en gardant l'IP locale des URL mobiles ;
-- lance `pnpm env:start`, `pnpm install`, puis migre et seede `cityborn_dev`.
+- attribue le slot et lance son env, sous un verrou qui empêche deux setups simultanés de prendre le même slot ;
+- écrit ses ports et URL dans les `.env` des apps, en gardant l'IP locale des URL mobiles ;
+- lance `pnpm install`, puis migre et seede `cityborn_dev`.
 
 Dans un worktree non préparé, `pnpm env:start` échoue et renvoie à ce script.
 

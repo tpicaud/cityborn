@@ -10,8 +10,8 @@ Sans argument, prépare le worktree courant.
   - vérifie les .env requis des apps
   - supprime les env de dev des worktrees disparus et libère leur slot
   - attribue au worktree le premier slot libre à partir de 1, gardé dans .cityborn-slot
-  - écrit les ports et URL du slot dans les .env des apps
   - lance l'env de dev du worktree (scripts/dev-env.sh start)
+  - écrit les ports et URL du slot dans les .env des apps
   - exécute `pnpm install` dans le worktree (sauf --skip-install)
   - migre et seede sa base cityborn_dev
 USAGE
@@ -43,7 +43,8 @@ if [ ! -d "$target" ]; then
 fi
 
 target_root="$(git -C "$target" rev-parse --show-toplevel)"
-main_root="$(git -C "$target" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}')"
+. "$target_root/scripts/dev-env.sh"
+main_root="$(dev_env_main_root "$target_root")"
 
 if [ ! -d "$main_root" ]; then
   echo "Checkout principal introuvable : $main_root" >&2
@@ -97,59 +98,8 @@ if [ "$missing_env" = true ]; then
   exit 1
 fi
 
-. "$target_root/scripts/dev-env.sh"
-
-host_id="$(dev_env_host_id)"
-
-checkout_envs() {
-  docker ps --all --filter "label=cityborn.host=$host_id" \
-    --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}	{{.Label "cityborn.slot"}}' |
-    sort -u
-}
-
-remove_env() {
-  echo "  env supprimé $1 ($2)"
-  docker compose -p "$1" down --volumes --remove-orphans >/dev/null 2>&1 ||
-    echo "  suppression impossible : $1" >&2
-}
-
-checkout_envs | while IFS=$'\t' read -r env_project env_checkout _; do
-  [ -d "$env_checkout" ] || remove_env "$env_project" "$env_checkout"
-done
-
-used_slots="$(
-  {
-    git -C "$target_root" worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}' |
-      while IFS= read -r checkout; do
-        [ "$checkout" = "$target_root" ] || [ ! -d "$checkout" ] || dev_env_read_slot "$checkout"
-      done
-    checkout_envs | awk -F '\t' -v target="$target_root" '$2 != target { print $3 }'
-  } | sort -u
-)"
-
-slot="$(dev_env_read_slot "$target_root")"
-if [ -z "$slot" ] || grep -qx "$slot" <<< "$used_slots"; then
-  slot=""
-  for candidate in $(seq 1 "$DEV_ENV_MAX_SLOT"); do
-    if ! grep -qx "$candidate" <<< "$used_slots"; then
-      slot="$candidate"
-      break
-    fi
-  done
-fi
-if [ -z "$slot" ]; then
-  echo "Aucun slot libre parmi 1 à $DEV_ENV_MAX_SLOT : supprimer un worktree inutilisé." >&2
-  exit 1
-fi
-
-checkout_envs | while IFS=$'\t' read -r env_project env_checkout _; do
-  if [ "$env_checkout" = "$target_root" ] && [ "$env_project" != "$(dev_env_project "$slot")" ]; then
-    remove_env "$env_project" "$env_checkout"
-  fi
-done
-
-echo "$slot" > "$target_root/$DEV_ENV_SLOT_FILE"
-echo "Slot        : $slot"
+dev_env_provision "$target_root"
+slot="$(dev_env_checkout_slot "$target_root")"
 
 set_env() {
   local file="$1" key="$2" value="$3"
@@ -164,20 +114,12 @@ set_env() {
 }
 
 shift_env_ports() {
-  local file="$1" key="$2" value shifted="" port default_port
+  local file="$1" key="$2" value shifted="" port
   value="$(grep -m 1 "^$key=" "$file" | cut -d= -f2-)" || return 0
   while [[ "$value" =~ :([0-9]+) ]]; do
     port="${BASH_REMATCH[1]}"
-    shifted+="${value%%"${BASH_REMATCH[0]}"*}:"
+    shifted+="${value%%"${BASH_REMATCH[0]}"*}:$(dev_env_rebase_port "$port" "$slot")"
     value="${value#*"${BASH_REMATCH[0]}"}"
-    for default_port in "$DEV_ENV_BACKEND_PORT" "$DEV_ENV_FRONTEND_PORT" "$DEV_ENV_BACK_OFFICE_PORT" "$DEV_ENV_METRO_PORT"; do
-      if [ $(((port - default_port) % 10)) -eq 0 ] && [ "$port" -ge "$default_port" ] &&
-        [ "$port" -le "$(dev_env_port "$default_port" "$DEV_ENV_MAX_SLOT")" ]; then
-        port="$(dev_env_port "$default_port" "$slot")"
-        break
-      fi
-    done
-    shifted+="$port"
   done
   set_env "$file" "$key" "$shifted$value"
 }
@@ -212,8 +154,6 @@ mobile_env="$target_root/apps/mobile/.env"
 set_env "$mobile_env" RCT_METRO_PORT "$(dev_env_port "$DEV_ENV_METRO_PORT" "$slot")"
 shift_env_ports "$mobile_env" EXPO_PUBLIC_REST_BACKEND_URL
 shift_env_ports "$mobile_env" EXPO_PUBLIC_WEBSOCKET_BACKEND_URL
-
-dev_env_start "$target_root"
 
 cd "$target_root"
 if [ "$skip_install" = true ]; then
