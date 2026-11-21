@@ -92,6 +92,11 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.THEME_NOT_FOUND]: 'Aucun thème trouvé pour cet identifiant.',
   [ErrorCode.THEME_ICON_NOT_FOUND]: 'Cette icône est introuvable sur Iconify.',
 
+  // Catalog section
+  [ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS]: 'Cette section existe déjà',
+  [ErrorCode.CATALOG_SECTION_NOT_FOUND]:
+    'Aucune section trouvée pour cet identifiant.',
+
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:
     'Trop de requêtes. Veuillez patienter avant de réessayer.',
