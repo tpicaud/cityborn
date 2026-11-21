@@ -525,18 +525,31 @@ export class SessionService {
     });
   }
 
-  async listSessionIDs(): Promise<SessionId[]> {
+  async pruneExpiredSessionsAndListIDs(): Promise<SessionId[]> {
     await this.redisService.redisClient.zremrangebyscore(
       this.sessionExpirationsKey,
       '-inf',
       Date.now(),
     );
-    const sessionIDs: string[] = await this.redisService.redisClient.zrange(
-      this.sessionExpirationsKey,
-      0,
-      -1,
+    const sessionIDs: SessionId[] = (
+      await this.redisService.redisClient.zrange(
+        this.sessionExpirationsKey,
+        0,
+        -1,
+      )
+    ).map((sessionID) => SessionIdSchema.parse(sessionID));
+    [...this.playerAbsenceStarts.keys()]
+      .filter((sessionID) => !sessionIDs.includes(sessionID))
+      .forEach((sessionID) => {
+        this.playerAbsenceStarts.delete(sessionID);
+      });
+    return sessionIDs;
+  }
+
+  hasPlayerAbsence(): boolean {
+    return [...this.playerAbsenceStarts.values()].some(
+      (absenceStarts) => absenceStarts.size > 0,
     );
-    return sessionIDs.map((sessionID) => SessionIdSchema.parse(sessionID));
   }
 
   async reconcilePlayerPresence({

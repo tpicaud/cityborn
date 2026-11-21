@@ -1323,6 +1323,60 @@ describe('SessionService connection operations', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('hasPlayerAbsence', () => {
+    beforeEach(() => {
+      jest.useFakeTimers({ now: 0 });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('reports an absence in progress until the absent player is disconnected', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      const absenceChecks: boolean[] = [sessionService.hasPlayerAbsence()];
+
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      absenceChecks.push(sessionService.hasPlayerAbsence());
+      jest.setSystemTime(sessionPresenceTiming.disconnectGracePeriodMs);
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      absenceChecks.push(sessionService.hasPlayerAbsence());
+
+      expect(absenceChecks).toEqual([false, true, false]);
+    });
+  });
+
+  describe('pruneExpiredSessionsAndListIDs', () => {
+    it('forgets the absences of a session expired from the index', async () => {
+      const session: Session = buildSession();
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      redisService.redisClient.zrange.mockResolvedValue([]);
+
+      await sessionService.pruneExpiredSessionsAndListIDs();
+
+      expect(sessionService.hasPlayerAbsence()).toBe(false);
+    });
+  });
 });
 
 describe('SessionService session lock', () => {
