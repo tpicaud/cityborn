@@ -19,7 +19,6 @@ import {
   type SessionPlayer,
   type SessionReconnectToken,
   SessionReconnectTokenSchema,
-  SessionSchema,
   SessionStatus,
   type User,
 } from '@cityborn/api';
@@ -38,7 +37,11 @@ import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
-import { RedisService } from '../redis/redis.service';
+import {
+  SESSION_REPOSITORY,
+  type SessionRepository,
+  type StoredSession,
+} from './repositories/session.repository';
 import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
@@ -56,16 +59,14 @@ export type LeaveGameResult = {
 
 @Injectable()
 export class SessionService {
-  private readonly prefix = 'session:';
-  private readonly TTL = 10 * 60;
   private readonly LOCK_TTL = 2000;
   private readonly ROUND_NETWORK_TOLERANCE_MS = 2000;
-  private readonly sessionExpirationsKey = 'session-expirations';
   private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
     new Map();
 
   constructor(
-    private readonly redisService: RedisService,
+    @Inject(SESSION_REPOSITORY)
+    private readonly sessionRepository: SessionRepository,
     private readonly lockService: LockService,
     private readonly idService: IdService,
     private readonly gameService: GameService,
@@ -74,16 +75,8 @@ export class SessionService {
     private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
 
-  private getKey(id: SessionId): string {
-    return `${this.prefix}${id}`;
-  }
-
-  private getReconnectTokenHashesKey(id: SessionId): string {
-    return `${this.getKey(id)}:reconnect-token-hashes`;
-  }
-
-  private getRoundDeadlineKey(id: SessionId): string {
-    return `${this.getKey(id)}:round-deadline`;
+  private getLockResource(id: SessionId): string {
+    return `session:${id}`;
   }
 
   ////////////////////
@@ -105,7 +98,11 @@ export class SessionService {
       players: [],
     };
 
-    await this.saveSession(newSession);
+    await this.saveSession({
+      session: newSession,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -124,7 +121,9 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return this.hideRoundGuesses(await this.requireSession(sessionID));
+    const { session }: StoredSession =
+      await this.requireStoredSession(sessionID);
+    return this.hideRoundGuesses(session);
   }
 
   async join(
@@ -132,7 +131,8 @@ export class SessionService {
     playerID: PlayerId,
     user?: User,
   ): Promise<JoinedSession> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       if (session.mode === SessionMode.SOLO && session.players.length > 0)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
@@ -168,7 +168,7 @@ export class SessionService {
       if (session.hostID === '') session.hostID = playerID;
 
       const reconnectToken: SessionReconnectToken | undefined = isGuest
-        ? await this.issueReconnectToken(sessionID, playerID)
+        ? this.issueReconnectToken({ storedSession, playerID })
         : undefined;
       return { session, reconnectToken };
     });
@@ -179,7 +179,7 @@ export class SessionService {
     sessionID: SessionId,
     newHostID: PlayerId,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async ({ session }) => {
       if (session.currentGame)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_ALREADY_IN_GAME,
@@ -211,7 +211,7 @@ export class SessionService {
     sessionID: SessionId,
     gameConfig: GameConfig,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async ({ session }) => {
       if (session.currentGame)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_ALREADY_IN_GAME,
@@ -235,7 +235,8 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       if (session.currentGame)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_ALREADY_IN_GAME,
@@ -258,7 +259,7 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
-      await this.startRoundClock({ sessionID, timer: game.config.timer });
+      this.startRoundClock({ storedSession, timer: game.config.timer });
       return this.hideRoundGuesses(session);
     });
   }
@@ -290,7 +291,8 @@ export class SessionService {
     sessionID: SessionId;
     guess: GuessSubmission;
   }): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -325,7 +327,7 @@ export class SessionService {
       const connectedPlayerIDs: PlayerId[] = session.players
         .filter((player) => player.connected)
         .map((player) => player.username);
-      const isLate: boolean = await this.isPastRoundDeadline(sessionID);
+      const isLate: boolean = this.isPastRoundDeadline(storedSession);
 
       session.currentGame = await this.gameService.applyGuess({
         game,
@@ -342,7 +344,8 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -362,7 +365,7 @@ export class SessionService {
 
       if (!isGameOver) {
         session.currentGame = updatedGame;
-        await this.startRoundClock({ sessionID, timer: game.config.timer });
+        this.startRoundClock({ storedSession, timer: game.config.timer });
         return this.hideRoundGuesses(session);
       }
 
@@ -393,7 +396,8 @@ export class SessionService {
     sessionID: SessionId;
     visitorId?: string;
   }): Promise<LeaveGameResult> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -425,10 +429,7 @@ export class SessionService {
         quickPlay: session.quickPlay ?? false,
         visitorId,
       });
-      await this.redisService.hdel(
-        this.getReconnectTokenHashesKey(sessionID),
-        playerID,
-      );
+      delete storedSession.reconnectTokenHashes[playerID];
 
       if (session.players.length === 0) {
         session.status = SessionStatus.IN_LOBBY;
@@ -498,7 +499,8 @@ export class SessionService {
     reconnectToken: SessionReconnectToken | undefined,
     user?: User,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async (storedSession) => {
+      const { session }: StoredSession = storedSession;
       const players = session.players;
 
       const playerIndex = players.findIndex(
@@ -510,12 +512,12 @@ export class SessionService {
           message: `Player not found in session`,
         });
 
-      await this.assertReconnectingPlayerIdentity(
-        sessionID,
-        players[playerIndex],
+      this.assertReconnectingPlayerIdentity({
+        storedSession,
+        player: players[playerIndex],
         reconnectToken,
         user,
-      );
+      });
 
       players[playerIndex].connected = true;
 
@@ -526,18 +528,8 @@ export class SessionService {
   }
 
   async pruneExpiredSessionsAndListIDs(): Promise<SessionId[]> {
-    await this.redisService.redisClient.zremrangebyscore(
-      this.sessionExpirationsKey,
-      '-inf',
-      Date.now(),
-    );
-    const sessionIDs: SessionId[] = (
-      await this.redisService.redisClient.zrange(
-        this.sessionExpirationsKey,
-        0,
-        -1,
-      )
-    ).map((sessionID) => SessionIdSchema.parse(sessionID));
+    const sessionIDs: SessionId[] =
+      await this.sessionRepository.listActiveIds();
     [...this.playerAbsenceStarts.keys()]
       .filter((sessionID) => !sessionIDs.includes(sessionID))
       .forEach((sessionID) => {
@@ -594,7 +586,7 @@ export class SessionService {
     );
     if (departedPlayerIDs.length === 0 && !hasReturnedPlayer) return null;
 
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updateSession(sessionID, async ({ session }) => {
       session.players.forEach((player) => {
         if (presentPlayerIDs.includes(player.username)) {
           player.connected = true;
@@ -618,15 +610,16 @@ export class SessionService {
 
   private async updateSession<Result>(
     sessionID: SessionId,
-    update: (session: Session) => Promise<Result>,
+    update: (storedSession: StoredSession) => Promise<Result>,
   ): Promise<Result> {
     return await this.lockService.withLock(
-      this.getKey(sessionID),
+      this.getLockResource(sessionID),
       this.LOCK_TTL,
       async () => {
-        const session: Session = await this.requireSession(sessionID);
-        const result: Result = await update(session);
-        await this.saveSession(session);
+        const storedSession: StoredSession =
+          await this.requireStoredSession(sessionID);
+        const result: Result = await update(storedSession);
+        await this.saveSession(storedSession);
         return result;
       },
     );
@@ -643,9 +636,12 @@ export class SessionService {
     };
   }
 
-  private async requireSession(sessionID: SessionId): Promise<Session> {
-    const session: Session | null = await this.getSession(sessionID);
-    if (session) return session;
+  private async requireStoredSession(
+    sessionID: SessionId,
+  ): Promise<StoredSession> {
+    const storedSession: StoredSession | null =
+      await this.sessionRepository.find(sessionID);
+    if (storedSession) return storedSession;
 
     throw new NotFoundException({
       code: ErrorCode.SESSION_NOT_FOUND,
@@ -654,86 +650,62 @@ export class SessionService {
   }
 
   private async getSession(sessionID: SessionId): Promise<Session | null> {
-    const storedSession = await this.redisService.getJSON<unknown>(
-      this.getKey(sessionID),
-    );
-    if (!storedSession) return null;
-    return SessionSchema.parse(storedSession);
+    const storedSession: StoredSession | null =
+      await this.sessionRepository.find(sessionID);
+    return storedSession?.session ?? null;
   }
 
-  private async saveSession(
-    session: Session,
-    ttl: number = this.TTL,
-  ): Promise<void> {
-    await Promise.all([
-      this.redisService.setJSON(
-        this.getKey(session.id),
-        this.getLightSession(session),
-        ttl,
-      ),
-      this.redisService.expire(
-        this.getReconnectTokenHashesKey(session.id),
-        ttl,
-      ),
-      this.redisService.expire(this.getRoundDeadlineKey(session.id), ttl),
-      this.redisService.redisClient.zadd(
-        this.sessionExpirationsKey,
-        Date.now() + ttl * 1000,
-        session.id,
-      ),
-    ]);
+  private async saveSession(storedSession: StoredSession): Promise<void> {
+    await this.sessionRepository.save({
+      ...storedSession,
+      session: this.getLightSession(storedSession.session),
+    });
   }
 
-  private async startRoundClock({
-    sessionID,
+  private startRoundClock({
+    storedSession,
     timer,
   }: {
-    sessionID: SessionId;
+    storedSession: StoredSession;
     timer: number;
-  }): Promise<void> {
-    const roundDeadline: number =
+  }): void {
+    storedSession.roundDeadline =
       Date.now() +
       (roundCountdownInSeconds + timer) * 1000 +
       this.ROUND_NETWORK_TOLERANCE_MS;
-    await this.redisService.set(
-      this.getRoundDeadlineKey(sessionID),
-      String(roundDeadline),
-      this.TTL,
-    );
   }
 
-  private async isPastRoundDeadline(sessionID: SessionId): Promise<boolean> {
-    const roundDeadline: string | null = await this.redisService.get(
-      this.getRoundDeadlineKey(sessionID),
-    );
-    return roundDeadline !== null && Date.now() > Number(roundDeadline);
+  private isPastRoundDeadline({ roundDeadline }: StoredSession): boolean {
+    return roundDeadline !== null && Date.now() > roundDeadline;
   }
 
-  private async issueReconnectToken(
-    sessionID: SessionId,
-    playerID: PlayerId,
-  ): Promise<SessionReconnectToken> {
+  private issueReconnectToken({
+    storedSession,
+    playerID,
+  }: {
+    storedSession: StoredSession;
+    playerID: PlayerId;
+  }): SessionReconnectToken {
     const reconnectToken: SessionReconnectToken =
       SessionReconnectTokenSchema.parse(randomBytes(32).toString('base64url'));
-    await this.redisService.hset(
-      this.getReconnectTokenHashesKey(sessionID),
-      playerID,
-      this.hashReconnectToken(reconnectToken),
-    );
+    storedSession.reconnectTokenHashes[playerID] =
+      this.hashReconnectToken(reconnectToken);
     return reconnectToken;
   }
 
-  private async isReconnectTokenValid(
-    sessionID: SessionId,
-    playerID: PlayerId,
-    reconnectToken: SessionReconnectToken | undefined,
-  ): Promise<boolean> {
+  private isReconnectTokenValid({
+    storedSession,
+    playerID,
+    reconnectToken,
+  }: {
+    storedSession: StoredSession;
+    playerID: PlayerId;
+    reconnectToken: SessionReconnectToken | undefined;
+  }): boolean {
     if (!reconnectToken) return false;
 
-    const storedHash: string | null = await this.redisService.hget(
-      this.getReconnectTokenHashesKey(sessionID),
-      playerID,
-    );
+    const storedHash: string | undefined =
+      storedSession.reconnectTokenHashes[playerID];
     if (!storedHash) return false;
 
     return timingSafeEqual(
@@ -750,18 +722,23 @@ export class SessionService {
   // Private function //
   //////////////////////
 
-  private async assertReconnectingPlayerIdentity(
-    sessionID: SessionId,
-    player: SessionPlayer,
-    reconnectToken: SessionReconnectToken | undefined,
-    user: User | undefined,
-  ): Promise<void> {
+  private assertReconnectingPlayerIdentity({
+    storedSession,
+    player,
+    reconnectToken,
+    user,
+  }: {
+    storedSession: StoredSession;
+    player: SessionPlayer;
+    reconnectToken: SessionReconnectToken | undefined;
+    user: User | undefined;
+  }): void {
     if (player.isGuest) {
-      const reconnectTokenValid: boolean = await this.isReconnectTokenValid(
-        sessionID,
-        player.username,
+      const reconnectTokenValid: boolean = this.isReconnectTokenValid({
+        storedSession,
+        playerID: player.username,
         reconnectToken,
-      );
+      });
       if (reconnectTokenValid) return;
 
       throw new ForbiddenException({

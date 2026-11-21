@@ -37,7 +37,10 @@ import {
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
-import { RedisService } from '../../src/redis/redis.service';
+import {
+  SESSION_REPOSITORY,
+  type SessionRepository,
+} from '../../src/session/repositories/session.repository';
 import { SessionGateway } from '../../src/session/session.gateway';
 import {
   SESSION_PRESENCE_TIMING,
@@ -166,7 +169,11 @@ describe('Session gateway over a real socket', () => {
     const client: Socket = await connectClient();
     const session: Session = buildSession();
     const playerID: PlayerId = PlayerIdSchema.parse('carol');
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const broadcast: Promise<unknown> = nextEvent(
       client,
       sessionWsServerEvent.update,
@@ -237,7 +244,11 @@ describe('Session gateway over a real socket', () => {
         }),
       ],
     });
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const observer: Socket = await connectClient();
     const observerID: PlayerId = PlayerIdSchema.parse('observer');
     const observerJoin: unknown = await emitWithAck(
@@ -296,7 +307,11 @@ describe('Session gateway over a real socket', () => {
   it('restores a guest player only for the client holding its reconnect token', async () => {
     const session: Session = buildSession();
     const playerID: PlayerId = PlayerIdSchema.parse('carol');
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const guestClient: Socket = await connectClient();
     const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
       await emitWithAck(guestClient, sessionWsEvent.join, {
@@ -356,7 +371,11 @@ describe('Session gateway over a real socket', () => {
         }),
       ],
     });
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const intruderClient: Socket = await connectClient({
       auth: { access_token: intruderAccessToken },
     });
@@ -426,7 +445,11 @@ describe('Session gateway over a real socket', () => {
       },
     });
     const session: Session = buildSession({ hostID: '', players: [] });
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const hostClient: Socket = await connectClient();
     await emitWithAck(hostClient, sessionWsEvent.join, {
       sessionID: session.id,
@@ -515,7 +538,11 @@ describe('Session gateway over a real socket', () => {
       },
     });
     const session: Session = buildSession({ hostID: '', players: [] });
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const hostID: PlayerId = PlayerIdSchema.parse('carol');
     const legacyPlayerID: PlayerId = PlayerIdSchema.parse('dave');
     const hostClient: Socket = await connectClient();
