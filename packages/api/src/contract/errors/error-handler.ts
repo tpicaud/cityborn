@@ -55,6 +55,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Impossible de reprendre la place de ce joueur dans la session.',
   [ErrorCode.SESSION_SOLO_NOT_JOINABLE]:
     'Une session solo ne peut pas être rejointe.',
+  [ErrorCode.SESSION_HOST_SELF_KICK]: "L'hôte ne peut pas s'exclure du lobby.",
 
   // Game
   [ErrorCode.GAME_END_SENTENCE_NOT_FOUND]:

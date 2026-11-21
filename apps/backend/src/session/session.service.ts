@@ -180,17 +180,7 @@ export class SessionService {
     newHostID: PlayerId,
   ): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
-      if (session.currentGame)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_ALREADY_IN_GAME,
-          message: `Session already in game`,
-        });
-
-      if (session.hostID !== playerID)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_FORBIDDEN_HOST,
-          message: `Player is not the host`,
-        });
+      this.assertHostInLobby({ session, playerID });
 
       const newHost = session.players.find(
         (player) => player.username === newHostID && player.connected,
@@ -206,23 +196,44 @@ export class SessionService {
     });
   }
 
+  async kickPlayer({
+    playerID,
+    sessionID,
+    kickedPlayerID,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    kickedPlayerID: PlayerId;
+  }): Promise<Session> {
+    return await this.updateSession(sessionID, async (session) => {
+      this.assertHostInLobby({ session, playerID });
+
+      if (kickedPlayerID === playerID)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_HOST_SELF_KICK,
+          message: `Host cannot kick themselves`,
+        });
+
+      this.assertPlayerInSession({ session, playerID: kickedPlayerID });
+
+      session.players = session.players.filter(
+        (player) => player.username !== kickedPlayerID,
+      );
+      await this.redisService.hdel(
+        this.getReconnectTokenHashesKey(sessionID),
+        kickedPlayerID,
+      );
+      return session;
+    });
+  }
+
   async updateGameConfig(
     playerID: PlayerId,
     sessionID: SessionId,
     gameConfig: GameConfig,
   ): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
-      if (session.currentGame)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_ALREADY_IN_GAME,
-          message: `Session already in game`,
-        });
-
-      if (session.hostID !== playerID)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_FORBIDDEN_HOST,
-          message: `Player is not the host`,
-        });
+      this.assertHostInLobby({ session, playerID });
 
       session.gameConfig = gameConfig;
       session.quickPlay = false;
@@ -236,17 +247,7 @@ export class SessionService {
     visitorId?: string,
   ): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
-      if (session.currentGame)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_ALREADY_IN_GAME,
-          message: `Session already in game`,
-        });
-
-      if (session.hostID !== playerID)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_FORBIDDEN_HOST,
-          message: `Player is not the host`,
-        });
+      this.assertHostInLobby({ session, playerID });
 
       const game = await this.gameService.createGame({
         gameConfig: session.gameConfig,
@@ -298,14 +299,7 @@ export class SessionService {
         });
       const game = session.currentGame;
 
-      const playerExists = session.players.some(
-        (player) => player.username === playerID,
-      );
-      if (!playerExists)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
-        });
+      this.assertPlayerInSession({ session, playerID });
 
       const playerConnected = session.players.some(
         (player) => player.username === playerID && player.connected,
@@ -401,14 +395,7 @@ export class SessionService {
         });
       const game: Game = session.currentGame;
 
-      const playerExists: boolean = session.players.some(
-        (player) => player.username === playerID,
-      );
-      if (!playerExists)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
-        });
+      this.assertPlayerInSession({ session, playerID });
 
       session.players = session.players.filter(
         (player) => player.username !== playerID,
@@ -780,6 +767,43 @@ export class SessionService {
       throw new ForbiddenException({
         code: ErrorCode.SESSION_RECONNECT_FORBIDDEN,
         message: 'Authenticated user does not own this player',
+      });
+  }
+
+  private assertHostInLobby({
+    session,
+    playerID,
+  }: {
+    session: Session;
+    playerID: PlayerId;
+  }): void {
+    if (session.currentGame)
+      throw new ForbiddenException({
+        code: ErrorCode.SESSION_ALREADY_IN_GAME,
+        message: `Session already in game`,
+      });
+
+    if (session.hostID !== playerID)
+      throw new ForbiddenException({
+        code: ErrorCode.SESSION_FORBIDDEN_HOST,
+        message: `Player is not the host`,
+      });
+  }
+
+  private assertPlayerInSession({
+    session,
+    playerID,
+  }: {
+    session: Session;
+    playerID: PlayerId;
+  }): void {
+    const playerExists: boolean = session.players.some(
+      (player) => player.username === playerID,
+    );
+    if (!playerExists)
+      throw new NotFoundException({
+        code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+        message: `Player not found in session`,
       });
   }
 

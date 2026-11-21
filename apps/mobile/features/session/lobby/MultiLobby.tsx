@@ -1,10 +1,12 @@
 import type { GameConfigChanges, PlayerId, Session } from '@cityborn/api';
 import {
   type PackSelection,
+  type PlayerKick,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
   usePackSelection,
+  usePlayerKick,
   usePlayerNameForm,
 } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
@@ -20,6 +22,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { PackThemeFilters } from './PackThemeFilters';
 import { PackVisual } from './PackVisual';
+import { PlayerKickDialog } from './PlayerKickDialog';
 
 type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
@@ -27,6 +30,7 @@ type MultiLobbyProps = {
   isHost: boolean;
   handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
+  handleKickPlayer: (kickedPlayerID: PlayerId) => Promise<void>;
   handleJoinSession: (playerID: PlayerId) => Promise<void>;
 };
 
@@ -36,10 +40,14 @@ export function MultiLobby({
   isHost,
   handleUpdateGameConfig,
   handleStartGame,
+  handleKickPlayer,
   handleJoinSession,
 }: MultiLobbyProps) {
   const [copied, setCopied] = useState(false);
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
+  const playerKick: PlayerKick = usePlayerKick({
+    kickPlayer: handleKickPlayer,
+  });
   const {
     isLoading: isLoadingPacks,
     themes,
@@ -104,7 +112,23 @@ export function MultiLobby({
                   className={`w-6/13 flex-row items-center gap-2 h-7 ${playerConnectionStatus(player) === 'disconnected' && 'opacity-30'}`}
                 >
                   <View className="w-[3px] h-full bg-foreground/30 rounded-full" />
-                  <Text className="text-xl">{player.username}</Text>
+                  <Text className="text-xl flex-shrink" numberOfLines={1}>
+                    {player.username}
+                  </Text>
+                  {isHost && player.username !== session.hostID && (
+                    <Pressable
+                      accessibilityLabel={`Exclure ${player.username}`}
+                      accessibilityRole="button"
+                      hitSlop={8}
+                      onPress={() => playerKick.requestKick(player.username)}
+                    >
+                      <Icon
+                        name="close_outline"
+                        size={20}
+                        color={colors.destructive[500]}
+                      />
+                    </Pressable>
+                  )}
                 </View>
               ))}
             </View>
@@ -147,6 +171,12 @@ export function MultiLobby({
           )}
         </View>
       </View>
+      <PlayerKickDialog
+        isOpen={playerKick.isConfirmationOpen}
+        playerID={playerKick.targetPlayerID}
+        onCancel={playerKick.cancelKick}
+        onConfirm={playerKick.confirmKick}
+      />
       <Dialog visible={!localPlayerID} className="h-auto">
         <View className="flex items-center justify-center">
           <Text className="text-center text-xl mb-4">

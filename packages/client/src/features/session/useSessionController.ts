@@ -12,12 +12,15 @@ import type {
 } from '@cityborn/api';
 import {
   applyGameConfigChanges,
+  ErrorCode,
   GameStatus,
+  isApiError,
   SessionMode,
   SessionStatus,
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
+  UserFacingError,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
@@ -60,6 +63,7 @@ export type SessionController = {
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
+  kickPlayer: (kickedPlayerID: PlayerId) => Promise<void>;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
   guess: (coordinates: Coord | undefined) => Promise<void>;
@@ -70,6 +74,9 @@ export type SessionController = {
   leaveGame: () => Promise<void>;
   departedPlayerIDs: PlayerId[];
 };
+
+const kickedFromLobbyMessage: string =
+  "L'hôte t'a sorti du lobby. Tu peux revenir avec le code, s'il veut bien de toi.";
 
 type JoinedPlayer = {
   playerID: PlayerId;
@@ -89,6 +96,22 @@ export async function enterSession({
 }): Promise<void> {
   await join(playerID);
   if (session.quickPlay) await startGame();
+}
+
+export async function reconnectJoinedPlayer({
+  reconnect,
+  leaveKickedSession,
+}: {
+  reconnect: () => Promise<void>;
+  leaveKickedSession: () => void;
+}): Promise<void> {
+  try {
+    await reconnect();
+  } catch (error: unknown) {
+    if (!isApiError(error) || error.code !== ErrorCode.SESSION_PLAYER_NOT_FOUND)
+      throw error;
+    leaveKickedSession();
+  }
 }
 
 export function useSessionController({
@@ -111,17 +134,28 @@ export function useSessionController({
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
   const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
 
+  const leaveKickedSession: () => void = useCallback(() => {
+    joinedPlayer.current = null;
+    reportError(new UserFacingError(kickedFromLobbyMessage));
+    navigation.returnTo('/');
+  }, [reportError, navigation]);
+
   const restoreSession = useCallback(
     async (restoredChannel: SessionChannel) => {
       const player: JoinedPlayer | null = joinedPlayer.current;
       if (!player) return;
-      await restoredChannel.emit(sessionWsEvent.reconnect, {
-        sessionID,
-        playerID: player.playerID,
-        reconnectToken: player.reconnectToken,
+      await reconnectJoinedPlayer({
+        reconnect: async () => {
+          await restoredChannel.emit(sessionWsEvent.reconnect, {
+            sessionID,
+            playerID: player.playerID,
+            reconnectToken: player.reconnectToken,
+          });
+        },
+        leaveKickedSession,
       });
     },
-    [sessionID],
+    [sessionID, leaveKickedSession],
   );
 
   const {
@@ -158,6 +192,11 @@ export function useSessionController({
         setSession(incoming);
       }),
     [sessionChannel],
+  );
+
+  useEffect(
+    () => sessionChannel?.on(sessionWsServerEvent.kicked, leaveKickedSession),
+    [sessionChannel, leaveKickedSession],
   );
 
   const emit: SessionChannel['emit'] = useCallback(
@@ -235,6 +274,12 @@ export function useSessionController({
     await emit(sessionWsEvent.updateHost, { newHostID });
   };
 
+  const kickPlayer: SessionController['kickPlayer'] = async (
+    kickedPlayerID: PlayerId,
+  ) => {
+    await emit(sessionWsEvent.kickPlayer, { kickedPlayerID });
+  };
+
   const updateGameConfig = async (changes: GameConfigChanges) => {
     const current = requireSession('Updating game config');
     await emit(sessionWsEvent.updateGameConfig, {
@@ -286,6 +331,7 @@ export function useSessionController({
     retryConnection,
     join: reportActionErrors({ action: join, reportError }),
     updateHost: reportActionErrors({ action: updateHost, reportError }),
+    kickPlayer: reportActionErrors({ action: kickPlayer, reportError }),
     updateGameConfig: reportActionErrors({
       action: updateGameConfig,
       reportError,

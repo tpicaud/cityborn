@@ -9,6 +9,7 @@ import {
   type User,
   type VisitorId,
   type WsPayload,
+  type WsServerToClientEvents,
   wsLifecycleEventName,
 } from '@cityborn/api';
 import {
@@ -25,6 +26,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import type { RemoteSocket } from 'socket.io';
 import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
@@ -32,6 +34,7 @@ import { DefaultExceptionFilter } from '../common/filters/default-exception.filt
 import type {
   AppServer,
   AppSocket,
+  AppSocketData,
   SocketPlayer,
 } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
@@ -45,6 +48,8 @@ import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
 } from './session-presence-timing';
+
+type KickedSocket = RemoteSocket<WsServerToClientEvents, AppSocketData>;
 
 @WebSocketGateway()
 @UseFilters(DefaultExceptionFilter)
@@ -78,7 +83,7 @@ export class SessionGateway
 
   private resolvePlayer(socket: AppSocket): SocketPlayer {
     const { player } = socket.data;
-    if (!player)
+    if (!player || !socket.rooms.has(player.sessionID))
       throw new NotFoundException({
         code: ErrorCode.CONNECTION_NOT_FOUND,
         message: 'No connection associated with this socket',
@@ -154,6 +159,31 @@ export class SessionGateway
       playerID,
       sessionID,
       newHostID,
+    );
+    this.broadcastSession(session);
+  }
+
+  @WsMessage(sessionWsChannel, 'kickPlayer')
+  async kickPlayer(
+    @ConnectedSocket() socket: AppSocket,
+    @MessageBody() {
+      kickedPlayerID,
+    }: WsPayload<typeof sessionWsChannel, 'kickPlayer'>,
+  ): Promise<void> {
+    const { playerID, sessionID }: SocketPlayer = this.resolvePlayer(socket);
+    const session: Session = await this.sessionService.kickPlayer({
+      playerID,
+      sessionID,
+      kickedPlayerID,
+    });
+    const kickedSockets: KickedSocket[] = (
+      await this.io.in(sessionID).fetchSockets()
+    ).filter(({ data }) => data.player?.playerID === kickedPlayerID);
+    await Promise.all(
+      kickedSockets.map(async (kickedSocket) => {
+        kickedSocket.emit(sessionWsServerEvent.kicked);
+        await kickedSocket.leave(sessionID);
+      }),
     );
     this.broadcastSession(session);
   }
@@ -323,7 +353,9 @@ export class SessionGateway
     try {
       const presentPlayers: SocketPlayer[] = (
         await this.io.fetchSockets()
-      ).flatMap(({ data }) => (data.player ? [data.player] : []));
+      ).flatMap(({ data, rooms }) =>
+        data.player && rooms.has(data.player.sessionID) ? [data.player] : [],
+      );
       const sessionIDs: SessionId[] =
         await this.sessionService.pruneExpiredSessionsAndListIDs();
       await Promise.all(

@@ -9,13 +9,16 @@ import {
 import {
   type PackSelection,
   type PlayerConnectionStatus,
+  type PlayerKick,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
   usePackSelection,
+  usePlayerKick,
   usePlayerNameForm,
 } from '@cityborn/client/session';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
@@ -36,6 +39,7 @@ import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
 import { PackThemeFilters } from './PackThemeFilters';
 import { PackVisual } from './PackVisual';
+import { PlayerKickDialog } from './PlayerKickDialog';
 
 type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;
@@ -43,6 +47,7 @@ type LobbyComponentProps = {
   isHost: boolean;
   handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
+  handleKickPlayer: (kickedPlayerID: PlayerId) => Promise<void>;
   handleJoinSession?: (playerID: PlayerId) => Promise<void>;
 };
 
@@ -70,10 +75,14 @@ export const Lobby = ({
   isHost,
   handleUpdateGameConfig,
   handleStartGame,
+  handleKickPlayer,
   handleJoinSession,
 }: LobbyComponentProps) => {
   const [copied, setCopied] = useState(false);
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
+  const playerKick: PlayerKick = usePlayerKick({
+    kickPlayer: handleKickPlayer,
+  });
   const navigation = useNavigation();
   const {
     isLoading: isLoadingPacks,
@@ -176,7 +185,25 @@ export const Lobby = ({
                 }}
               >
                 {sortPlayersConnectedFirst(session.players).map((player) => (
-                  <ListItem key={player.username} divider>
+                  <ListItem
+                    key={player.username}
+                    divider
+                    secondaryAction={
+                      isHost &&
+                      player.username !== session.hostID && (
+                        <IconButton
+                          edge="end"
+                          aria-label={`Exclure ${player.username}`}
+                          title={`Exclure ${player.username}`}
+                          onClick={() =>
+                            playerKick.requestKick(player.username)
+                          }
+                        >
+                          <CloseIcon />
+                        </IconButton>
+                      )
+                    }
+                  >
                     <ListItemText
                       primary={
                         player.username === session.hostID
@@ -276,6 +303,13 @@ export const Lobby = ({
           </LoadingButton>
         </Box>
       </div>
+
+      <PlayerKickDialog
+        isOpen={playerKick.isConfirmationOpen}
+        playerID={playerKick.targetPlayerID}
+        onCancel={playerKick.cancelKick}
+        onConfirm={playerKick.confirmKick}
+      />
 
       <Dialog open={session.mode === SessionMode.MULTI && !localPlayerID}>
         <DialogTitle>

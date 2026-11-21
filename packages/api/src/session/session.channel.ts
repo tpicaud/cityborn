@@ -38,6 +38,7 @@ export const sessionWsChannel = {
     join: { payload: SessionMembershipSchema, ack: SessionJoinAckSchema },
     reconnect: { payload: SessionReconnectionSchema },
     updateHost: { payload: z.object({ newHostID: PlayerIdSchema }) },
+    kickPlayer: { payload: z.object({ kickedPlayerID: PlayerIdSchema }) },
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     startGame: {},
     /**
@@ -55,6 +56,7 @@ export const sessionWsChannel = {
   },
   serverToClient: {
     update: { payload: SessionSchema },
+    kicked: {},
   },
 } as const satisfies WsChannel<'session'>;
 
@@ -62,6 +64,7 @@ export const sessionWsEvent = {
   join: wsEventName(sessionWsChannel, 'join'),
   reconnect: wsEventName(sessionWsChannel, 'reconnect'),
   updateHost: wsEventName(sessionWsChannel, 'updateHost'),
+  kickPlayer: wsEventName(sessionWsChannel, 'kickPlayer'),
   updateGameConfig: wsEventName(sessionWsChannel, 'updateGameConfig'),
   startGame: wsEventName(sessionWsChannel, 'startGame'),
   guess: wsEventName(sessionWsChannel, 'guess'),
@@ -73,4 +76,5 @@ export const sessionWsEvent = {
 
 export const sessionWsServerEvent = {
   update: wsEventName(sessionWsChannel, 'update'),
+  kicked: wsEventName(sessionWsChannel, 'kicked'),
 } satisfies WsServerEventNames<typeof sessionWsChannel>;
