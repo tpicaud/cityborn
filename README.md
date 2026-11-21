@@ -27,7 +27,7 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose `cityborn-slot-<slot>` avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et un Redis (base `0` pour le dev, `1` pour les tests), dans des volumes nommés.
 
 - **Slot** : `0` pour le principal ; un worktree reçoit le premier slot libre de `1` à `9`, gardé dans `.cityborn-slot` à sa racine.
-- **Ports** : chaque port vaut son défaut + 10 × slot.
+- **Ports** : chaque port vaut son défaut + 10 × slot ; PostgreSQL, Redis et les outils n'écoutent que sur `127.0.0.1`.
 
 | Service | Défaut (slot 0) | Slot 1 |
 |---|---|---|
@@ -40,7 +40,7 @@ Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Comp
 
 La connexion Google sur le web suppose que le client OAuth de dev autorise les origines `http://localhost:3000` à `3090` et `3001` à `3091`.
 
-`pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, `env:start` lance aussi le projet `cityborn-tools` : Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`, branchés sur le PostgreSQL et le Redis du slot 0.
+`pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, `env:start` lance aussi le projet `cityborn-tools` : Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`, branchés sur le réseau Docker du slot 0.
 
 Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable et garde le slot :
 

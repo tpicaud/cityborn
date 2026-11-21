@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: cityborn_dev
     labels: *checkout-labels
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     configs:
       - source: test-database
         target: /docker-entrypoint-initdb.d/20_test_database.sql
@@ -29,7 +29,7 @@ services:
     image: redis:8-alpine
     labels: *checkout-labels
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
