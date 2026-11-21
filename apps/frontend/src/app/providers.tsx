@@ -3,8 +3,11 @@
 import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
+import { AssetImageProvider, tamaguiConfig } from '@cityborn/design-system';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { ReactNode } from 'react';
+import { TamaguiProvider } from 'tamagui';
+import { AssetImage } from '@/components/AssetImage';
 import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 import { AuthBootstrap } from '@/features/auth/AuthBootstrap';
 import { authApi } from '@/lib/api/auth';
@@ -20,13 +23,17 @@ type AppProvidersProps = {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-      <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
-        <ApiProvider contractClient={contractClient} authApi={authApi}>
-          <WsProvider createSocket={createSocketConnection}>
-            <AuthBootstrap>{children}</AuthBootstrap>
-          </WsProvider>
-        </ApiProvider>
-      </ErrorReporterProvider>
+      <AssetImageProvider image={AssetImage}>
+        <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
+          <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
+            <ApiProvider contractClient={contractClient} authApi={authApi}>
+              <WsProvider createSocket={createSocketConnection}>
+                <AuthBootstrap>{children}</AuthBootstrap>
+              </WsProvider>
+            </ApiProvider>
+          </ErrorReporterProvider>
+        </TamaguiProvider>
+      </AssetImageProvider>
     </AppRouterCacheProvider>
   );
 }

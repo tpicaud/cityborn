@@ -1,4 +1,9 @@
-import { type CreateUser, CreateUserSchema } from '@cityborn/api';
+import {
+  type CreateUser,
+  CreateUserSchema,
+  type ThemeIcon,
+  ThemeIconSchema,
+} from '@cityborn/api';
 import type { Prisma, PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../../src/auth/password-hashing';
 import { defaultThemeIcon } from '../../src/theme/default-theme';
@@ -28,11 +33,17 @@ type SeedPersonality = {
   birthplace: SeedWorldLocation;
 };
 
+type SeedTheme = {
+  name: string;
+  icon: ThemeIcon;
+};
+
 type SeedPack = {
   id: string;
   name: string;
   description: string;
   image: string;
+  theme: SeedTheme;
   personalities: SeedPersonality[];
 };
 
@@ -44,7 +55,20 @@ type SeedUser = {
 
 const SEED_PASSWORD: string = 'Password123';
 
-const SEED_THEME_NAME: string = 'Divertissement';
+const ENTERTAINMENT: SeedTheme = {
+  name: 'Divertissement',
+  icon: defaultThemeIcon,
+};
+
+const MUSIC: SeedTheme = {
+  name: 'Musique',
+  icon: ThemeIconSchema.parse({
+    name: 'ic:baseline-music-note',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4V7h4V3z"/></svg>',
+  }),
+};
+
+const SEED_THEMES: SeedTheme[] = [ENTERTAINMENT, MUSIC];
 
 const PARIS: SeedWorldLocation = {
   osmRelationId: '7444',
@@ -83,7 +107,9 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000001',
     name: 'Cinéma',
     description: 'Des stars du grand écran.',
-    image: 'https://placehold.co/600x400/png?text=Cinema',
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Bowl_of_Popcorn_%28Unsplash%29.jpg/960px-Bowl_of_Popcorn_%28Unsplash%29.jpg',
+    theme: ENTERTAINMENT,
     personalities: [
       {
         name: 'Marion Cotillard',
@@ -105,7 +131,9 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000002',
     name: 'Pop',
     description: 'Des icônes de la musique pop.',
-    image: 'https://placehold.co/400x400/png?text=Pop',
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Smoke_and_light_beams_%28Unsplash%29.jpg/960px-Smoke_and_light_beams_%28Unsplash%29.jpg',
+    theme: MUSIC,
     personalities: [
       {
         name: 'Lady Gaga',
@@ -248,28 +276,36 @@ async function seedPack({
   });
 }
 
-async function seedTheme(
-  tx: Prisma.TransactionClient,
-): Promise<{ id: string }> {
+async function seedTheme({
+  tx,
+  theme,
+}: {
+  tx: Prisma.TransactionClient;
+  theme: SeedTheme;
+}): Promise<{ id: string }> {
   const existingTheme: { id: string } | null = await tx.theme.findFirst({
-    where: { name: { equals: SEED_THEME_NAME, mode: 'insensitive' } },
+    where: { name: { equals: theme.name, mode: 'insensitive' } },
     select: { id: true },
   });
   return (
     existingTheme ??
     tx.theme.create({
-      data: { name: SEED_THEME_NAME, icon: defaultThemeIcon },
+      data: { name: theme.name, icon: theme.icon },
       select: { id: true },
     })
   );
 }
 
 async function seedContent(tx: Prisma.TransactionClient): Promise<void> {
-  const theme: { id: string } = await seedTheme(tx);
   await Promise.all(
-    SEED_PACKS.map((pack: SeedPack) =>
-      seedPack({ tx, pack, themeId: theme.id }),
-    ),
+    SEED_THEMES.map(async (theme: SeedTheme): Promise<void> => {
+      const { id: themeId }: { id: string } = await seedTheme({ tx, theme });
+      await Promise.all(
+        SEED_PACKS.filter((pack: SeedPack) => pack.theme === theme).map(
+          (pack: SeedPack) => seedPack({ tx, pack, themeId }),
+        ),
+      );
+    }),
   );
 }
 

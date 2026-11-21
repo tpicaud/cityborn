@@ -1,22 +1,27 @@
 export { createGameDisplay, type GameDisplay } from './gameDisplay';
-export { createGameResults } from './gameResult';
 export {
-  canSubmitGuess,
+  createGameResults,
+  type GameResults,
+} from './gameResult';
+export type { RoundAction } from './roundAction';
+export {
   createRoundResult,
   currentGuessObject,
   currentRevealedGuessObject,
   formatDistanceInKm,
+  formatRoundOutcome,
   type RoundGuessOutcome,
   type RoundResult,
 } from './roundResult';
 export {
   type Countdown,
   type CountdownOptions,
-  type RoundTimer,
-  type RoundTimerOptions,
+  type RoundTimeLeft,
+  type RoundTimeLeftOptions,
   useCountdown,
-  useRoundTimer,
+  useRoundTimeLeft,
 } from './roundTimer';
+export { createRouteLabel, type RouteLabel } from './routeLabel';
 export {
   type GameOptionsMenu,
   type GameOptionsMenuOptions,

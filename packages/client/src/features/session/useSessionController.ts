@@ -2,7 +2,9 @@
 
 import type {
   Coord,
-  GameConfigChanges,
+  GameConfigPack,
+  Pack,
+  PackId,
   PlayerId,
   Session,
   SessionId,
@@ -12,12 +14,14 @@ import type {
 } from '@cityborn/api';
 import {
   applyGameConfigChanges,
+  ErrorCode,
   GameStatus,
+  getFriendlyErrorMessage,
   SessionMode,
-  SessionStatus,
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
+  UserFacingError,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
@@ -29,6 +33,7 @@ import {
 } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { invalidateGameRecords } from '../../domains/game-record/gameRecordQueries';
+import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
 import type { SessionChannel } from '../../domains/session/sessionApi';
 import { useSessionChannel } from '../../domains/session/useSessionChannel';
 import type { Navigation } from '../../platform/navigation';
@@ -43,28 +48,27 @@ import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
-import { isHostOf, withStatus } from './sessionState';
+import { isHostOf } from './sessionState';
 import { usePlayerDepartures } from './usePlayerDepartures';
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
   navigation: Navigation;
+  launchedPackId?: PackId;
 };
 
 export type SessionController = {
   session: Session | undefined;
   localPlayerID: PlayerId | undefined;
   isHost: boolean;
-  isLaunchingQuickPlay: boolean;
+  isLaunchingGame: boolean;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
-  updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
-  startGame: () => Promise<void>;
+  playPack: (pack: Pack) => Promise<void>;
   guess: (coordinates: Coord | undefined) => Promise<void>;
   nextRound: () => Promise<void>;
-  endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
   exitGame: () => Promise<void>;
   leaveGame: () => Promise<void>;
@@ -76,33 +80,74 @@ type JoinedPlayer = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
+function toGameConfigPack(pack: Pack): GameConfigPack {
+  return {
+    id: pack.id,
+    name: pack.name,
+    isPublished: pack.isPublished,
+    description: pack.description,
+  };
+}
+
+export function findLaunchedPack({
+  packs,
+  packId,
+}: {
+  packs: Pack[];
+  packId: PackId;
+}): Pack {
+  const pack: Pack | undefined = packs.find(
+    (publishedPack: Pack) => publishedPack.id === packId,
+  );
+  if (!pack)
+    throw new UserFacingError(
+      getFriendlyErrorMessage({ code: ErrorCode.PACK_NOT_FOUND }),
+    );
+  return pack;
+}
+
+export function launchesGameOnEntry({
+  session,
+  launchedPackId,
+}: {
+  session: Pick<Session, 'quickPlay'>;
+  launchedPackId: PackId | undefined;
+}): boolean {
+  return session.quickPlay || launchedPackId !== undefined;
+}
+
 export async function enterSession({
   session,
   playerID,
+  launchedPackId,
   join,
   startGame,
+  playLaunchedPack,
 }: {
   session: Pick<Session, 'quickPlay'>;
   playerID: PlayerId;
+  launchedPackId: PackId | undefined;
   join: (playerID: PlayerId) => Promise<void>;
   startGame: () => Promise<void>;
+  playLaunchedPack: (packId: PackId) => Promise<void>;
 }): Promise<void> {
   await join(playerID);
+  if (launchedPackId !== undefined) return playLaunchedPack(launchedPackId);
   if (session.quickPlay) await startGame();
 }
 
 export function useSessionController({
   sessionID,
   navigation,
+  launchedPackId,
 }: SessionControllerOptions): SessionController {
-  const { sessionApi }: DomainApis = useDomainApis();
+  const { sessionApi, packApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const [session, setSession] = useState<Session>();
   const [joinedPlayerID, setJoinedPlayerID] = useState<PlayerId>();
-  const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
-    useState<boolean>(true);
+  const [isLaunchPending, setIsLaunchPending] = useState<boolean>(true);
   const localPlayerID: PlayerId | undefined =
     joinedPlayerID ??
     presetPlayerID({ mode: session?.mode, username: user?.username });
@@ -189,9 +234,34 @@ export function useSessionController({
     [session, emit],
   );
 
-  const startGame: SessionController['startGame'] = useCallback(async () => {
+  const startGame: () => Promise<void> = useCallback(async () => {
     await emit(sessionWsEvent.startGame);
   }, [emit]);
+
+  const playPack: SessionController['playPack'] = useCallback(
+    async (pack: Pack) => {
+      if (!session)
+        throw new Error('Playing pack failed: session not initialized');
+      await emit(sessionWsEvent.updateGameConfig, {
+        gameConfig: applyGameConfigChanges({
+          gameConfig: session.gameConfig,
+          changes: { packs: [toGameConfigPack(pack)] },
+        }),
+      });
+      await startGame();
+    },
+    [session, emit, startGame],
+  );
+
+  const playLaunchedPack: (packId: PackId) => Promise<void> = useCallback(
+    async (packId: PackId) => {
+      const packs: Pack[] = await queryClient.query(
+        publishedPacksQueryOptions(packApi),
+      );
+      await playPack(findLaunchedPack({ packs, packId }));
+    },
+    [queryClient, packApi, playPack],
+  );
 
   useEffect(() => {
     if (
@@ -202,18 +272,30 @@ export function useSessionController({
     )
       return;
 
-    enterSession({ session, playerID: localPlayerID, join, startGame })
+    enterSession({
+      session,
+      playerID: localPlayerID,
+      launchedPackId,
+      join,
+      startGame,
+      playLaunchedPack,
+    })
       .catch((error: unknown) => {
         reportError(error);
-        if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+        if (session.mode === SessionMode.SOLO)
+          navigation.returnTo(
+            launchedPackId === undefined ? '/' : '/collection',
+          );
       })
-      .finally(() => setIsQuickPlayLaunchPending(false));
+      .finally(() => setIsLaunchPending(false));
   }, [
     connectionStatus,
     session,
     localPlayerID,
+    launchedPackId,
     join,
     startGame,
+    playLaunchedPack,
     reportError,
     navigation,
   ]);
@@ -235,16 +317,6 @@ export function useSessionController({
     await emit(sessionWsEvent.updateHost, { newHostID });
   };
 
-  const updateGameConfig = async (changes: GameConfigChanges) => {
-    const current = requireSession('Updating game config');
-    await emit(sessionWsEvent.updateGameConfig, {
-      gameConfig: applyGameConfigChanges({
-        gameConfig: current.gameConfig,
-        changes,
-      }),
-    });
-  };
-
   const guess = async (coordinates: Coord | undefined) => {
     await emit(sessionWsEvent.submitGuess, {
       guess: createGuessSubmission(coordinates),
@@ -253,11 +325,6 @@ export function useSessionController({
 
   const nextRound = async () => {
     await emit(sessionWsEvent.nextRound);
-  };
-
-  const endGame = async () => {
-    const current = requireGame('Ending game');
-    setSession(withStatus(current, SessionStatus.IN_LOBBY));
   };
 
   const playAgain = async () => {
@@ -280,20 +347,17 @@ export function useSessionController({
     session,
     localPlayerID,
     isHost: isHostOf(session, localPlayerID),
-    isLaunchingQuickPlay:
-      isQuickPlayLaunchPending && session?.quickPlay === true,
+    isLaunchingGame:
+      isLaunchPending &&
+      session !== undefined &&
+      launchesGameOnEntry({ session, launchedPackId }),
     connectionStatus,
     retryConnection,
     join: reportActionErrors({ action: join, reportError }),
     updateHost: reportActionErrors({ action: updateHost, reportError }),
-    updateGameConfig: reportActionErrors({
-      action: updateGameConfig,
-      reportError,
-    }),
-    startGame: reportActionErrors({ action: startGame, reportError }),
+    playPack: reportActionErrors({ action: playPack, reportError }),
     guess: reportActionErrors({ action: guess, reportError }),
     nextRound: reportActionErrors({ action: nextRound, reportError }),
-    endGame: reportActionErrors({ action: endGame, reportError }),
     playAgain: reportActionErrors({ action: playAgain, reportError }),
     exitGame: reportActionErrors({ action: exitGame, reportError }),
     leaveGame: reportActionErrors({ action: leaveGame, reportError }),

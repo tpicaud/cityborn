@@ -1,5 +1,5 @@
-import Button from '@/components/ui/Button';
-import { Text, View } from '@/components/ui/native/NativeComponents';
+import { BodyText, Button, Popup } from '@cityborn/design-system';
+import { View } from 'tamagui';
 
 type ConnectionLostDialogProps = {
   onRetry: () => void;
@@ -11,14 +11,12 @@ export function ConnectionLostDialog({
   onExit,
 }: ConnectionLostDialogProps) {
   return (
-    <View className="absolute inset-0 items-center justify-center bg-black/30">
-      <View className="items-center gap-4 py-8 px-6 bg-background rounded-xl">
-        <Text className="text-center">Connexion à la session perdue</Text>
-        <View className="flex-row gap-3">
-          <Button label="Quitter" variant="outlined" onPress={onExit} />
-          <Button label="Réessayer" onPress={onRetry} />
-        </View>
+    <Popup open title="Connexion perdue">
+      <View gap="4">
+        <BodyText>Connexion à la session perdue</BodyText>
+        <Button compact label="Réessayer" onPress={onRetry} />
+        <Button variant="outline" label="Quitter" onPress={onExit} />
       </View>
-    </View>
+    </Popup>
   );
 }

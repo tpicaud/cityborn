@@ -1,6 +1,6 @@
 ---
 name: conventions-client-apps
-description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/back-office). À utiliser pour ajouter ou modifier un écran, une page, un composant, le routing, le câblage de l'API ou l'implémentation d'un port plateforme."
+description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/back-office) et de leur design system. À utiliser pour ajouter ou modifier un écran, une page, un composant, partagé compris, le routing, le câblage de l'API ou l'implémentation d'un port plateforme."
 ---
 
 # Conventions des apps clientes
@@ -22,6 +22,20 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 - Toute page du back-office, sauf la connexion, est réservée au rôle `admin`.
 - Un écran mobile qui reste monté hors focus (onglet) passe `useIsFocused()` au hook de sa feature.
 - Une page du frontend ou du back-office : lire [la référence Next](references/next.md).
+
+## Écrans
+
+- Un écran joueur se compose dans le gabarit d'écran du design system.
+- Un écran affiché sans barre d'onglets porte lui-même la zone sûre du bas.
+- Adaptation d'un écran :
+  - téléphone : valeurs des maquettes téléphone, sans condition de média ;
+  - tablette : valeurs des maquettes tablette sous le média `md`, sur le web comme sur le mobile ;
+  - desktop : sans maquette, il garde les valeurs tablette, le contenu centré dans la largeur de la maquette tablette ; fond et barre d'onglets restent pleine largeur.
+
+## UI partagée
+
+- Un composant destiné au frontend et au mobile vit dans `@cityborn/design-system` et utilise Tamagui.
+- Un composant Tamagui, la configuration ou le build de l'UI partagée : lire [la référence Tamagui](references/tamagui.md).
 
 ## Critère de fin
 

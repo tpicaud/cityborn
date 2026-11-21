@@ -32,7 +32,7 @@ const gameShowingLastRoundResults: Game = buildGame({
 });
 
 describe('createGameDisplay', () => {
-  it('exposes the game state and progress', () => {
+  it('exposes the game state', () => {
     const display: GameDisplay = createGameDisplay(
       gameShowingLastRoundResults,
       localPlayerID,
@@ -41,11 +41,8 @@ describe('createGameDisplay', () => {
     assert.deepEqual(display, {
       state: 'playing',
       localPlayerID,
-      showNextRound: true,
       showResults: true,
       showOptions: false,
-      roundNumber: 2,
-      roundCount: 2,
     });
   });
 

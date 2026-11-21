@@ -73,13 +73,13 @@ describe('seedDatabase', () => {
     expect(passwordMatches).toEqual([true, true]);
   });
 
-  it('publishes two illustrated packs of two personalities within one theme', async () => {
+  it('publishes two illustrated packs of two personalities in two themes', async () => {
     await seedDatabase(prisma);
 
     const packs: FullPack[] = await packRepository.findFullBy({
       isPublished: true,
     });
-    expect(new Set(packs.map((pack: FullPack) => pack.themeId)).size).toBe(1);
+    expect(new Set(packs.map((pack: FullPack) => pack.themeId)).size).toBe(2);
     expect(
       packs
         .map(
@@ -97,13 +97,15 @@ describe('seedDatabase', () => {
       {
         name: 'Cinéma',
         isPublished: true,
-        image: 'https://placehold.co/600x400/png?text=Cinema',
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Bowl_of_Popcorn_%28Unsplash%29.jpg/960px-Bowl_of_Popcorn_%28Unsplash%29.jpg',
         personalities: ['Leonardo DiCaprio', 'Marion Cotillard'],
       },
       {
         name: 'Pop',
         isPublished: true,
-        image: 'https://placehold.co/400x400/png?text=Pop',
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Smoke_and_light_beams_%28Unsplash%29.jpg/960px-Smoke_and_light_beams_%28Unsplash%29.jpg',
         personalities: ['Adele', 'Lady Gaga'],
       },
     ]);
@@ -157,7 +159,7 @@ describe('seedDatabase', () => {
       geometryCount,
     }).toEqual({
       userCount: 2,
-      themeCount: 1,
+      themeCount: 2,
       packCount: 2,
       guessObjectCount: 4,
       worldLocationCount: 4,

@@ -1,5 +1,4 @@
 import type {
-  Coord,
   FullGuessObject,
   Game,
   Guess,
@@ -8,23 +7,17 @@ import type {
   RoundGuessObject,
   WorldLocation,
 } from '@cityborn/api';
-import { PlayerIdSchema, RoundStatus } from '@cityborn/api';
+import { RoundStatus } from '@cityborn/api';
 
 export type RoundGuessOutcome =
   | { kind: 'timedOut' }
   | { kind: 'found' }
   | { kind: 'missed'; distanceInKm: number };
 
-export type PlayerRoundPoints = {
-  playerID: PlayerId;
-  points: number;
-};
-
 export type RoundResult = {
   guessObject: FullGuessObject;
   localPoints: number;
   localOutcome: RoundGuessOutcome;
-  otherPlayersPoints: PlayerRoundPoints[];
 };
 
 export function currentGuessObject(game: Game): RoundGuessObject | undefined {
@@ -41,19 +34,6 @@ export function currentRevealedGuessObject(
   return guessObject && worldLocation
     ? { ...guessObject, world_location: worldLocation }
     : undefined;
-}
-
-export function canSubmitGuess(
-  game: Game,
-  localPlayerID: PlayerId,
-  preGuess: Coord | undefined,
-): boolean {
-  const currentRound = game.state.currentRound;
-  return (
-    preGuess !== undefined &&
-    currentRound?.status === RoundStatus.GUESSING &&
-    currentRound.playersGuesses?.[localPlayerID] === undefined
-  );
 }
 
 function roundGuessOutcome(guess: Guess): RoundGuessOutcome {
@@ -84,15 +64,21 @@ export function createRoundResult(
     guessObject,
     localPoints: localGuess.points,
     localOutcome: roundGuessOutcome(localGuess),
-    otherPlayersPoints: Object.entries(playersGuesses)
-      .map(([playerID, guess]) => ({
-        playerID: PlayerIdSchema.parse(playerID),
-        points: guess.points,
-      }))
-      .filter(({ playerID }) => playerID !== localPlayerID),
   };
 }
 
+const distanceInKmFormat: Intl.NumberFormat = new Intl.NumberFormat('fr-FR', {
+  maximumFractionDigits: 0,
+});
+
+export function formatRoundOutcome(outcome: RoundGuessOutcome): string {
+  if (outcome.kind === 'timedOut') return "Tu n'as pas deviné à temps !";
+  if (outcome.kind === 'found') return 'Bien joué ! Tu as deviné !';
+  return `${formatDistanceInKm(outcome.distanceInKm)} km du lieu`;
+}
+
 export function formatDistanceInKm(distanceInKm: number): string {
-  return distanceInKm.toFixed(2);
+  return distanceInKmFormat.format(
+    distanceInKm > 0 ? Math.max(distanceInKm, 1) : distanceInKm,
+  );
 }

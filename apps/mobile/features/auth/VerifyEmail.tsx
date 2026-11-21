@@ -1,0 +1,41 @@
+import {
+  type EmailVerification,
+  useEmailVerification,
+} from '@cityborn/client/auth';
+import type { Navigation } from '@cityborn/client/platform';
+import { BodyText, Button } from '@cityborn/design-system';
+import { useLocalSearchParams } from 'expo-router';
+import { Spinner, View } from 'tamagui';
+import { useNavigation } from '@/lib/navigation';
+import { AuthScreen } from './AuthScreen';
+
+export function VerifyEmail() {
+  const { verification_token, token } = useLocalSearchParams<{
+    verification_token?: string;
+    token?: string;
+  }>();
+  const verificationToken: string = verification_token ?? token ?? '';
+  const navigation: Navigation = useNavigation();
+  const { content, renew }: EmailVerification = useEmailVerification({
+    verificationToken,
+  });
+  return (
+    <AuthScreen title={content.title} bottomSafeArea>
+      <View gap="4" role="status">
+        {content.pending && <Spinner color="white" />}
+        <BodyText>{content.message}</BodyText>
+        {content.renewable && (
+          <Button label="Renvoyer un lien" onPress={renew} />
+        )}
+        {!content.pending && (
+          <Button
+            compact
+            label="Retour à l’accueil"
+            variant="secondary"
+            onPress={() => navigation.returnTo('/')}
+          />
+        )}
+      </View>
+    </AuthScreen>
+  );
+}

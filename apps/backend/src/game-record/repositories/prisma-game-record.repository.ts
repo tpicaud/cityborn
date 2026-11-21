@@ -42,7 +42,7 @@ export class PrismaGameRecordRepository implements GameRecordRepository {
       where: { id: userId },
       include: {
         gameRecords: {
-          take: 5,
+          take: 10,
           orderBy: { createdAt: 'desc' },
         },
       },

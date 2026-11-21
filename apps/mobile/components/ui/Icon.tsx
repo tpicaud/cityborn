@@ -20,9 +20,6 @@ const ICONS = {
   profile_outline: {
     ionicons: 'person-outline',
   },
-  components_fill: {
-    ionicons: 'albums',
-  },
   alert_outline: {
     ionicons: 'alert-circle-outline',
   },

@@ -1,103 +1,71 @@
 'use client';
 
-import type { Session } from '@cityborn/api';
 import {
   createGameDisplay,
   type GameComponentProps,
+  type GameDisplay,
+  type GameOptionsMenu,
+  useGameOptionsMenu,
 } from '@cityborn/client/game';
-import { ArrowForward } from '@mui/icons-material';
-import { Backdrop } from '@mui/material';
-import LoadingButton from '@/components/ui/buttons/LoadingButton';
-import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import Guess from '@/features/game/guess/Guess';
+import {
+  ActionPrompt,
+  Button,
+  LoadingScreen,
+  Screen,
+} from '@cityborn/design-system';
 import { GameOptions } from './GameOptions';
-import Results from './Results';
+import { Results } from './Results';
+import { Round } from './round/Round';
 
 export const Game = ({
   localPlayerID,
   isHost,
-  session,
   game,
   handleGuess,
   handleNextRound,
-  handleEndGame,
   handlePlayAgain,
   handleExitGame,
   handleLeaveGame,
-}: GameComponentProps & {
-  session: Session;
-}) => {
-  const gameDisplay = createGameDisplay(game, localPlayerID);
+}: GameComponentProps) => {
+  const gameDisplay: GameDisplay = createGameDisplay(game, localPlayerID);
+  const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
+    leaveGame: handleLeaveGame,
+  });
 
-  if (gameDisplay.state === 'loading') return <LoadingDialog />;
-  if (gameDisplay.state === 'unavailable')
-    return <p>La partie est déjà en cours</p>;
+  if (gameDisplay.state === 'loading') return <LoadingScreen />;
+  if (gameDisplay.state === 'unavailable') {
+    return (
+      <Screen bottomSafeArea>
+        <ActionPrompt prompt="La partie est déjà en cours">
+          <Button compact label="Menu" onPress={handleExitGame} />
+        </ActionPrompt>
+      </Screen>
+    );
+  }
   const activePlayerID = gameDisplay.localPlayerID;
 
   return (
-    <div>
-      <Guess
+    <>
+      <Round
         localPlayerID={activePlayerID}
+        isHost={isHost}
         game={game}
         handleGuess={handleGuess}
+        handleNextRound={handleNextRound}
+        onOpenOptions={gameDisplay.showOptions ? optionsMenu.open : undefined}
+        finalResults={
+          gameDisplay.showResults ? (
+            <Results
+              game={game}
+              localPlayerID={activePlayerID}
+              isHost={isHost}
+              handlePlayAgain={handlePlayAgain}
+              handleExitGame={handleExitGame}
+            />
+          ) : undefined
+        }
       />
-      {gameDisplay.showOptions && (
-        <GameOptions handleLeaveGame={handleLeaveGame} />
-      )}
-      {gameDisplay.roundNumber !== undefined && (
-        <div
-          data-result-map-overlay="right"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-        >
-          <div className="flex flex-col gap-2">
-            {gameDisplay.showNextRound && (
-              <LoadingButton
-                variant="contained"
-                color="error"
-                disabled={!isHost}
-                onClick={async () => {
-                  await handleNextRound();
-                }}
-                sx={{
-                  borderRadius: 6,
-                  color: 'white',
-                  fontWeight: 'bold',
-                  minWidth: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <ArrowForward />
-              </LoadingButton>
-            )}
-            <div className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
-              {gameDisplay.roundNumber}/{gameDisplay.roundCount}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {gameDisplay.showResults && (
-        <div className="absolute h-full w-full">
-          <div className="flex flex-row w-full h-full items-center justify-center">
-            <Backdrop open={true}>
-              <div className="w-[80%]">
-                <Results
-                  game={game}
-                  localPlayerID={activePlayerID}
-                  isHost={isHost}
-                  mode={session.mode}
-                  handleEndGame={handleEndGame}
-                  handlePlayAgain={handlePlayAgain}
-                  handleExitGame={handleExitGame}
-                />
-              </div>
-            </Backdrop>
-          </div>
-        </div>
-      )}
-    </div>
+      {gameDisplay.showOptions && <GameOptions optionsMenu={optionsMenu} />}
+    </>
   );
 };

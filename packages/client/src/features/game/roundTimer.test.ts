@@ -1,23 +1,58 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatTimeLeft } from './roundTimer';
+import { createRoundTimeLeft, type RoundTimeLeft } from './roundTimer';
 
-describe('formatTimeLeft', () => {
-  it('formats whole seconds as minutes and seconds', () => {
-    const formattedTimeLeft: string = formatTimeLeft(65);
+describe('createRoundTimeLeft', () => {
+  it('rounds up to the started second and keeps the exact remaining share', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 24.2,
+      totalTimeInSeconds: 40,
+    });
 
-    assert.equal(formattedTimeLeft, '1:05');
+    assert.deepEqual(roundTimeLeft, {
+      secondsLeft: 25,
+      remainingShare: 0.605,
+      urgency: 'calm',
+    });
   });
 
-  it('rounds up to the started second', () => {
-    const formattedTimeLeft: string = formatTimeLeft(24.2);
+  it('warns from the last twelve seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 12,
+      totalTimeInSeconds: 30,
+    });
 
-    assert.equal(formattedTimeLeft, '0:25');
+    assert.equal(roundTimeLeft.urgency, 'warning');
   });
 
-  it('shows the last started second until the time is up', () => {
-    const formattedTimeLeft: string = formatTimeLeft(0.4);
+  it('stays calm just above twelve seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 12.01,
+      totalTimeInSeconds: 30,
+    });
 
-    assert.equal(formattedTimeLeft, '0:01');
+    assert.equal(roundTimeLeft.urgency, 'calm');
+  });
+
+  it('becomes critical from the last six seconds', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 6,
+      totalTimeInSeconds: 30,
+    });
+
+    assert.equal(roundTimeLeft.urgency, 'critical');
+  });
+
+  it('reports no time left once the round is over', () => {
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
+      timeLeftInSeconds: 0,
+      totalTimeInSeconds: 30,
+    });
+
+    assert.deepEqual(roundTimeLeft, {
+      secondsLeft: 0,
+      remainingShare: 0,
+      urgency: 'critical',
+    });
   });
 });

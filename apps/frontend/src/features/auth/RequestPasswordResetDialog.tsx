@@ -5,90 +5,84 @@ import {
   usePasswordResetRequestFlow,
 } from '@cityborn/client/auth';
 import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  BodyText,
+  Button,
+  Popup,
+  TextButton,
   TextField,
-  Typography,
-} from '@mui/material';
+} from '@cityborn/design-system';
 import { useState } from 'react';
-import Button from '@/components/ui/buttons/Button';
+import { Controller } from 'react-hook-form';
+import { ScrollView, View } from 'tamagui';
 
 export function RequestPasswordResetDialog() {
   const [open, setOpen] = useState<boolean>(false);
   const {
     form: {
-      register,
+      control,
       formState: { errors, isSubmitting },
     },
     message,
     reset,
     submit,
   }: PasswordResetRequestFlow = usePasswordResetRequestFlow();
-
   return (
     <>
-      <Button
-        type="button"
-        onClick={() => {
+      <TextButton
+        label="Mot de passe oublié ?"
+        onPress={() => {
           reset();
           setOpen(true);
         }}
-      >
-        Mot de passe oublié ?
-      </Button>
-      <Dialog
+      />
+      <Popup
         open={open}
         onClose={() => {
           if (!isSubmitting) setOpen(false);
         }}
-        fullWidth
-        maxWidth="xs"
+        title="Mot de passe oublié"
       >
-        <DialogTitle>Réinitialiser son mot de passe</DialogTitle>
-        <form
-          onSubmit={(event) => {
-            event.stopPropagation();
-            void submit(event);
-          }}
-        >
-          <DialogContent>
+        <ScrollView maxH="96" keyboardShouldPersistTaps="handled">
+          <View gap="4">
             {message ? (
-              <Typography role="status">{message}</Typography>
+              <BodyText role="status">{message}</BodyText>
             ) : (
-              <TextField
-                autoFocus
-                fullWidth
-                type="email"
-                label="Adresse e-mail"
-                autoComplete="email"
-                {...register('email')}
-                error={!!errors.email}
-                helperText={errors.email?.message}
-              />
+              <>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value, ref } }) => (
+                    <TextField
+                      inputRef={ref}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Adresse e-mail"
+                      inputMode="email"
+                      autoComplete="email"
+                      error={errors.email?.message}
+                      disabled={isSubmitting}
+                      returnKeyType="done"
+                      onSubmitEditing={() => void submit()}
+                    />
+                  )}
+                />
+                <Button
+                  compact
+                  label="Envoyer le lien"
+                  onPress={submit}
+                  loading={isSubmitting}
+                />
+              </>
             )}
-          </DialogContent>
-          <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
-            <Button
-              type="button"
+            <TextButton
+              label="Fermer"
               disabled={isSubmitting}
-              onClick={() => setOpen(false)}
-            >
-              Fermer
-            </Button>
-            {!message && (
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                Envoyer le lien de réinitialisation
-              </Button>
-            )}
-          </DialogActions>
-        </form>
-      </Dialog>
+              onPress={() => setOpen(false)}
+            />
+          </View>
+        </ScrollView>
+      </Popup>
     </>
   );
 }
