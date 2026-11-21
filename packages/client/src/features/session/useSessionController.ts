@@ -12,7 +12,9 @@ import type {
 } from '@cityborn/api';
 import {
   applyGameConfigChanges,
+  ErrorCode,
   GameStatus,
+  isApiError,
   SessionMode,
   SessionStatus,
   type sessionWsChannel,
@@ -96,6 +98,22 @@ export async function enterSession({
   if (session.quickPlay) await startGame();
 }
 
+export async function reconnectJoinedPlayer({
+  reconnect,
+  leaveKickedSession,
+}: {
+  reconnect: () => Promise<void>;
+  leaveKickedSession: () => void;
+}): Promise<void> {
+  try {
+    await reconnect();
+  } catch (error: unknown) {
+    if (!isApiError(error) || error.code !== ErrorCode.SESSION_PLAYER_NOT_FOUND)
+      throw error;
+    leaveKickedSession();
+  }
+}
+
 export function useSessionController({
   sessionID,
   navigation,
@@ -116,17 +134,28 @@ export function useSessionController({
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
   const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
 
+  const leaveKickedSession: () => void = useCallback(() => {
+    joinedPlayer.current = null;
+    reportError(new UserFacingError(kickedFromLobbyMessage));
+    navigation.returnTo('/');
+  }, [reportError, navigation]);
+
   const restoreSession = useCallback(
     async (restoredChannel: SessionChannel) => {
       const player: JoinedPlayer | null = joinedPlayer.current;
       if (!player) return;
-      await restoredChannel.emit(sessionWsEvent.reconnect, {
-        sessionID,
-        playerID: player.playerID,
-        reconnectToken: player.reconnectToken,
+      await reconnectJoinedPlayer({
+        reconnect: async () => {
+          await restoredChannel.emit(sessionWsEvent.reconnect, {
+            sessionID,
+            playerID: player.playerID,
+            reconnectToken: player.reconnectToken,
+          });
+        },
+        leaveKickedSession,
       });
     },
-    [sessionID],
+    [sessionID, leaveKickedSession],
   );
 
   const {
@@ -166,13 +195,8 @@ export function useSessionController({
   );
 
   useEffect(
-    () =>
-      sessionChannel?.on(sessionWsServerEvent.kicked, () => {
-        joinedPlayer.current = null;
-        reportError(new UserFacingError(kickedFromLobbyMessage));
-        navigation.returnTo('/');
-      }),
-    [sessionChannel, reportError, navigation],
+    () => sessionChannel?.on(sessionWsServerEvent.kicked, leaveKickedSession),
+    [sessionChannel, leaveKickedSession],
   );
 
   const emit: SessionChannel['emit'] = useCallback(
