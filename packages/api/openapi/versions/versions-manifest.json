@@ -33,6 +33,11 @@
     {
       "versionNumber": 7,
       "releasedAt": "2026-11-21T15:23:38.138Z"
+    },
+    {
+      "versionNumber": 8,
+      "releasedAt": "2026-11-21T16:42:17.447Z",
+      "draft": true
     }
   ]
 }
