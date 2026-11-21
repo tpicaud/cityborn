@@ -72,6 +72,22 @@ describe('RedisSessionRepository', () => {
       );
     });
 
+    it('keeps the reconnect token hash of a player named __proto__', async () => {
+      const storedSession: StoredSession = {
+        session: buildSession(),
+        reconnectTokenHashes: {
+          [PlayerIdSchema.parse('__proto__')]: 'proto-hash',
+        },
+        roundDeadline: null,
+      };
+
+      await sessionRepository.save(storedSession);
+
+      expect(await sessionRepository.find(storedSession.session.id)).toEqual(
+        storedSession,
+      );
+    });
+
     it('replaces the previous record of the session', async () => {
       const session: Session = buildSession();
       await sessionRepository.save({
