@@ -5,7 +5,7 @@ import {
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { FormText } from '@cityborn/design-system';
+import { BodyText } from '@cityborn/design-system';
 import Script from 'next/script';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import { Spinner, View } from 'tamagui';
@@ -114,9 +114,9 @@ export function SignInWithGoogleButton() {
         onError={() => setScriptStatus('failed')}
       />
       {scriptStatus === 'failed' ? (
-        <FormText>
+        <BodyText>
           La connexion avec Google est indisponible pour le moment.
-        </FormText>
+        </BodyText>
       ) : (
         <div
           ref={googleButtonContainer}
