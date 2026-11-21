@@ -20,6 +20,11 @@ export class PrismaCatalogSectionRepository
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
 
+  async lockOrder(): Promise<void> {
+    await this.txHost.tx
+      .$executeRaw`LOCK TABLE "CatalogSection" IN SHARE ROW EXCLUSIVE MODE`;
+  }
+
   async findAll(): Promise<CatalogSection[]> {
     const sections: PrismaCatalogSection[] =
       await this.txHost.tx.catalogSection.findMany({

@@ -29,7 +29,9 @@ export class CatalogSectionService {
     return this.catalogSectionRepository.findAll();
   }
 
+  @Transactional()
   async create({ name }: SaveCatalogSection): Promise<CatalogSection> {
+    await this.catalogSectionRepository.lockOrder();
     return this.save(() => this.catalogSectionRepository.create(name));
   }
 
@@ -55,6 +57,7 @@ export class CatalogSectionService {
     id: CatalogSectionId;
     direction: CatalogSectionMoveDirection;
   }): Promise<CatalogSection[]> {
+    await this.catalogSectionRepository.lockOrder();
     const sections: CatalogSection[] =
       await this.catalogSectionRepository.findAll();
     const index: number = sections.findIndex((section) => section.id === id);

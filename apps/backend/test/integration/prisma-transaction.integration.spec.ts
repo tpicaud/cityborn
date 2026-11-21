@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import type {
+  CatalogSection,
   CreatePack,
   CreateWorldLocation,
   GuessObject,
@@ -32,6 +33,12 @@ import {
 } from '../../src/auth/repositories/password-reset.repository';
 import { PrismaPasswordResetRepository } from '../../src/auth/repositories/prisma-password-reset.repository';
 import { PasswordResetService } from '../../src/auth/services/password-reset.service';
+import { CatalogSectionService } from '../../src/catalog-section/catalog-section.service';
+import {
+  CATALOG_SECTION_REPOSITORY,
+  type CatalogSectionRepository,
+} from '../../src/catalog-section/repositories/catalog-section.repository';
+import { PrismaCatalogSectionRepository } from '../../src/catalog-section/repositories/prisma-catalog-section.repository';
 import { WideEventService } from '../../src/common/wide-event/wide-event.service';
 import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
@@ -76,6 +83,7 @@ describe('Prisma transactions', () => {
   let userService: UserService;
   let passwordResetService: PasswordResetService;
   let rateLimitService: RateLimitService;
+  let catalogSectionService: CatalogSectionService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -86,6 +94,11 @@ describe('Prisma transactions', () => {
         WorldLocationService,
         UserService,
         ThemeService,
+        CatalogSectionService,
+        {
+          provide: CATALOG_SECTION_REPOSITORY,
+          useClass: PrismaCatalogSectionRepository,
+        },
         { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
         { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
         PasswordResetService,
@@ -137,11 +150,71 @@ describe('Prisma transactions', () => {
     userService = module.get(UserService);
     passwordResetService = module.get(PasswordResetService);
     rateLimitService = module.get(RateLimitService);
+    catalogSectionService = module.get(CatalogSectionService);
   });
 
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  describe('CatalogSectionService', () => {
+    describe('create', () => {
+      it('places a creation racing another one after it', async () => {
+        const txHost: PrismaTransactionHost = module.get(TransactionHost);
+        const repository: CatalogSectionRepository = module.get(
+          CATALOG_SECTION_REPOSITORY,
+        );
+        let releaseFirstCreation: () => void = () => {};
+        const released: Promise<void> = new Promise((resolve) => {
+          releaseFirstCreation = resolve;
+        });
+        let confirmFirstCreation: () => void = () => {};
+        const created: Promise<void> = new Promise((resolve) => {
+          confirmFirstCreation = resolve;
+        });
+        const firstCreation: Promise<CatalogSection> = txHost.withTransaction(
+          async () => {
+            const section: CatalogSection = await catalogSectionService.create({
+              name: 'Z',
+            });
+            confirmFirstCreation();
+            await released;
+            return section;
+          },
+        );
+        await created;
+        const secondCreation: Promise<CatalogSection> =
+          catalogSectionService.create({ name: 'A' });
+        async function waitForBlockedCreation(
+          remainingAttempts: number,
+        ): Promise<void> {
+          const waiting: { count: bigint }[] = await prisma.$queryRaw`
+            SELECT count(*) AS count FROM pg_stat_activity
+            WHERE datname = current_database() AND usename = current_user
+              AND wait_event_type = 'Lock' AND query LIKE 'LOCK TABLE "CatalogSection"%'
+          `;
+          if (waiting[0]?.count === 1n) return;
+          if (remainingAttempts === 0)
+            throw new Error('Creation did not wait for the racing one');
+          await new Promise<void>((resolve) => setTimeout(resolve, 10));
+          await waitForBlockedCreation(remainingAttempts - 1);
+        }
+
+        try {
+          await waitForBlockedCreation(100);
+        } finally {
+          releaseFirstCreation();
+        }
+        const firstSection: CatalogSection = await firstCreation;
+        const secondSection: CatalogSection = await secondCreation;
+
+        expect(await repository.findAll()).toEqual([
+          firstSection,
+          secondSection,
+        ]);
+      });
+    });
   });
 
   describe('PackService', () => {
