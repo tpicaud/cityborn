@@ -32,19 +32,4 @@ describe('catalogSectionEditorReducer', () => {
 
     assert.equal(cancelled.deletionSectionId, null);
   });
-
-  it('keeps a failed rename open and associates its error with the row', () => {
-    const editing: CatalogSectionEditorState = catalogSectionEditorReducer(
-      initialCatalogSectionEditorState,
-      { type: 'edit', id },
-    );
-
-    const failed: CatalogSectionEditorState = catalogSectionEditorReducer(
-      editing,
-      { type: 'rowError', id, message: 'Cette section existe déjà' },
-    );
-
-    assert.equal(failed.editedSectionId, id);
-    assert.equal(failed.rowErrors[id], 'Cette section existe déjà');
-  });
 });

@@ -18,6 +18,10 @@ import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
 import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
 import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../../shared/errorReporter';
+import {
   type CatalogSectionEditorState,
   catalogSectionEditorReducer,
   initialCatalogSectionEditorState,
@@ -54,6 +58,7 @@ const noSections: CatalogSection[] = [];
 export function useCatalogSectionsManagement(): CatalogSectionsManagement {
   const { catalogSectionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const query: UseQueryResult<CatalogSection[]> = useQuery({
     ...catalogSectionsQueryOptions(catalogSectionApi),
     meta: { reportsError: false },
@@ -106,6 +111,7 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
       creationForm,
       editForm,
       dispatch,
+      reportError,
       setIsMoving,
       setIsDeleting,
     }),

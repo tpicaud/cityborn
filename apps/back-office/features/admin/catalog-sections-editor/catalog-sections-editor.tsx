@@ -9,16 +9,14 @@ import { CatalogSectionRow } from './catalog-section-row';
 
 export function CatalogSectionsEditor() {
   const editor: CatalogSectionsManagement = useCatalogSectionsManagement();
-  const { creationForm, state }: CatalogSectionsManagement = editor;
+  const { creationForm }: CatalogSectionsManagement = editor;
   const isBusy: boolean =
     creationForm.formState.isSubmitting ||
     editor.editForm.formState.isSubmitting ||
     editor.isMoving ||
     editor.isDeleting;
   const creationError: string | undefined =
-    creationForm.formState.errors.name?.message ??
-    state.creationError ??
-    undefined;
+    creationForm.formState.errors.name?.message;
   return (
     <section
       className="flex w-full flex-col gap-6 overflow-auto"

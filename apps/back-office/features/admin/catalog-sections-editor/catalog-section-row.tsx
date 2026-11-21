@@ -25,9 +25,9 @@ export function CatalogSectionRow({
     if (isEditing) editor.editForm.setFocus('name');
   }, [isEditing, editor.editForm]);
   const isConfirming: boolean = editor.state.deletionSectionId === section.id;
-  const error: string | undefined =
-    (isEditing ? editor.editForm.formState.errors.name?.message : undefined) ??
-    editor.state.rowErrors[section.id];
+  const error: string | undefined = isEditing
+    ? editor.editForm.formState.errors.name?.message
+    : undefined;
   const errorId: string = `catalog-section-error-${section.id}`;
   return (
     <li className="rounded-lg border border-zinc-700 p-3 flex flex-col gap-2">

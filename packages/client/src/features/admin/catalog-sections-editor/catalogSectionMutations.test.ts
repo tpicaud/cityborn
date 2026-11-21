@@ -44,6 +44,7 @@ type MutationsFixture = {
   editForm: CatalogSectionForm;
   mutations: CatalogSectionMutations;
   state: CatalogSectionEditorState;
+  reportedErrors: unknown[];
 };
 
 const news: CatalogSection = buildCatalogSection({
@@ -59,6 +60,8 @@ const duplicateNameError: ApiResponseError = new ApiResponseError({
   statusCode: 409,
   message: 'duplicate name',
 });
+
+const networkError: TypeError = new TypeError('Network request failed');
 
 function unexpectedCall(): never {
   throw new Error('unexpected catalog section call');
@@ -124,6 +127,7 @@ function createMutationsFixture({
   const creationForm: CatalogSectionForm = createCatalogSectionForm(context);
   const editForm: CatalogSectionForm = createCatalogSectionForm(context);
   let currentState: CatalogSectionEditorState = state;
+  const reportedErrors: unknown[] = [];
   const mutations: CatalogSectionMutations = createCatalogSectionMutations({
     catalogSectionApi,
     queryClient,
@@ -132,6 +136,9 @@ function createMutationsFixture({
     editForm,
     dispatch: (action) => {
       currentState = catalogSectionEditorReducer(currentState, action);
+    },
+    reportError: (error) => {
+      reportedErrors.push(error);
     },
     setIsMoving: () => undefined,
     setIsDeleting: () => undefined,
@@ -142,6 +149,7 @@ function createMutationsFixture({
     creationForm,
     editForm,
     mutations,
+    reportedErrors,
     get state() {
       return currentState;
     },
@@ -257,7 +265,7 @@ describe('createCatalogSectionMutations', () => {
     await fixture.mutations.createCatalogSection();
 
     assert.equal(fixture.creationForm.getValues('name'), 'nouveautés');
-    assert.equal(fixture.state.creationError, 'Cette section existe déjà');
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
       events,
@@ -307,10 +315,7 @@ describe('createCatalogSectionMutations', () => {
     await fixture.mutations.renameCatalogSection();
 
     assert.equal(fixture.state.editedSectionId, events.id);
-    assert.equal(
-      fixture.state.rowErrors[events.id],
-      'Cette section existe déjà',
-    );
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
       events,
@@ -340,12 +345,12 @@ describe('createCatalogSectionMutations', () => {
     ]);
   });
 
-  it('keeps the order and shows the error on the row after a rejected move', async (context: TestContext) => {
+  it('keeps the order and reports the error of a rejected move', async (context: TestContext) => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       catalogSectionApi: {
         moveCatalogSection: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
@@ -359,10 +364,7 @@ describe('createCatalogSectionMutations', () => {
       news,
       events,
     ]);
-    assert.equal(
-      fixture.state.rowErrors[events.id],
-      "Quelque chose s'est mal passé.",
-    );
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
   });
 
   it('removes a deleted section and closes its confirmation', async (context: TestContext) => {
@@ -387,7 +389,7 @@ describe('createCatalogSectionMutations', () => {
     assert.equal(fixture.state.deletionSectionId, null);
   });
 
-  it('keeps the section and shows the error after a rejected deletion', async (context: TestContext) => {
+  it('keeps the section and reports the error of a rejected deletion', async (context: TestContext) => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       state: {
@@ -396,7 +398,7 @@ describe('createCatalogSectionMutations', () => {
       },
       catalogSectionApi: {
         deleteCatalogSection: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
@@ -407,9 +409,6 @@ describe('createCatalogSectionMutations', () => {
       news,
       events,
     ]);
-    assert.equal(
-      fixture.state.rowErrors[events.id],
-      "Quelque chose s'est mal passé.",
-    );
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
   });
 });
