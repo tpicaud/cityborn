@@ -14,11 +14,12 @@ La review rend des findings : le code, la branche et GitHub restent inchangés. 
 3. Charger les skills de conventions des périmètres du diff.
 4. Relire chaque fichier modifié avec son contexte, à travers chaque axe de la [checklist](#checklist). Ouvrir les appelants et les fichiers voisins dès qu'un constat en dépend.
 5. Confirmer chaque finding en relisant le code concerné : garder ce qui est démontré par le code, écarter le soupçon.
-6. En relecture, avec la tête relue au tour précédent et ses findings :
+6. En relecture, avec la tête relue au tour précédent, les findings transmis et le plus grand ID attribué :
    - statuer sur chaque finding transmis : `résolu`, ou `ouvert` avec l'argument tiré du code quand le correctif manque ou que le rejet ne tient pas ;
-   - relever les nouveaux findings dans `git diff <tête précédente>..HEAD` seulement, numérotés à la suite.
+   - revérifier la preuve de chaque critère d'acceptation ;
+   - relever les nouveaux findings dans `git diff <tête précédente>..HEAD` seulement, numérotés après le plus grand ID attribué.
 
-L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaque axe.
+L'étape 4 est terminée quand chaque fichier du diff, ou du delta en relecture, a été confronté à chaque axe ; l'étape 6 quand chaque finding transmis a un statut.
 
 ## Checklist
 
@@ -32,14 +33,14 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 
 ## Format des findings
 
-Ouvrir le rapport par `tête relue : <sha>`, puis rendre les findings du plus grave au moins grave, d'abord dans un tableau récapitulatif, une ligne par finding :
+Ouvrir le rapport par `tête relue : <sha> · modèle : <modèle>`, puis, en relecture, une ligne `<ID> : résolu` ou `<ID> : ouvert : <argument>` par finding transmis. Rendre ensuite les nouveaux findings du plus grave au moins grave, d'abord dans un tableau récapitulatif, une ligne par finding :
 
 | ID | Gravité | Périmètre | Emplacement | Résumé |
 |---|---|---|---|---|
 | `F1` | 🔴 bloquant | issue | `chemin:ligne` | le constat en une phrase |
 
 - `ID` : `F1`, `F2`… ;
-- `Gravité` : 🔴 `bloquant` (bug, faille, critère non satisfait ou sans preuve), 🟠 `majeur` (règle d'`AGENTS.md` ou d'un skill violée) ou 🟡 `mineur` ;
+- `Gravité` : 🔴 `bloquant` (bug, faille, critère non satisfait ou sans preuve), 🟠 `majeur` (règle d'`AGENTS.md` ou d'un skill violée, test manquant, ajout hors de l'issue) ou 🟡 `mineur` ;
 - `Périmètre` : `issue` (introduit par le diff, ou défaut qui empêche un critère même hors du diff) ou `hors périmètre` (défaut préexistant sans effet sur les critères, à signaler seulement) ;
 - `Emplacement` : `chemin:ligne`.
 

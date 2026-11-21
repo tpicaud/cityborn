@@ -34,7 +34,7 @@ L'étape est terminée au critère de fin de la référence.
 
 Enchaîner au plus 3 tours de review, séparés par des correctifs. À chaque tour :
 
-1. Lancer un reviewer avec l'URL de l'issue, l'URL de la PR et l'instruction d'appliquer `.agents/skills/review-pr/SKILL.md`, sans le rapport du dev, sur GPT Sol 6.1, sinon Opus 5.5, sinon le meilleur modèle disponible, toujours en effort high. Dès le tour 2, lui transmettre aussi la tête relue au tour précédent et ses findings `bloquant` et `majeur` du périmètre de l'issue, avec le statut rendu par le correcteur.
+1. Lancer un reviewer avec l'URL de l'issue, l'URL de la PR et l'instruction d'appliquer `.agents/skills/review-pr/SKILL.md`, sans le rapport du dev, sur GPT Sol 6.1, sinon Opus 5.5, sinon le meilleur modèle disponible, toujours en effort high. Dès le tour 2, lui transmettre aussi la tête relue au tour précédent, le plus grand ID attribué et chaque finding `bloquant` ou `majeur` du périmètre de l'issue qu'aucun reviewer n'a déclaré `résolu`, quel que soit son tour, avec le dernier statut rendu par le correcteur.
 2. Sans finding `bloquant` ni `majeur` ouvert dans le périmètre de l'issue, ou au tour 3, sortir de la boucle.
 3. Sinon, lancer un correcteur avec l'URL de l'issue, l'URL de la PR et ces findings recopiés tels quels. Il doit :
    - charger les skills de conventions des périmètres touchés ;
@@ -49,7 +49,7 @@ L'étape est terminée quand la boucle est sortie.
 
 ## Étape 3 — Verdict
 
-Mettre à jour la description de la PR selon `.agents/skills/deliver-issue/references/report.md` : le verdict en première ligne d'après les findings encore ouverts au dernier tour, chaque finding hors périmètre dans « Pistes ».
+Mettre à jour toi-même la description de la PR selon `.agents/skills/deliver-issue/references/report.md` : le verdict en première ligne d'après les findings encore ouverts au dernier tour, chaque finding hors périmètre dans « Pistes ».
 
 ## Compte rendu final
 

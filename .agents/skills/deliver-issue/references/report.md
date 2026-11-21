@@ -12,9 +12,9 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 
 ## Sections
 
-- **Verdict** : une citation d'une ligne, en première ligne, posée par l'orchestrateur à la sortie de la boucle de review :
-  - aucun finding `bloquant` ni `majeur` ouvert : `> ✅ **Prête pour recette**` ;
-  - sinon : `> ⛔ **Bloquée** : <ID et résumé de chaque finding ouvert>`.
+- **Verdict** : absent du gabarit, posé en première ligne par l'orchestrateur seul, à la sortie de la boucle de review :
+  - aucun finding `bloquant` ni `majeur` ouvert : `> ✅ **Prête pour recette** · <n> tours · <modèle du reviewer>` ;
+  - sinon : `> ⛔ **Bloquée** · <n> tours · <modèle du reviewer>`, suivi d'une bullet par finding ouvert avec son ID, son résumé, l'argument du reviewer et, en cas de rejet, la raison du correcteur.
 - **À vérifier en recette** : une case par critère « (vérification manuelle) », avec ce qu'il faut regarder et où.
 - **Comment ça marche** : le mécanisme qui produit le comportement, ses pièces et leur enchaînement ; le résultat et le code retiré se lisent dans « En bref » et le diff. Quelques phrases de prose, complétées au besoin de bullets pour les étapes du flux ; cinq phrases ou bullets au plus. Quand le flux traverse au moins trois acteurs, comme client, serveur et Redis, un diagramme de séquence Mermaid peut remplacer les bullets.
 - **Décisions prises** : un arbitrage dont l'alternative écartée aurait été un choix crédible pour le relecteur ; sans alternative à nommer, ce n'est pas une décision. Une phrase par décision, sans détail d'implémentation.
@@ -25,8 +25,6 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 ## Gabarit
 
 ```markdown
-> ✅ **Prête pour recette**
-
 ## 📌 En bref
 
 Une ou deux phrases : le comportement ou la structure obtenus.
