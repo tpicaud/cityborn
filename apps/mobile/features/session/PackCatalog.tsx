@@ -7,7 +7,7 @@ import {
 } from '@cityborn/client/session';
 import {
   BodyText,
-  CardGrid,
+  CardRow,
   FilterBar,
   FilterTag,
   ImageCard,
@@ -64,8 +64,8 @@ export function PackCatalog({
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <Screen title="Solo" bottomSafeArea={bottomSafeArea}>
-      <View flex={1} minH="0" gap="4 md:5">
+    <Screen title="Solo" bottomSafeArea={bottomSafeArea} scrollable>
+      <View gap="4 md:5">
         <FilterBar label="Filtrer les packs par thème">
           <FilterTag
             label="Tous"
@@ -85,11 +85,11 @@ export function PackCatalog({
         {packs.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardGrid>
+          <CardRow key={selectedTheme?.id ?? 'all'} title="Tous les packs">
             {packs.map((pack: Pack) => (
               <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
             ))}
-          </CardGrid>
+          </CardRow>
         )}
       </View>
     </Screen>
