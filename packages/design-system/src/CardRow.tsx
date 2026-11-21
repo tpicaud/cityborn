@@ -85,41 +85,49 @@ function clamp({ value, max }: { value: number; max: number }): number {
 export function CardRow({ title, children }: CardRowProps) {
   const scrollViewRef: RefObject<GetRef<typeof ScrollView> | null> =
     useRef<GetRef<typeof ScrollView>>(null);
-  const [extent, setExtent] = useState<RowExtent>({
+  const extentRef: RefObject<RowExtent> = useRef<RowExtent>({
     offset: 0,
     viewport: 0,
     content: 0,
   });
-  const maxOffset: number = Math.max(0, extent.content - extent.viewport);
-  const overflows: boolean = maxOffset > 1;
-  const canScrollBack: boolean = extent.offset > 1;
-  const canScrollForward: boolean = extent.offset < maxOffset - 1;
+  const [overflows, setOverflows] = useState<boolean>(false);
+  const [canScrollBack, setCanScrollBack] = useState<boolean>(false);
+  const [canScrollForward, setCanScrollForward] = useState<boolean>(false);
+
+  const maxOffset = (): number =>
+    Math.max(0, extentRef.current.content - extentRef.current.viewport);
+
+  const updateExtent = (change: Partial<RowExtent>): void => {
+    extentRef.current = { ...extentRef.current, ...change };
+    const max: number = maxOffset();
+    setOverflows(max > 1);
+    setCanScrollBack(extentRef.current.offset > 1);
+    setCanScrollForward(extentRef.current.offset < max - 1);
+  };
 
   const scrollTo = (offset: number): void => {
-    const x: number = clamp({ value: offset, max: maxOffset });
-    setExtent((current: RowExtent) => ({ ...current, offset: x }));
+    const x: number = clamp({ value: offset, max: maxOffset() });
+    updateExtent({ offset: x });
     scrollViewRef.current?.scrollTo({ x, animated: true });
   };
 
   const scrollByPage = (direction: ScrollDirection): void =>
-    scrollTo(extent.offset + direction * extent.viewport * pageRatio);
+    scrollTo(
+      extentRef.current.offset +
+        direction * extentRef.current.viewport * pageRatio,
+    );
 
   const measureViewport: ScrollViewProps['onLayout'] = ({
     nativeEvent: { layout },
-  }) =>
-    setExtent((current: RowExtent) => ({ ...current, viewport: layout.width }));
+  }) => updateExtent({ viewport: layout.width });
 
   const measureContent: ScrollViewProps['onContentSizeChange'] = (
     width: number,
-  ) => setExtent((current: RowExtent) => ({ ...current, content: width }));
+  ) => updateExtent({ content: width });
 
   const followScroll: ScrollViewProps['onScroll'] = ({
     nativeEvent: { contentOffset },
-  }) =>
-    setExtent((current: RowExtent) => ({
-      ...current,
-      offset: contentOffset.x,
-    }));
+  }) => updateExtent({ offset: contentOffset.x });
 
   const scrollFromKeyboard: ScrollViewProps['onKeyDown'] = (event) => {
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -128,7 +136,7 @@ export function CardRow({ title, children }: CardRowProps) {
     }
     if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-      scrollTo(event.key === 'Home' ? 0 : maxOffset);
+      scrollTo(event.key === 'Home' ? 0 : maxOffset());
     }
   };
 
