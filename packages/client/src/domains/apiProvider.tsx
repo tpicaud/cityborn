@@ -6,6 +6,10 @@ import type { AppFocus } from '../platform/appFocus';
 import { ServerStateProvider } from '../shared/serverStateProvider';
 import type { AuthApi } from './auth/authApi';
 import {
+  type CatalogSectionApi,
+  createCatalogSectionApi,
+} from './catalog-section/catalogSectionApi';
+import {
   createGameRecordApi,
   type GameRecordApi,
 } from './game-record/gameRecordApi';
@@ -26,6 +30,7 @@ import {
 
 export type DomainApis = {
   authApi: AuthApi;
+  catalogSectionApi: CatalogSectionApi;
   packApi: PackApi;
   gameRecordApi: GameRecordApi;
   guessObjectApi: GuessObjectApi;
@@ -55,6 +60,7 @@ export function ApiProvider({
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
       authApi,
+      catalogSectionApi: createCatalogSectionApi(contractClient),
       packApi: createPackApi(contractClient),
       gameRecordApi: createGameRecordApi(contractClient),
       guessObjectApi: createGuessObjectApi(contractClient),
