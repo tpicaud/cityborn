@@ -102,7 +102,6 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
     ...createCatalogSectionMutations({
       catalogSectionApi,
       queryClient,
-      sections,
       editedSectionId: state.editedSectionId,
       creationForm,
       editForm,

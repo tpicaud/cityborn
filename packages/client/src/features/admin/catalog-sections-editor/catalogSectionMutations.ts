@@ -34,7 +34,6 @@ type CatalogSectionForm = Pick<
 export function createCatalogSectionMutations({
   catalogSectionApi,
   queryClient,
-  sections,
   editedSectionId,
   creationForm,
   editForm,
@@ -44,7 +43,6 @@ export function createCatalogSectionMutations({
 }: {
   catalogSectionApi: CatalogSectionApi;
   queryClient: QueryClient;
-  sections: CatalogSection[];
   editedSectionId: CatalogSectionId | null;
   creationForm: CatalogSectionForm;
   editForm: CatalogSectionForm;
@@ -59,9 +57,9 @@ export function createCatalogSectionMutations({
         try {
           const section: CatalogSection =
             await catalogSectionApi.createCatalogSection(data);
-          updateCatalogSectionsCache({
+          await updateCatalogSectionsCache({
             queryClient,
-            sections: [...sections, section],
+            update: (sections) => [...sections, section],
           });
           creationForm.reset();
         } catch (error: unknown) {
@@ -79,11 +77,12 @@ export function createCatalogSectionMutations({
         try {
           const renamedSection: CatalogSection =
             await catalogSectionApi.renameCatalogSection({ id, section: data });
-          updateCatalogSectionsCache({
+          await updateCatalogSectionsCache({
             queryClient,
-            sections: sections.map((section) =>
-              section.id === id ? renamedSection : section,
-            ),
+            update: (sections) =>
+              sections.map((section) =>
+                section.id === id ? renamedSection : section,
+              ),
           });
           dispatch({ type: 'saved', id });
         } catch (error: unknown) {
@@ -103,7 +102,10 @@ export function createCatalogSectionMutations({
             id: section.id,
             move: { direction },
           });
-        updateCatalogSectionsCache({ queryClient, sections: movedSections });
+        await updateCatalogSectionsCache({
+          queryClient,
+          update: () => movedSections,
+        });
         dispatch({ type: 'moved', id: section.id });
       } catch (error: unknown) {
         dispatch({
@@ -119,9 +121,10 @@ export function createCatalogSectionMutations({
       setIsDeleting(true);
       try {
         await catalogSectionApi.deleteCatalogSection(section.id);
-        updateCatalogSectionsCache({
+        await updateCatalogSectionsCache({
           queryClient,
-          sections: sections.filter((item) => item.id !== section.id),
+          update: (sections) =>
+            sections.filter((item) => item.id !== section.id),
         });
         dispatch({ type: 'saved', id: section.id });
       } catch (error: unknown) {
