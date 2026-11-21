@@ -14,7 +14,7 @@ export const testDatabaseUrl: string =
 export const testRedisUrl: string =
   process.env.TEST_REDIS_URL ??
   backendEnv.TEST_REDIS_URL ??
-  'redis://localhost:6379/1';
+  'redis://localhost:6380/0';
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = testDatabaseUrl;

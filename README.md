@@ -24,7 +24,7 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 ## Env de dev
 
-Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et un Redis (base `0` pour le dev, `1` pour les tests), dans des volumes nommés.
+Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et deux Redis, un pour le dev et un pour les tests, dans des volumes nommés.
 
 - **Nom** : `cityborn-main` pour le principal, `cityborn-<dossier du worktree>` pour un worktree.
 - **Slot** : `0` pour le principal ; au premier setup, un worktree reçoit le premier slot libre de `1` à `9` et le garde.
@@ -38,10 +38,11 @@ Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Comp
 | Metro | 8081 | 8091 |
 | PostgreSQL | 5432 | 5442 |
 | Redis | 6379 | 6389 |
+| Redis de test | 6380 | 6390 |
 
 La connexion Google sur le web suppose que le client OAuth de dev autorise les origines `http://localhost:3000` à `3090` et `3001` à `3091`.
 
-Docker Compose lit le nom du projet, ses profils et ses ports dans `apps/backend/.env` (`COMPOSE_PROJECT_NAME`, `COMPOSE_PROFILES`, `POSTGRES_PORT`, `REDIS_PORT`). `pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, le profil `tools` ajoute Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`.
+Docker Compose lit le nom du projet, ses profils et ses ports dans `apps/backend/.env` (`COMPOSE_PROJECT_NAME`, `COMPOSE_PROFILES`, `POSTGRES_PORT`, `REDIS_PORT`, `REDIS_TEST_PORT`). `pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, le profil `tools` ajoute Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`.
 
 Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable et garde le slot :
 
@@ -80,7 +81,7 @@ Les apps écoutent sur les ports du slot : `http://localhost:3000` (frontend), `
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`).
 
-`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites sur la base `cityborn_test` et le Redis `1` de l'env du checkout, sans toucher aux données de dev. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites sur la base `cityborn_test` et le Redis de test de l'env du checkout, sans toucher aux données de dev. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
 
 `pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Il demande l'env du checkout lancé.
 

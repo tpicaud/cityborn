@@ -117,14 +117,19 @@ compose_file="$target_root/apps/backend/docker-compose.resources.yml"
 backend_env="$target_root/apps/backend/.env"
 folder="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
 project="cityborn-${folder%-}"
+if [ "$project" = "cityborn-main" ]; then
+  echo "Le dossier du worktree ne peut pas s'appeler main : cityborn-main est l'env du checkout principal." >&2
+  exit 1
+fi
 
 docker ps --all --filter label=com.docker.compose.project \
   --format '{{.Label "com.docker.compose.project"}}	{{.Label "com.docker.compose.project.config_files"}}' |
   sort -u |
   while IFS=$'\t' read -r env_project env_compose_file; do
     case "$env_project" in cityborn-*) ;; *) continue ;; esac
-    [ ! -e "${env_compose_file%%,*}" ] || continue
-    echo "  env supprimé $env_project (${env_compose_file%%/apps/backend/*})"
+    env_checkout="${env_compose_file%%/apps/backend/*}"
+    [ ! -e "${env_compose_file%%,*}" ] && [ -d "$(dirname "$env_checkout")" ] || continue
+    echo "  env supprimé $env_project ($env_checkout)"
     docker compose -p "$env_project" down --volumes --remove-orphans >/dev/null 2>&1 ||
       echo "  suppression impossible : $env_project" >&2
   done
@@ -167,16 +172,19 @@ slot_port() {
 
 postgres_port="$(slot_port 5432)"
 redis_port="$(slot_port 6379)"
+redis_test_port="$(slot_port 6380)"
 backend_port="$(slot_port 4000)"
 frontend_port="$(slot_port 3000)"
 back_office_port="$(slot_port 3001)"
 metro_port="$(slot_port 8081)"
 
-echo "Env de dev  : $project (slot $slot : PostgreSQL $postgres_port, Redis $redis_port)"
+echo "Env de dev  : $project (slot $slot : PostgreSQL $postgres_port, Redis $redis_port, Redis de test $redis_test_port)"
 COMPOSE_PROJECT_NAME="$project" COMPOSE_PROFILES="" POSTGRES_PORT="$postgres_port" REDIS_PORT="$redis_port" \
+  REDIS_TEST_PORT="$redis_test_port" \
   docker compose -f "$compose_file" --progress quiet up -d --wait --quiet-pull --remove-orphans
 
-for app_env in "$target_root"/apps/*/.env; do
+for app_env in "$target_root"/apps/*/.env "$target_root"/apps/*/.env.local "$target_root"/apps/*/.env.development "$target_root"/apps/*/.env.development.local; do
+  [ -f "$app_env" ] || continue
   BACKEND="$backend_port" FRONTEND="$frontend_port" BACK_OFFICE="$back_office_port" METRO="$metro_port" \
     perl -pi -e 's/:4000(?!\d)/:$ENV{BACKEND}/g; s/:3000(?!\d)/:$ENV{FRONTEND}/g; s/:3001(?!\d)/:$ENV{BACK_OFFICE}/g; s/:8081(?!\d)/:$ENV{METRO}/g' \
     "$app_env"
@@ -186,12 +194,13 @@ set_env "$backend_env" COMPOSE_PROJECT_NAME "$project"
 set_env "$backend_env" COMPOSE_PROFILES ""
 set_env "$backend_env" POSTGRES_PORT "$postgres_port"
 set_env "$backend_env" REDIS_PORT "$redis_port"
+set_env "$backend_env" REDIS_TEST_PORT "$redis_test_port"
 set_env "$backend_env" PORT "$backend_port"
 set_env "$backend_env" DATABASE_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
 set_env "$backend_env" DIRECT_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
 set_env "$backend_env" REDIS_URL "redis://localhost:$redis_port/0"
 set_env "$backend_env" TEST_DATABASE_URL "postgresql://cityborn_test:cityborn_test@localhost:$postgres_port/cityborn_test"
-set_env "$backend_env" TEST_REDIS_URL "redis://localhost:$redis_port/1"
+set_env "$backend_env" TEST_REDIS_URL "redis://localhost:$redis_test_port/0"
 set_env "$target_root/apps/frontend/.env" PORT "$frontend_port"
 set_env "$target_root/apps/back-office/.env" PORT "$back_office_port"
 set_env "$target_root/apps/mobile/.env" RCT_METRO_PORT "$metro_port"
