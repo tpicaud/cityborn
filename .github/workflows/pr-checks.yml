@@ -42,6 +42,8 @@ jobs:
 
       - name: Start dev env
         run: pnpm env:start
+        env:
+          COMPOSE_PROJECT_NAME: cityborn-ci
 
       - name: Verify
         run: pnpm verify

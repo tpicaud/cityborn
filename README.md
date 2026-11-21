@@ -24,9 +24,10 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 ## Env de dev
 
-Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose `cityborn-slot-<slot>` avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et un Redis (base `0` pour le dev, `1` pour les tests), dans des volumes nommés.
+Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et un Redis (base `0` pour le dev, `1` pour les tests), dans des volumes nommés.
 
-- **Slot** : `0` pour le principal ; un worktree reçoit le premier slot libre de `1` à `9`, gardé dans `.cityborn-slot` à sa racine.
+- **Nom** : `cityborn-main` pour le principal, `cityborn-<dossier du worktree>` pour un worktree.
+- **Slot** : `0` pour le principal ; au premier setup, un worktree reçoit le premier slot libre de `1` à `9` et le garde.
 - **Ports** : chaque port vaut son défaut + 10 × slot ; PostgreSQL, Redis et les outils n'écoutent que sur `127.0.0.1`.
 
 | Service | Défaut (slot 0) | Slot 1 |
@@ -40,14 +41,13 @@ Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Comp
 
 La connexion Google sur le web suppose que le client OAuth de dev autorise les origines `http://localhost:3000` à `3090` et `3001` à `3091`.
 
-`pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, `env:start` lance aussi le projet `cityborn-tools` : Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`, branchés sur le réseau Docker du slot 0.
+Docker Compose lit le nom du projet, ses profils et ses ports dans `apps/backend/.env` (`COMPOSE_PROJECT_NAME`, `COMPOSE_PROFILES`, `POSTGRES_PORT`, `REDIS_PORT`). `pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, le profil `tools` ajoute Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`.
 
 Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable et garde le slot :
 
 - copie les `.env` manquants depuis le principal ;
-- supprime l'env des worktrees disparus, ce qui libère leur slot ;
-- attribue le slot et lance son env, sous un verrou qui empêche deux setups simultanés de prendre le même slot ;
-- écrit ses ports et URL dans les `.env` des apps, en gardant l'IP locale des URL mobiles ;
+- supprime l'env des worktrees disparus ;
+- lance l'env du worktree, puis écrit son nom et ses ports dans les `.env` des apps, en gardant l'hôte des URL ;
 - lance `pnpm install`, puis migre et seede `cityborn_dev`.
 
 Dans un worktree non préparé, `pnpm env:start` échoue et renvoie à ce script.
@@ -62,7 +62,7 @@ docker compose -p cityborn-test down --volumes
 sudo rm -rf apps/backend/docker-data apps/backend/redis-data
 ```
 
-Reporter ensuite dans les `.env` du principal les valeurs des `.env.example` (`DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `TEST_*`, `RCT_METRO_PORT`), puis relancer `./scripts/setup-worktree.sh` dans chaque worktree à jour de `main`.
+Reporter ensuite dans les `.env` du principal les valeurs des `.env.example` (`COMPOSE_PROJECT_NAME`, `COMPOSE_PROFILES`, `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `TEST_*`, `RCT_METRO_PORT`), lancer `pnpm env:start && pnpm db:dev:reset`, puis relancer `./scripts/setup-worktree.sh` dans chaque worktree à jour de `main`.
 
 ## Lancement
 

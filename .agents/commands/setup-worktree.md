@@ -30,7 +30,7 @@ existent déjà ; `--skip-install` ne valide pas la préparation complète.
 
 ## Étape 3 — Rendre compte
 
-Lister les fichiers copiés, le slot attribué, l'env de dev lancé et confirmer
+Lister les fichiers copiés, l'env de dev lancé avec son slot et confirmer
 que `pnpm install`, les migrations et le seed se sont terminés sans erreur. Tout échec bloque le développement : signaler l'erreur telle quelle sans
 tenter de contourner (pas de `--force`, pas de suppression de lockfile).
 

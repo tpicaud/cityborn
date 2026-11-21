@@ -104,7 +104,6 @@
       "persistent": true,
       "interactive": true,
       "passThroughEnv": [
-        "RCT_METRO_PORT",
         "APP_VARIANT",
         "GOOGLE_MAPS_ANDROID_API_KEY",
         "GOOGLE_MAPS_IOS_API_KEY",

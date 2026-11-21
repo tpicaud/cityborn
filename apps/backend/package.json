@@ -18,6 +18,8 @@
     "test:all": "pnpm test && pnpm test:int && pnpm test:e2e",
     "test:cov": "jest --selectProjects unit --coverage",
     "test:watch": "jest --selectProjects unit --watch",
+    "env:start": "docker compose -f docker-compose.resources.yml up -d --wait --quiet-pull --remove-orphans",
+    "env:stop": "docker compose -f docker-compose.resources.yml stop",
     "db:dev:up": "prisma migrate deploy",
     "db:dev:migrate": "prisma migrate dev --name",
     "db:dev:reset": "prisma migrate reset && prisma db seed",

@@ -1,7 +1,4 @@
-x-checkout-labels: &checkout-labels
-  cityborn.checkout: ${CITYBORN_CHECKOUT:-}
-  cityborn.host: ${CITYBORN_HOST:-}
-  cityborn.slot: ${CITYBORN_SLOT:-0}
+name: ${COMPOSE_PROJECT_NAME:?absent de apps/backend/.env, lancer scripts/setup-worktree.sh dans un worktree}
 
 services:
   postgres:
@@ -10,7 +7,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: cityborn_dev
-    labels: *checkout-labels
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     configs:
@@ -27,7 +23,6 @@ services:
 
   redis:
     image: redis:8-alpine
-    labels: *checkout-labels
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
@@ -37,6 +32,31 @@ services:
       interval: 1s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    profiles: [tools]
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    profiles: [tools]
+    environment:
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
+      RI_REDIS_HOST0: redis
+      RI_REDIS_PORT0: 6379
+      RI_REDIS_ALIAS0: local
+    ports:
+      - "127.0.0.1:5540:5540"
+    depends_on:
+      - redis
     restart: unless-stopped
 
 configs:
