@@ -206,6 +206,54 @@ export class SessionService {
     });
   }
 
+  async kickPlayer({
+    playerID,
+    sessionID,
+    kickedPlayerID,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    kickedPlayerID: PlayerId;
+  }): Promise<Session> {
+    return await this.updateSession(sessionID, async (session) => {
+      if (session.currentGame)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_ALREADY_IN_GAME,
+          message: `Session already in game`,
+        });
+
+      if (session.hostID !== playerID)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_FORBIDDEN_HOST,
+          message: `Player is not the host`,
+        });
+
+      if (kickedPlayerID === playerID)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_HOST_SELF_KICK,
+          message: `Host cannot kick themselves`,
+        });
+
+      const kickedPlayerExists: boolean = session.players.some(
+        (player) => player.username === kickedPlayerID,
+      );
+      if (!kickedPlayerExists)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+          message: `Player not found in session`,
+        });
+
+      session.players = session.players.filter(
+        (player) => player.username !== kickedPlayerID,
+      );
+      await this.redisService.hdel(
+        this.getReconnectTokenHashesKey(sessionID),
+        kickedPlayerID,
+      );
+      return session;
+    });
+  }
+
   async updateGameConfig(
     playerID: PlayerId,
     sessionID: SessionId,

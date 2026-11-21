@@ -201,6 +201,7 @@ describe('resolveWsAction', () => {
       'session.join',
       'session.reconnect',
       'session.updateHost',
+      'session.kickPlayer',
       'session.updateGameConfig',
       'session.startGame',
       'session.guess',

@@ -386,6 +386,130 @@ describe('SessionService lobby operations', () => {
     });
   });
 
+  describe('kickPlayer', () => {
+    it('removes the kicked player and revokes its reconnect token', async () => {
+      const session: Session = buildSession({
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'bob', isGuest: true }),
+          buildPlayer({ username: 'carol' }),
+        ],
+      });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      const result: Session = await sessionService.kickPlayer({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        kickedPlayerID: playerId('bob'),
+      });
+
+      expect(result.players.map((player) => player.username)).toEqual([
+        playerId('host'),
+        playerId('carol'),
+      ]);
+      expect(result.hostID).toBe(playerId('host'));
+      expect(redisService.hdel).toHaveBeenCalledWith(
+        `session:${session.id}:reconnect-token-hashes`,
+        playerId('bob'),
+      );
+    });
+
+    it('lets the kicked player join the lobby again', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      await sessionService.kickPlayer({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        kickedPlayerID: playerId('bob'),
+      });
+
+      const { session: rejoinedSession }: JoinedSession =
+        await sessionService.join(session.id, playerId('bob'));
+
+      expect(rejoinedSession.players.map((player) => player.username)).toEqual([
+        playerId('host'),
+        playerId('bob'),
+      ]);
+    });
+
+    it('rejects a kick requested by another player than the host', async () => {
+      const session: Session = buildSession({
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'bob' }),
+          buildPlayer({ username: 'carol' }),
+        ],
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.kickPlayer({
+          playerID: playerId('bob'),
+          sessionID: session.id,
+          kickedPlayerID: playerId('carol'),
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
+      });
+    });
+
+    it('rejects the host kicking themselves', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.kickPlayer({
+          playerID: playerId('host'),
+          sessionID: session.id,
+          kickedPlayerID: playerId('host'),
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_HOST_SELF_KICK },
+      });
+    });
+
+    it('rejects kicking a player who is not in the session', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.kickPlayer({
+          playerID: playerId('host'),
+          sessionID: session.id,
+          kickedPlayerID: playerId('mallory'),
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
+      });
+    });
+
+    it('rejects a kick once the game has started', async () => {
+      const session: Session = buildSession({
+        status: SessionStatus.IN_GAME,
+        currentGame: buildGame(),
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.kickPlayer({
+          playerID: playerId('host'),
+          sessionID: session.id,
+          kickedPlayerID: playerId('bob'),
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_ALREADY_IN_GAME },
+      });
+    });
+  });
+
   describe('updateGameConfig', () => {
     it('updates the game configuration for the host', async () => {
       const session: Session = buildSession();

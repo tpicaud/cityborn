@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import {
   buildSession,
   GameIdSchema,
+  PlayerIdSchema,
   type Session,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -113,6 +114,99 @@ describe('SessionGateway.leaveGame', () => {
     expect(wideEventService.enrichBusinessContext).toHaveBeenCalledWith({
       gameId: 'game-1',
     });
+  });
+});
+
+type SessionRemoteSocket = Awaited<
+  ReturnType<SessionRoom['fetchSockets']>
+>[number];
+
+describe('SessionGateway.kickPlayer', () => {
+  it('notifies and detaches the sockets of the kicked player before broadcasting the session', async () => {
+    const session: Session = buildSession();
+    const sessionService: DeepMocked<SessionService> =
+      createMock<SessionService>();
+    sessionService.kickPlayer.mockResolvedValue(session);
+    const gateway: SessionGateway = new SessionGateway(
+      sessionService,
+      createMock<WideEventService>(),
+      createMock<WsWideEventLifecycle>(),
+      sessionPresenceTiming,
+    );
+    const actions: string[] = [];
+    const kickedSocket: DeepMocked<SessionRemoteSocket> =
+      createMock<SessionRemoteSocket>({
+        data: { player: { sessionID: session.id, playerID: 'bob' } },
+      });
+    kickedSocket.emit.mockImplementation(() => {
+      actions.push('notify');
+      return true;
+    });
+    kickedSocket.leave.mockImplementation(async () => {
+      actions.push('leave');
+    });
+    const remainingSocket: DeepMocked<SessionRemoteSocket> =
+      createMock<SessionRemoteSocket>({
+        data: { player: { sessionID: session.id, playerID: session.hostID } },
+      });
+    const sessionRoom: DeepMocked<SessionRoom> = createMock<SessionRoom>();
+    sessionRoom.fetchSockets.mockResolvedValue([kickedSocket, remainingSocket]);
+    const io: DeepMocked<AppServer> = createMock<AppServer>();
+    io.in.mockReturnValue(sessionRoom);
+    io.to.mockImplementation(() => {
+      actions.push('broadcast');
+      return sessionRoom;
+    });
+    gateway.io = io;
+    const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
+      data: { player: { sessionID: session.id, playerID: session.hostID } },
+    });
+
+    await gateway.kickPlayer(socket, {
+      kickedPlayerID: PlayerIdSchema.parse('bob'),
+    });
+
+    expect(sessionService.kickPlayer).toHaveBeenCalledWith({
+      playerID: session.hostID,
+      sessionID: session.id,
+      kickedPlayerID: 'bob',
+    });
+    expect(kickedSocket.emit).toHaveBeenCalledWith(sessionWsServerEvent.kicked);
+    expect(kickedSocket.leave).toHaveBeenCalledWith(session.id);
+    expect(remainingSocket.emit).not.toHaveBeenCalled();
+    expect(remainingSocket.leave).not.toHaveBeenCalled();
+    expect(sessionRoom.emit).toHaveBeenCalledWith(
+      sessionWsServerEvent.update,
+      session,
+    );
+    expect(actions).toEqual(['notify', 'leave', 'broadcast']);
+  });
+
+  it('notifies nobody when the kick is rejected', async () => {
+    const session: Session = buildSession();
+    const sessionService: DeepMocked<SessionService> =
+      createMock<SessionService>();
+    sessionService.kickPlayer.mockRejectedValue(new Error('not the host'));
+    const gateway: SessionGateway = new SessionGateway(
+      sessionService,
+      createMock<WideEventService>(),
+      createMock<WsWideEventLifecycle>(),
+      sessionPresenceTiming,
+    );
+    const io: DeepMocked<AppServer> = createMock<AppServer>();
+    gateway.io = io;
+    const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
+      data: { player: { sessionID: session.id, playerID: 'bob' } },
+    });
+
+    await expect(
+      gateway.kickPlayer(socket, {
+        kickedPlayerID: PlayerIdSchema.parse('host'),
+      }),
+    ).rejects.toThrow('not the host');
+
+    expect(io.in).not.toHaveBeenCalled();
+    expect(io.to).not.toHaveBeenCalled();
   });
 });
 
