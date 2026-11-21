@@ -5,6 +5,7 @@ import type { JwtService } from '@nestjs/jwt';
 import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
 import { RateLimiterRes } from 'rate-limiter-flexible';
+import type { ConsumedRefreshTokenRepository } from '../auth/repositories/consumed-refresh-token.repository';
 import { AuthCookieService } from '../auth/services/auth-cookie.service';
 import { AuthTokenService } from '../auth/services/auth-token.service';
 import type { AppSocket } from '../common/types/app-socket';
@@ -20,7 +21,6 @@ import type {
   RuntimeConfig,
 } from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
-import type { RedisService } from '../redis/redis.service';
 import type { UserService } from '../user/user.service';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
 import {
@@ -87,8 +87,8 @@ function buildMiddleware() {
         jwtService,
         authConfig,
         userService,
-        createMock<RedisService>(),
         wideEventService,
+        createMock<ConsumedRefreshTokenRepository>(),
       ),
       new AuthCookieService(runtimeConfig),
       new AuthenticatedSocketService(),

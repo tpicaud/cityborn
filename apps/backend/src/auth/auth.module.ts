@@ -9,8 +9,10 @@ import { AuthController } from './controllers/auth.controller';
 import { AuthCookieController } from './controllers/auth-cookie.controller';
 import { GoogleClientProvider } from './identity-providers/google-client.provider';
 import { IdentityTokenService } from './identity-providers/identity-token.service';
+import { CONSUMED_REFRESH_TOKEN_REPOSITORY } from './repositories/consumed-refresh-token.repository';
 import { PASSWORD_RESET_REPOSITORY } from './repositories/password-reset.repository';
 import { PrismaPasswordResetRepository } from './repositories/prisma-password-reset.repository';
+import { RedisConsumedRefreshTokenRepository } from './repositories/redis-consumed-refresh-token.repository';
 import { AuthService } from './services/auth.service';
 import { AuthCookieService } from './services/auth-cookie.service';
 import { AuthTokenService } from './services/auth-token.service';
@@ -35,6 +37,10 @@ import { PasswordResetService } from './services/password-reset.service';
       useClass: PrismaPasswordResetRepository,
     },
     AuthTokenService,
+    {
+      provide: CONSUMED_REFRESH_TOKEN_REPOSITORY,
+      useClass: RedisConsumedRefreshTokenRepository,
+    },
     AuthCookieService,
     IdentityTokenService,
     GoogleClientProvider,
