@@ -10,7 +10,11 @@ import {
   SaveCatalogSectionSchema,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  QueryClient,
+  type QueryKey,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { createFormControl } from 'react-hook-form';
 import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
 import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
@@ -75,16 +79,32 @@ function createCatalogSectionForm(context: TestContext): CatalogSectionForm {
   return form;
 }
 
+function observeSections({
+  context,
+  queryClient,
+  catalogSectionApi,
+}: {
+  context: TestContext;
+  queryClient: QueryClient;
+  catalogSectionApi: CatalogSectionApi;
+}): void {
+  const observer: QueryObserver<CatalogSection[]> = new QueryObserver(
+    queryClient,
+    catalogSectionsQueryOptions(catalogSectionApi),
+  );
+  context.after(observer.subscribe(() => undefined));
+}
+
 function createMutationsFixture({
   context,
   catalogSectionApi: overrides,
-  sections = [news, events],
   state = initialCatalogSectionEditorState,
+  isLoadingSections = false,
 }: {
   context: TestContext;
   catalogSectionApi: Partial<CatalogSectionApi>;
-  sections?: CatalogSection[];
   state?: CatalogSectionEditorState;
+  isLoadingSections?: boolean;
 }): MutationsFixture {
   const catalogSectionApi: CatalogSectionApi = {
     getCatalogSections: unexpectedCall,
@@ -98,14 +118,15 @@ function createMutationsFixture({
   context.after(() => queryClient.clear());
   const sectionsKey: QueryKey =
     catalogSectionsQueryOptions(catalogSectionApi).queryKey;
-  queryClient.setQueryData(sectionsKey, sections);
+  if (isLoadingSections)
+    observeSections({ context, queryClient, catalogSectionApi });
+  if (!isLoadingSections) queryClient.setQueryData(sectionsKey, [news, events]);
   const creationForm: CatalogSectionForm = createCatalogSectionForm(context);
   const editForm: CatalogSectionForm = createCatalogSectionForm(context);
   let currentState: CatalogSectionEditorState = state;
   const mutations: CatalogSectionMutations = createCatalogSectionMutations({
     catalogSectionApi,
     queryClient,
-    sections,
     editedSectionId: state.editedSectionId,
     creationForm,
     editForm,
@@ -154,6 +175,72 @@ describe('createCatalogSectionMutations', () => {
       classics,
     ]);
     assert.equal(fixture.creationForm.getValues('name'), '');
+  });
+
+  it('adds a created section to the sections loaded during its request', async (context: TestContext) => {
+    let finishLoading: (sections: CatalogSection[]) => void = () => {};
+    const loading: Promise<CatalogSection[]> = new Promise((resolve) => {
+      finishLoading = resolve;
+    });
+    let finishCreation: () => void = () => {};
+    const creating: Promise<void> = new Promise((resolve) => {
+      finishCreation = resolve;
+    });
+    const loads: Promise<CatalogSection[]>[] = [
+      loading,
+      Promise.resolve([news, events]),
+    ];
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      isLoadingSections: true,
+      catalogSectionApi: {
+        getCatalogSections: () => loads.shift() ?? unexpectedCall(),
+        createCatalogSection: async () => {
+          await creating;
+          return events;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', 'Événements');
+    const creation: Promise<void> = fixture.mutations.createCatalogSection();
+    finishLoading([news]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    finishCreation();
+
+    await creation;
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
+  });
+
+  it('ignores sections loaded before a creation that responds after it', async (context: TestContext) => {
+    let finishLoading: (sections: CatalogSection[]) => void = () => {};
+    const loads: Promise<CatalogSection[]>[] = [
+      new Promise((resolve) => {
+        finishLoading = resolve;
+      }),
+      Promise.resolve([news, events]),
+    ];
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      isLoadingSections: true,
+      catalogSectionApi: {
+        getCatalogSections: () => loads.shift() ?? unexpectedCall(),
+        createCatalogSection: async () => events,
+      },
+    });
+    fixture.creationForm.setValue('name', 'Événements');
+
+    await fixture.mutations.createCatalogSection();
+    finishLoading([news]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      events,
+    ]);
   });
 
   it('keeps the input and the list after a rejected creation', async (context: TestContext) => {

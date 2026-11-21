@@ -20,12 +20,17 @@ export function catalogSectionsQueryOptions(
   });
 }
 
-export function updateCatalogSectionsCache({
+export async function updateCatalogSectionsCache({
   queryClient,
-  sections,
+  update,
 }: {
   queryClient: QueryClient;
-  sections: CatalogSection[];
-}): void {
-  queryClient.setQueryData(catalogSectionsQueryKey, sections);
+  update: (sections: CatalogSection[]) => CatalogSection[];
+}): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: catalogSectionsQueryKey });
+  queryClient.setQueryData<CatalogSection[]>(
+    catalogSectionsQueryKey,
+    (sections) => sections && update(sections),
+  );
+  await queryClient.invalidateQueries({ queryKey: catalogSectionsQueryKey });
 }
