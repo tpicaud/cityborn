@@ -115,3 +115,149 @@ describe('SessionGateway.leaveGame', () => {
     });
   });
 });
+
+describe('SessionGateway presence reconciliation', () => {
+  const intervalMs: number = sessionPresenceTiming.reconciliationIntervalMs;
+
+  function buildPresenceGateway(): {
+    gateway: SessionGateway;
+    sessionService: DeepMocked<SessionService>;
+    io: DeepMocked<AppServer>;
+  } {
+    const sessionService: DeepMocked<SessionService> =
+      createMock<SessionService>();
+    sessionService.listSessionIDs.mockResolvedValue([]);
+    sessionService.hasPlayerAbsence.mockReturnValue(false);
+    const gateway: SessionGateway = new SessionGateway(
+      sessionService,
+      createMock<WideEventService>(),
+      createMock<WsWideEventLifecycle>({
+        runDisconnection: async (_socket, _eventName, handler) => handler(),
+      }),
+      sessionPresenceTiming,
+    );
+    const io: DeepMocked<AppServer> = createMock<AppServer>();
+    io.fetchSockets.mockResolvedValue([]);
+    gateway.io = io;
+    return { gateway, sessionService, io };
+  }
+
+  function buildPlayerSocket(): DeepMocked<AppSocket> {
+    const session: Session = buildSession();
+    return createMock<AppSocket>({
+      data: { player: { sessionID: session.id, playerID: session.hostID } },
+    });
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('stops after the startup pass when no absence is in progress', async () => {
+    const {
+      gateway,
+      sessionService,
+      io,
+    }: ReturnType<typeof buildPresenceGateway> = buildPresenceGateway();
+
+    gateway.afterInit();
+    await jest.advanceTimersByTimeAsync(intervalMs * 3);
+
+    expect(jest.getTimerCount()).toBe(0);
+    expect(sessionService.listSessionIDs).toHaveBeenCalledTimes(1);
+    expect(io.fetchSockets).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs after a player disconnects until the absence is resolved', async () => {
+    const { gateway, sessionService }: ReturnType<typeof buildPresenceGateway> =
+      buildPresenceGateway();
+    sessionService.hasPlayerAbsence
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(true)
+      .mockReturnValue(false);
+
+    await gateway.handleDisconnect(buildPlayerSocket());
+    await jest.advanceTimersByTimeAsync(intervalMs * 5);
+
+    expect(jest.getTimerCount()).toBe(0);
+    expect(sessionService.listSessionIDs).toHaveBeenCalledTimes(3);
+  });
+
+  it('ignores the disconnection of a socket without player', async () => {
+    const { gateway }: ReturnType<typeof buildPresenceGateway> =
+      buildPresenceGateway();
+
+    await gateway.handleDisconnect(createMock<AppSocket>({ data: {} }));
+
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('does not start a second loop when a player disconnects while it runs', async () => {
+    const { gateway, sessionService }: ReturnType<typeof buildPresenceGateway> =
+      buildPresenceGateway();
+
+    gateway.afterInit();
+    await gateway.handleDisconnect(buildPlayerSocket());
+
+    expect(jest.getTimerCount()).toBe(1);
+
+    await jest.advanceTimersByTimeAsync(intervalMs);
+
+    expect(sessionService.listSessionIDs).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs another pass when a player disconnects during a pass', async () => {
+    const {
+      gateway,
+      sessionService,
+      io,
+    }: ReturnType<typeof buildPresenceGateway> = buildPresenceGateway();
+    io.fetchSockets.mockImplementationOnce(async () => {
+      await gateway.handleDisconnect(buildPlayerSocket());
+      return [];
+    });
+
+    gateway.afterInit();
+    await jest.advanceTimersByTimeAsync(intervalMs * 3);
+
+    expect(sessionService.listSessionIDs).toHaveBeenCalledTimes(2);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('retries a pass that failed', async () => {
+    const {
+      gateway,
+      sessionService,
+      io,
+    }: ReturnType<typeof buildPresenceGateway> = buildPresenceGateway();
+    io.fetchSockets.mockRejectedValueOnce(new Error('redis unavailable'));
+
+    gateway.afterInit();
+    await jest.advanceTimersByTimeAsync(intervalMs * 3);
+
+    expect(io.fetchSockets).toHaveBeenCalledTimes(2);
+    expect(sessionService.listSessionIDs).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('does not restart once the module is destroyed', async () => {
+    const {
+      gateway,
+      sessionService,
+      io,
+    }: ReturnType<typeof buildPresenceGateway> = buildPresenceGateway();
+    gateway.afterInit();
+
+    gateway.onModuleDestroy();
+    await gateway.handleDisconnect(buildPlayerSocket());
+    await jest.advanceTimersByTimeAsync(intervalMs * 3);
+
+    expect(jest.getTimerCount()).toBe(0);
+    expect(io.fetchSockets).not.toHaveBeenCalled();
+    expect(sessionService.listSessionIDs).not.toHaveBeenCalled();
+  });
+});

@@ -52,6 +52,8 @@ export class SessionGateway
   implements OnGatewayInit, OnGatewayDisconnect, OnModuleDestroy
 {
   private presenceReconciliationTimer: NodeJS.Timeout | undefined;
+  private isPresenceReconciliationRequested: boolean = false;
+  private isPresenceReconciliationStopped: boolean = false;
 
   constructor(
     private readonly sessionService: SessionService,
@@ -65,10 +67,11 @@ export class SessionGateway
   io!: AppServer;
 
   afterInit(): void {
-    this.schedulePresenceReconciliation();
+    this.requestPresenceReconciliation();
   }
 
   onModuleDestroy(): void {
+    this.isPresenceReconciliationStopped = true;
     clearTimeout(this.presenceReconciliationTimer);
     this.presenceReconciliationTimer = undefined;
   }
@@ -298,11 +301,21 @@ export class SessionGateway
     this.broadcastSession(session);
   }
 
-  private schedulePresenceReconciliation(): void {
+  private requestPresenceReconciliation(): void {
+    if (this.isPresenceReconciliationStopped) return;
+
+    this.isPresenceReconciliationRequested = true;
+    if (this.presenceReconciliationTimer) return;
+
     this.presenceReconciliationTimer = setTimeout(async () => {
+      this.isPresenceReconciliationRequested = false;
       await this.reconcilePlayerPresence();
-      if (this.presenceReconciliationTimer)
-        this.schedulePresenceReconciliation();
+      this.presenceReconciliationTimer = undefined;
+      if (
+        this.isPresenceReconciliationRequested ||
+        this.sessionService.hasPlayerAbsence()
+      )
+        this.requestPresenceReconciliation();
     }, this.sessionPresenceTiming.reconciliationIntervalMs);
   }
 
@@ -319,7 +332,7 @@ export class SessionGateway
         ),
       );
     } catch (error) {
-      this.recordPresenceReconciliationError(error);
+      this.retryPresenceReconciliationAfter(error);
     }
   }
 
@@ -340,11 +353,12 @@ export class SessionGateway
         });
       if (session) this.broadcastSession(session);
     } catch (error) {
-      this.recordPresenceReconciliationError(error);
+      this.retryPresenceReconciliationAfter(error);
     }
   }
 
-  private recordPresenceReconciliationError(error: unknown): void {
+  private retryPresenceReconciliationAfter(error: unknown): void {
+    this.isPresenceReconciliationRequested = true;
     this.wideEventService.recordOperationError(error, {
       domain: 'session',
       operation: 'session.presence-reconciliation',
@@ -363,6 +377,7 @@ export class SessionGateway
           sessionId: player.sessionID,
           playerId: player.playerID,
         });
+        this.requestPresenceReconciliation();
       },
     );
   }
