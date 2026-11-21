@@ -17,12 +17,12 @@ Terminé quand chaque référence de l'issue est vérifiée dans le repo et que 
 ## Développer
 
 1. Charger les skills de conventions des périmètres touchés.
-2. Implémenter le périmètre demandé, avec ses tests.
+2. Implémenter le plus petit changement qui satisfait l'issue, avec ses tests : le cas demandé, pas chaque cas imaginable.
 
 ## Vérifier
 
-1. Prouver chaque critère d'acceptation par un test ou une commande, sans lancer l'app.
-2. Reporter chaque critère non prouvé dans « Critères non satisfaits ».
+1. Prouver chaque critère d'acceptation par un test ou une commande, sans lancer l'app ; un critère marqué « (vérification manuelle) » va dans « À vérifier en recette ».
+2. Reporter chaque autre critère non prouvé dans « Critères non satisfaits ».
 
 Terminé quand chaque critère a sa preuve ou sa place dans le rapport.
 

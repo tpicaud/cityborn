@@ -14,13 +14,17 @@ La review rend des findings : le code, la branche et GitHub restent inchangés. 
 3. Charger les skills de conventions des périmètres du diff.
 4. Relire chaque fichier modifié avec son contexte, à travers chaque axe de la [checklist](#checklist). Ouvrir les appelants et les fichiers voisins dès qu'un constat en dépend.
 5. Confirmer chaque finding en relisant le code concerné : garder ce qui est démontré par le code, écarter le soupçon.
+6. En relecture, avec la tête relue au tour précédent, les findings transmis et le plus grand ID attribué :
+   - statuer sur chaque finding transmis : `résolu`, ou `ouvert` avec l'argument tiré du code quand le correctif manque ou que le rejet ne tient pas ;
+   - revérifier la preuve de chaque critère d'acceptation ;
+   - relever les nouveaux findings dans `git diff <tête précédente>..HEAD` seulement, numérotés après le plus grand ID attribué.
 
-L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaque axe.
+L'étape 4 est terminée quand chaque fichier du diff, ou du delta en relecture, a été confronté à chaque axe ; l'étape 6 quand chaque finding transmis a un statut.
 
 ## Checklist
 
-- **Issue** : critères d'acceptation satisfaits, périmètre respecté.
-- **Correction** : logique, cas limites, erreurs propagées, concurrence, états partiels.
+- **Issue** : chaque critère d'acceptation satisfait et prouvé par un test ou une commande, sauf un critère « (vérification manuelle) » ; rien d'ajouté hors de l'issue.
+- **Correction** : logique, cas limites, erreurs propagées, concurrence, états partiels, appelants cassés hors du diff.
 - **Sécurité** : authentification et autorisation de chaque route ou event touché, validation zod des entrées, secrets absents du code, des logs et des réponses, données exposées au strict nécessaire, injections.
 - **Règles d'`AGENTS.md`** : chaque règle, dont chaque symptôme de « Découpage ».
 - **Skills de conventions** : chaque règle des skills chargés à l'étape 3.
@@ -29,15 +33,15 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 
 ## Format des findings
 
-Rendre les findings du plus grave au moins grave, d'abord dans un tableau récapitulatif, une ligne par finding :
+Ouvrir le rapport par `tête relue : <sha> · modèle : <modèle>`, puis, en relecture, une ligne `<ID> : résolu` ou `<ID> : ouvert : <argument>` par finding transmis. Rendre ensuite les nouveaux findings du plus grave au moins grave, d'abord dans un tableau récapitulatif, une ligne par finding :
 
 | ID | Gravité | Périmètre | Emplacement | Résumé |
 |---|---|---|---|---|
 | `F1` | 🔴 bloquant | issue | `chemin:ligne` | le constat en une phrase |
 
 - `ID` : `F1`, `F2`… ;
-- `Gravité` : 🔴 `bloquant` (bug, faille, critère non satisfait), 🟠 `majeur` (règle d'`AGENTS.md` ou d'un skill violée) ou 🟡 `mineur` ;
-- `Périmètre` : `issue` (à corriger dans la PR) ou `hors périmètre` (architecture préexistante, à signaler seulement) ;
+- `Gravité` : 🔴 `bloquant` (bug, faille, critère non satisfait ou sans preuve), 🟠 `majeur` (règle d'`AGENTS.md` ou d'un skill violée, test manquant, ajout hors de l'issue) ou 🟡 `mineur` ;
+- `Périmètre` : `issue` (introduit par le diff, ou défaut qui empêche un critère même hors du diff) ou `hors périmètre` (défaut préexistant sans effet sur les critères, à signaler seulement) ;
 - `Emplacement` : `chemin:ligne`.
 
 Puis, sous le tableau, une section par finding titrée `<ID> <emoji de gravité> <résumé>`, avec :
