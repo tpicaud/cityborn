@@ -116,8 +116,6 @@ pnpm dev:mobile
 
 Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo. En cas d'échec de connexion, vérifier que les ports Metro et backend du slot (`8081` et `4000` dans le principal) sont accessibles depuis le téléphone (pare-feu).
 
-Sous WSL, le téléphone joint la machine Windows, pas WSL : activer le mode réseau `mirrored` (`networkingMode=mirrored` dans `%UserProfile%\.wslconfig`, puis `wsl --shutdown`), ou ajouter une règle `netsh interface portproxy` vers l'IP de WSL pour chaque port Metro et backend des slots utilisés.
-
 ## Organisation
 
 ```text
