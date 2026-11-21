@@ -8,9 +8,12 @@ Usage: scripts/setup-worktree.sh [chemin_du_worktree] [--skip-install]
 Sans argument, prépare le worktree courant.
   - conserve les .env présents et copie seulement les manquants depuis le principal
   - vérifie les .env requis des apps
-  - supprime les env Docker des worktrees disparus
-  - lance le PostgreSQL et le Redis du worktree, et écrit leurs URL dans apps/backend/.env
+  - supprime les env de dev des worktrees disparus
+  - au premier setup, attribue au worktree le premier slot libre de 1 à 9
+  - lance son env de dev, le projet Docker Compose cityborn-<dossier du worktree>
+  - écrit le nom du projet et les ports du slot dans les .env des apps
   - exécute `pnpm install` dans le worktree (sauf --skip-install)
+  - migre et seede sa base cityborn_dev
 USAGE
 }
 
@@ -40,7 +43,7 @@ if [ ! -d "$target" ]; then
 fi
 
 target_root="$(git -C "$target" rev-parse --show-toplevel)"
-main_root="$(git -C "$target" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}')"
+main_root="$(git -C "$target_root" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}')"
 
 if [ ! -d "$main_root" ]; then
   echo "Checkout principal introuvable : $main_root" >&2
@@ -94,81 +97,122 @@ if [ "$missing_env" = true ]; then
   exit 1
 fi
 
-compose_file="$target_root/apps/backend/docker-compose.resources.yml"
-backend_env="$target_root/apps/backend/.env"
-host_id="$(cat /etc/machine-id 2>/dev/null || hostname)"
-worktree_name="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
-project="cityborn-${worktree_name%-}"
-case "$project" in
-  cityborn-dev|cityborn-test)
-    echo "Le dossier du worktree ne peut pas s'appeler dev ni test : $project est l'env Docker du checkout principal." >&2
-    exit 1
-    ;;
-esac
-
-docker ps --all --filter "label=cityborn.host=$host_id" \
-  --format '{{.Label "com.docker.compose.project"}}	{{.Label "cityborn.checkout"}}' |
-  sort -u |
-  while IFS=$'\t' read -r orphan_project orphan_checkout; do
-    if [ ! -d "$orphan_checkout" ] || { [ "$orphan_checkout" = "$target_root" ] && [ "$orphan_project" != "$project" ]; }; then
-      echo "  env supprimé $orphan_project ($orphan_checkout)"
-      docker compose -p "$orphan_project" -f "$compose_file" --profile test down --volumes --remove-orphans >/dev/null 2>&1 ||
-        echo "  suppression impossible : $orphan_project" >&2
-    fi
-  done
-
-project_owner="$(docker ps --all --filter "label=com.docker.compose.project=$project" --format '{{.Label "cityborn.checkout"}}' | head -n 1)"
-if [ -n "$project_owner" ] && [ "$project_owner" != "$target_root" ]; then
-  echo "L'env Docker $project appartient déjà à $project_owner : renommer le dossier de l'un des deux worktrees." >&2
-  exit 1
-fi
-
-published_port() {
-  docker compose -p "$project" -f "$compose_file" --profile test port "$1" "$2" 2>/dev/null | sed 's/.*://' || true
+env_value() {
+  { grep -m 1 "^$2=" "$1" 2>/dev/null || true; } | cut -d= -f2- | tr -d '\r'
 }
 
-free_port() {
-  local port
-  while :; do
-    port=$((20000 + RANDOM % 20000))
-    if [ "$port" != "${1:-}" ] && ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
-      echo "$port"
-      return
-    fi
-  done
-}
-
-postgres_port="$(published_port postgis-test 5432)"
-postgres_port="${postgres_port:-$(free_port)}"
-redis_port="$(published_port redis-test 6379)"
-redis_port="${redis_port:-$(free_port "$postgres_port")}"
-
-echo "Env Docker  : $project (PostgreSQL $postgres_port, Redis $redis_port)"
-CITYBORN_CHECKOUT="$target_root" CITYBORN_HOST="$host_id" TEST_POSTGRES_PORT="$postgres_port" TEST_REDIS_PORT="$redis_port" \
-  docker compose -p "$project" -f "$compose_file" --profile test --progress quiet \
-  up -d --wait --quiet-pull --remove-orphans postgis-test redis-test
-
-set_backend_env() {
-  if grep -q "^$1=" "$backend_env"; then
-    sed -i.bak "s|^$1=.*|$1=$2|" "$backend_env"
-    rm -f "$backend_env.bak"
+set_env() {
+  local file="$1" key="$2" value="$3"
+  if grep -q "^$key=" "$file"; then
+    KEY="$key" VALUE="$value" awk 'index($0, ENVIRON["KEY"] "=") == 1 { print ENVIRON["KEY"] "=" ENVIRON["VALUE"]; next } { print }' \
+      "$file" > "$file.tmp"
+    mv "$file.tmp" "$file"
   else
-    [ -z "$(tail -c 1 "$backend_env")" ] || echo >> "$backend_env"
-    echo "$1=$2" >> "$backend_env"
+    [ -z "$(tail -c 1 "$file")" ] || echo >> "$file"
+    echo "$key=$value" >> "$file"
   fi
 }
 
-postgres_url="postgresql://cityborn_test:cityborn_test@127.0.0.1:$postgres_port"
-set_backend_env DATABASE_URL "$postgres_url/cityborn_dev"
-set_backend_env DIRECT_URL "$postgres_url/cityborn_dev"
-set_backend_env TEST_DATABASE_URL "$postgres_url/cityborn_test"
-set_backend_env TEST_REDIS_URL "redis://127.0.0.1:$redis_port/0"
-
-if [ "$skip_install" = true ]; then
-  echo "pnpm install ignoré (--skip-install)."
-  exit 0
+compose_file="$target_root/apps/backend/docker-compose.resources.yml"
+backend_env="$target_root/apps/backend/.env"
+folder="$(basename "$target_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
+project="cityborn-${folder%-}"
+if [ "$project" = "cityborn-main" ]; then
+  echo "Le dossier du worktree ne peut pas s'appeler main : cityborn-main est l'env du checkout principal." >&2
+  exit 1
 fi
 
-echo "pnpm install…"
+docker ps --all --filter label=com.docker.compose.project \
+  --format '{{.Label "com.docker.compose.project"}}	{{.Label "com.docker.compose.project.config_files"}}' |
+  sort -u |
+  while IFS=$'\t' read -r env_project env_compose_file; do
+    case "$env_project" in cityborn-*) ;; *) continue ;; esac
+    env_checkout="${env_compose_file%%/apps/backend/*}"
+    [ ! -e "${env_compose_file%%,*}" ] && [ -d "$(dirname "$env_checkout")" ] || continue
+    echo "  env supprimé $env_project ($env_checkout)"
+    docker compose -p "$env_project" down --volumes --remove-orphans >/dev/null 2>&1 ||
+      echo "  suppression impossible : $env_project" >&2
+  done
+
+project_compose_file="$(docker ps --all --filter "label=com.docker.compose.project=$project" \
+  --format '{{.Label "com.docker.compose.project.config_files"}}' | sort -u | head -n 1)"
+if [ -n "$project_compose_file" ] && [ "${project_compose_file%%,*}" != "$compose_file" ]; then
+  echo "L'env $project appartient déjà à ${project_compose_file%%/apps/backend/*} : renommer le dossier de l'un des deux worktrees." >&2
+  exit 1
+fi
+
+postgres_port="$(env_value "$backend_env" POSTGRES_PORT)"
+if [ "$(env_value "$backend_env" COMPOSE_PROJECT_NAME)" = "$project" ] && [ -n "$postgres_port" ]; then
+  slot=$(((postgres_port - 5432) / 10))
+else
+  used_postgres_ports="$(
+    git -C "$target_root" worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}' |
+      while IFS= read -r checkout; do
+        [ "$checkout" != "$target_root" ] || continue
+        port="$(env_value "$checkout/apps/backend/.env" POSTGRES_PORT)"
+        echo "${port:-5432}"
+      done
+  )"
+  slot=""
+  for candidate in 1 2 3 4 5 6 7 8 9; do
+    if ! grep -qx "$((5432 + 10 * candidate))" <<< "$used_postgres_ports"; then
+      slot="$candidate"
+      break
+    fi
+  done
+  if [ -z "$slot" ]; then
+    echo "Aucun slot libre parmi 1 à 9 : supprimer un worktree inutilisé." >&2
+    exit 1
+  fi
+fi
+
+slot_port() {
+  echo $(($1 + 10 * slot))
+}
+
+postgres_port="$(slot_port 5432)"
+redis_port="$(slot_port 6379)"
+redis_test_port="$(slot_port 6380)"
+backend_port="$(slot_port 4000)"
+frontend_port="$(slot_port 3000)"
+back_office_port="$(slot_port 3001)"
+metro_port="$(slot_port 8081)"
+
+echo "Env de dev  : $project (slot $slot : PostgreSQL $postgres_port, Redis $redis_port, Redis de test $redis_test_port)"
+COMPOSE_PROJECT_NAME="$project" COMPOSE_PROFILES="" POSTGRES_PORT="$postgres_port" REDIS_PORT="$redis_port" \
+  REDIS_TEST_PORT="$redis_test_port" \
+  docker compose -f "$compose_file" --progress quiet up -d --wait --quiet-pull --remove-orphans
+
+for app_env in "$target_root"/apps/*/.env "$target_root"/apps/*/.env.local "$target_root"/apps/*/.env.development "$target_root"/apps/*/.env.development.local; do
+  [ -f "$app_env" ] || continue
+  BACKEND="$backend_port" FRONTEND="$frontend_port" BACK_OFFICE="$back_office_port" METRO="$metro_port" \
+    perl -pi -e 's/:4000(?!\d)/:$ENV{BACKEND}/g; s/:3000(?!\d)/:$ENV{FRONTEND}/g; s/:3001(?!\d)/:$ENV{BACK_OFFICE}/g; s/:8081(?!\d)/:$ENV{METRO}/g' \
+    "$app_env"
+done
+
+set_env "$backend_env" COMPOSE_PROJECT_NAME "$project"
+set_env "$backend_env" COMPOSE_PROFILES ""
+set_env "$backend_env" POSTGRES_PORT "$postgres_port"
+set_env "$backend_env" REDIS_PORT "$redis_port"
+set_env "$backend_env" REDIS_TEST_PORT "$redis_test_port"
+set_env "$backend_env" PORT "$backend_port"
+set_env "$backend_env" DATABASE_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
+set_env "$backend_env" DIRECT_URL "postgresql://postgres:postgres@localhost:$postgres_port/cityborn_dev"
+set_env "$backend_env" REDIS_URL "redis://localhost:$redis_port/0"
+set_env "$backend_env" TEST_DATABASE_URL "postgresql://cityborn_test:cityborn_test@localhost:$postgres_port/cityborn_test"
+set_env "$backend_env" TEST_REDIS_URL "redis://localhost:$redis_test_port/0"
+set_env "$target_root/apps/frontend/.env" PORT "$frontend_port"
+set_env "$target_root/apps/back-office/.env" PORT "$back_office_port"
+set_env "$target_root/apps/mobile/.env" RCT_METRO_PORT "$metro_port"
+
 cd "$target_root"
-pnpm install
+if [ "$skip_install" = true ]; then
+  echo "pnpm install ignoré (--skip-install)."
+else
+  echo "pnpm install…"
+  pnpm install
+fi
+
+echo "Migrations et seed de cityborn_dev…"
+pnpm --dir apps/backend exec prisma migrate deploy
+pnpm --dir apps/backend exec prisma db seed

@@ -1,7 +1,5 @@
 node_modules
 dist
-docker-data
-redis-data
 .turbo
 *.tsbuildinfo
 
