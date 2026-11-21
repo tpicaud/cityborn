@@ -7,6 +7,8 @@ import { IdModule } from '../id/id.module';
 import { LockModule } from '../lock/lock.module';
 import { PackModule } from '../pack/pack.module';
 import { RedisModule } from '../redis/redis.module';
+import { RedisSessionRepository } from './repositories/redis-session.repository';
+import { SESSION_REPOSITORY } from './repositories/session.repository';
 import { SessionController } from './session.controller';
 import { SessionGateway } from './session.gateway';
 import { SessionService } from './session.service';
@@ -29,6 +31,7 @@ import {
   providers: [
     { provide: SESSION_PRESENCE_TIMING, useValue: sessionPresenceTiming },
     SessionService,
+    { provide: SESSION_REPOSITORY, useClass: RedisSessionRepository },
     GameService,
     SessionGateway,
   ],
