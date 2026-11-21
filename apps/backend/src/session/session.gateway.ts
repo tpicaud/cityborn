@@ -325,7 +325,7 @@ export class SessionGateway
         await this.io.fetchSockets()
       ).flatMap(({ data }) => (data.player ? [data.player] : []));
       const sessionIDs: SessionId[] =
-        await this.sessionService.listSessionIDs();
+        await this.sessionService.pruneExpiredSessionsAndListIDs();
       await Promise.all(
         sessionIDs.map((sessionID) =>
           this.reconcileSessionPresence({ sessionID, presentPlayers }),

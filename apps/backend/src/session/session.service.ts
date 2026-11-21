@@ -525,7 +525,7 @@ export class SessionService {
     });
   }
 
-  async listSessionIDs(): Promise<SessionId[]> {
+  async pruneExpiredSessionsAndListIDs(): Promise<SessionId[]> {
     await this.redisService.redisClient.zremrangebyscore(
       this.sessionExpirationsKey,
       '-inf',

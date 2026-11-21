@@ -1357,7 +1357,9 @@ describe('SessionService connection operations', () => {
 
       expect(absenceChecks).toEqual([false, true, false]);
     });
+  });
 
+  describe('pruneExpiredSessionsAndListIDs', () => {
     it('forgets the absences of a session expired from the index', async () => {
       const session: Session = buildSession();
       const {
@@ -1370,7 +1372,7 @@ describe('SessionService connection operations', () => {
       });
       redisService.redisClient.zrange.mockResolvedValue([]);
 
-      await sessionService.listSessionIDs();
+      await sessionService.pruneExpiredSessionsAndListIDs();
 
       expect(sessionService.hasPlayerAbsence()).toBe(false);
     });
