@@ -5,6 +5,7 @@ export const CATALOG_SECTION_REPOSITORY = Symbol('CATALOG_SECTION_REPOSITORY');
 export class CatalogSectionNameAlreadyExistsError extends Error {}
 
 export interface CatalogSectionRepository {
+  lockOrder(): Promise<void>;
   findAll(): Promise<CatalogSection[]>;
   create(name: string): Promise<CatalogSection>;
   rename(data: {
