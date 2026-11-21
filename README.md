@@ -22,29 +22,66 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 Renseigner ensuite les variables requises dans les fichiers `.env` (demander les valeurs sensibles à l'équipe).
 
-Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du checkout principal, lance un PostgreSQL et un Redis propres au worktree, écrit leurs URL dans `apps/backend/.env`, puis lance `pnpm install`. Les tests et les commandes `pnpm db:dev:*` du worktree visent ainsi son env Docker, jamais celui du checkout principal. Le script supprime aussi les env Docker des worktrees disparus ; le relancer recrée l'env s'il manque.
+## Env de dev
+
+Chaque checkout, principal ou worktree, a son env de dev : un projet Docker Compose `cityborn-slot-<slot>` avec un PostgreSQL (bases `cityborn_dev` et `cityborn_test`) et un Redis (base `0` pour le dev, `1` pour les tests), dans des volumes nommés.
+
+- **Slot** : `0` pour le principal ; un worktree reçoit le premier slot libre de `1` à `9`, gardé dans `.cityborn-slot` à sa racine.
+- **Ports** : chaque port vaut son défaut + 10 × slot.
+
+| Service | Défaut (slot 0) | Slot 1 |
+|---|---|---|
+| Backend | 4000 | 4010 |
+| Frontend | 3000 | 3010 |
+| Back-office | 3001 | 3011 |
+| Metro | 8081 | 8091 |
+| PostgreSQL | 5432 | 5442 |
+| Redis | 6379 | 6389 |
+
+La connexion Google sur le web suppose que le client OAuth de dev autorise les origines `http://localhost:3000` à `3090` et `3001` à `3091`.
+
+`pnpm env:start` lance l'env du checkout courant et `pnpm env:stop` l'arrête en gardant ses données. Dans le principal, `env:start` lance aussi le projet `cityborn-tools` : Adminer sur `http://localhost:8080` et RedisInsight sur `http://localhost:5540`, branchés sur le PostgreSQL et le Redis du slot 0.
+
+Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable et garde le slot :
+
+- copie les `.env` manquants depuis le principal ;
+- supprime l'env des worktrees disparus, ce qui libère leur slot ;
+- attribue le slot et écrit ses ports et URL dans les `.env` des apps, en gardant l'IP locale des URL mobiles ;
+- lance `pnpm env:start`, `pnpm install`, puis migre et seede `cityborn_dev`.
+
+Dans un worktree non préparé, `pnpm env:start` échoue et renvoie à ce script.
+
+### Passer au nouveau modèle
+
+Dans le checkout principal, une fois sur une branche qui contient ce modèle :
+
+```bash
+docker compose -p cityborn-dev down --volumes
+docker compose -p cityborn-test down --volumes
+sudo rm -rf apps/backend/docker-data apps/backend/redis-data
+```
+
+Reporter ensuite dans les `.env` du principal les valeurs des `.env.example` (`DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `TEST_*`, `RCT_METRO_PORT`), puis relancer `./scripts/setup-worktree.sh` dans chaque worktree à jour de `main`.
 
 ## Lancement
 
 ```bash
-pnpm db:dev:start   # PostgreSQL et Redis
+pnpm env:start      # env de dev du checkout
 pnpm db:dev:reset   # base vidée, migrations et seed de développement
-pnpm dev:web    # frontend, back-office et backend
+pnpm dev:web        # frontend, back-office et backend
 ```
 
-`pnpm db:dev:up` applique les nouvelles migrations sans vider la base.
+`pnpm db:dev:up` applique les nouvelles migrations sans vider la base. Dans un worktree préparé, `pnpm env:start` suffit : sa base est déjà migrée et seedée.
 
 `pnpm lint` vérifie le formatage et les règles de code ; `pnpm format` applique les corrections. `pnpm typecheck` vérifie les types. `pnpm check` lance les vérifications de types et Biome. Ces commandes existent aussi dans chaque app et package.
 
-- Frontend : `http://localhost:3000`
-- Back-office : `http://localhost:3001`
-- Backend : `http://localhost:4000`
+Les apps écoutent sur les ports du slot : `http://localhost:3000` (frontend), `3001` (back-office) et `4000` (backend) dans le principal.
 
-`pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`). `pnpm db:dev:stop` arrête PostgreSQL et Redis.
+`pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`).
 
-`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Dans un worktree préparé par `setup-worktree.sh`, ces ressources tournent déjà. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites sur la base `cityborn_test` et le Redis `1` de l'env du checkout, sans toucher aux données de dev. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
 
-`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Dans le checkout principal, lancer `pnpm db:test:start` avant.
+`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Il demande l'env du checkout lancé.
 
 La seed crée deux comptes :
 
@@ -72,11 +109,13 @@ Lancer le workflow GitHub Actions `Build Android App` ou `Build iOS App` (**Acti
 ### 3. Lancer l'app
 
 ```bash
-pnpm db:dev:start
+pnpm env:start
 pnpm dev:mobile
 ```
 
-Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo. En cas d'échec de connexion, vérifier que les ports `8081` (Metro) et `4000` (backend) sont accessibles (pare-feu, WSL).
+Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo. En cas d'échec de connexion, vérifier que les ports Metro et backend du slot (`8081` et `4000` dans le principal) sont accessibles depuis le téléphone (pare-feu).
+
+Sous WSL, le téléphone joint la machine Windows, pas WSL : activer le mode réseau `mirrored` (`networkingMode=mirrored` dans `%UserProfile%\.wslconfig`, puis `wsl --shutdown`), ou ajouter une règle `netsh interface portproxy` vers l'IP de WSL pour chaque port Metro et backend des slots utilisés.
 
 ## Organisation
 

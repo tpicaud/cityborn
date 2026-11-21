@@ -34,5 +34,5 @@
 
 ## Commandes
 
-- Dans un worktree, le PostgreSQL et le Redis de test tournent depuis `scripts/setup-worktree.sh` ; le relancer s'ils manquent. Dans le checkout principal, `pnpm db:test:start` avant `pnpm test:int` ou `pnpm test:e2e`.
+- `pnpm test:int` et `pnpm test:e2e` visent la base `cityborn_test` et le Redis de test de l'env du checkout : `pnpm env:start` le lance, après `scripts/setup-worktree.sh` dans un worktree.
 - Intégration et e2e se lancent l'un après l'autre : ils partagent la base de test.
