@@ -8,16 +8,14 @@ import Loader from '@/components/ui/Loader';
 import { ThemeRow } from './theme-row';
 export function ThemesEditor() {
   const editor: ThemesManagement = useThemesManagement();
-  const { creationForm, state }: ThemesManagement = editor;
+  const { creationForm }: ThemesManagement = editor;
   const isBusy: boolean =
     creationForm.formState.isSubmitting ||
     editor.editForm.formState.isSubmitting ||
     editor.isMoving ||
     editor.isDeleting;
   const creationError: string | undefined =
-    creationForm.formState.errors.name?.message ??
-    state.creationError ??
-    undefined;
+    creationForm.formState.errors.name?.message;
   return (
     <section
       className="flex w-full flex-col gap-6 overflow-auto"
@@ -54,9 +52,9 @@ export function ThemesEditor() {
           </p>
         )}
       </form>
-      {editor.loadError ? (
+      {editor.hasLoadError ? (
         <div role="alert" className="text-red-400">
-          <p>{editor.loadError}</p>
+          <p>Les thèmes n'ont pas pu être chargés.</p>
           <Button onClick={editor.reload}>Réessayer</Button>
         </div>
       ) : editor.isLoading ? (

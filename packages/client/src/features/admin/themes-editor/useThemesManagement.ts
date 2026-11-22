@@ -1,7 +1,6 @@
 'use client';
 import {
   type AdminTheme,
-  resolveErrorMessage,
   type SaveTheme,
   SaveThemeSchema,
   type ThemeId,
@@ -17,6 +16,10 @@ import { useReducer, useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
 import { themesQueryOptions } from '../../../domains/theme/themeQueries';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../../shared/errorReporter';
 import {
   initialThemeEditorState,
   type ThemeEditorState,
@@ -38,17 +41,17 @@ export type ThemesManagement = ThemeMutations & {
   isMoving: boolean;
   isDeleting: boolean;
   isLoading: boolean;
-  loadError: string | null;
+  hasLoadError: boolean;
   reload: () => void;
 };
 const noThemes: AdminTheme[] = [];
 export function useThemesManagement(): ThemesManagement {
   const { themeApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const query: UseQueryResult<AdminTheme[]> = useQuery({
-    ...themesQueryOptions(themeApi),
-    meta: { reportsError: false },
-  });
+  const { reportError }: ErrorReporter = useErrorReporter();
+  const query: UseQueryResult<AdminTheme[]> = useQuery(
+    themesQueryOptions(themeApi),
+  );
   const [state, dispatch] = useReducer(
     themeEditorReducer,
     initialThemeEditorState,
@@ -77,7 +80,7 @@ export function useThemesManagement(): ThemesManagement {
     isMoving,
     isDeleting,
     isLoading: query.isPending,
-    loadError: query.isError ? resolveErrorMessage(query.error) : null,
+    hasLoadError: query.isError,
     reload: () => {
       query.refetch();
     },
@@ -95,6 +98,7 @@ export function useThemesManagement(): ThemesManagement {
       creationForm,
       editForm,
       dispatch,
+      reportError,
       setIsMoving,
       setIsDeleting,
     }),
