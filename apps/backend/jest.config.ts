@@ -51,6 +51,9 @@ const infrastructureProject = {
   setupFilesAfterEnv: ['<rootDir>/test/support/setupAfterEnv.ts'],
 } satisfies Config;
 
+const databaseRestoreSpec: string =
+  '<rootDir>/test/integration/database-restore.integration.spec.ts';
+
 const config: Config = {
   passWithNoTests: true,
   maxWorkers: 1,
@@ -78,6 +81,12 @@ const config: Config = {
       ...infrastructureProject,
       displayName: 'integration',
       testMatch: ['<rootDir>/**/*.integration.spec.ts'],
+      testPathIgnorePatterns: ['/node_modules/', databaseRestoreSpec],
+    },
+    {
+      ...infrastructureProject,
+      displayName: 'database-restore',
+      testMatch: [databaseRestoreSpec],
     },
     {
       ...infrastructureProject,
