@@ -3,6 +3,7 @@ export const THEME_REPOSITORY = Symbol('THEME_REPOSITORY');
 export class ThemeNameAlreadyExistsError extends Error {}
 export class ThemeHasPacksError extends Error {}
 export interface ThemeRepository {
+  lockOrder(): Promise<void>;
   findAll(): Promise<AdminTheme[]>;
   findPlayable(): Promise<Theme[]>;
   findById(id: ThemeId): Promise<Theme | null>;

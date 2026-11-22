@@ -119,6 +119,19 @@ describe('ThemeService.create', () => {
     });
     expect(themeRepository.create).not.toHaveBeenCalled();
   });
+  it('locks the theme order before placing the new theme', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+
+    await themeService.create({ name: 'Cinéma' });
+
+    expect(themeRepository.lockOrder).toHaveBeenCalledTimes(1);
+    expect(themeRepository.lockOrder.mock.invocationCallOrder[0]).toBeLessThan(
+      themeRepository.create.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
   it('translates a name conflict', async () => {
     const {
       themeRepository,
@@ -308,6 +321,21 @@ describe('ThemeService.move', () => {
       sport.id,
       miscellaneous.id,
     ]);
+  });
+
+  it('locks the theme order before reading it', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport, music]);
+
+    await themeService.move({ id: music.id, direction: ThemeMoveDirection.UP });
+
+    expect(themeRepository.lockOrder).toHaveBeenCalledTimes(1);
+    expect(themeRepository.lockOrder.mock.invocationCallOrder[0]).toBeLessThan(
+      themeRepository.findAll.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it('swaps a theme with the next one', async () => {

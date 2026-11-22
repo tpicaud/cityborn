@@ -21,6 +21,10 @@ export class PrismaThemeRepository implements ThemeRepository {
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
+  async lockOrder(): Promise<void> {
+    await this.txHost.tx
+      .$executeRaw`LOCK TABLE "Theme" IN SHARE ROW EXCLUSIVE MODE`;
+  }
   async findAll(): Promise<AdminTheme[]> {
     const themes: (PrismaTheme & { _count: { packs: number } })[] =
       await this.txHost.tx.theme.findMany({
