@@ -80,7 +80,7 @@ export function useThemesManagement(): ThemesManagement {
     isMoving,
     isDeleting,
     isLoading: query.isPending,
-    hasLoadError: query.isError,
+    hasLoadError: query.isLoadingError,
     reload: () => {
       query.refetch();
     },
