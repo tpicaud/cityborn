@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type {
   Game,
   GameConfig,
@@ -31,7 +32,7 @@ import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
-import type { RedisService } from '../redis/redis.service';
+import type { SessionRepository } from './repositories/session.repository';
 import {
   type JoinedSession,
   type LeaveGameResult,
@@ -45,18 +46,14 @@ const sessionId: (value: string) => SessionId = (value: string) =>
   SessionIdSchema.parse(value);
 
 function buildSessionService(session: Session | null) {
-  const redisService: DeepMocked<RedisService> = createMock<RedisService>();
-  redisService.getJSON.mockResolvedValue(session);
-  redisService.setJSON.mockImplementation(async (_key, storedSession) => {
-    redisService.getJSON.mockResolvedValue(storedSession);
-  });
-  const storedHashes: Map<string, string> = new Map<string, string>();
-  redisService.hset.mockImplementation(async (key, field, value) => {
-    storedHashes.set(`${key}:${field}`, value);
-  });
-  redisService.hget.mockImplementation(
-    async (key, field) => storedHashes.get(`${key}:${field}`) ?? null,
+  const sessionRepository: DeepMocked<SessionRepository> =
+    createMock<SessionRepository>();
+  sessionRepository.find.mockResolvedValue(
+    session ? { session, reconnectTokenHashes: {}, roundDeadline: null } : null,
   );
+  sessionRepository.save.mockImplementation(async (storedSession) => {
+    sessionRepository.find.mockResolvedValue(storedSession);
+  });
   const lockService: DeepMocked<LockService> = createMock<LockService>({
     withLock: async (_resource, _ttl, callback) => callback(),
   });
@@ -67,7 +64,7 @@ function buildSessionService(session: Session | null) {
   const eventService: DeepMocked<EventService> = createMock<EventService>();
 
   const sessionService: SessionService = new SessionService(
-    redisService,
+    sessionRepository,
     lockService,
     idService,
     gameService,
@@ -77,7 +74,7 @@ function buildSessionService(session: Session | null) {
 
   return {
     sessionService,
-    redisService,
+    sessionRepository,
     lockService,
     idService,
     gameService,
@@ -89,7 +86,7 @@ describe('SessionService.create', () => {
   it('creates and persists a multiplayer session', async () => {
     const {
       sessionService,
-      redisService,
+      sessionRepository,
       idService,
       eventService,
     }: ReturnType<typeof buildSessionService> = buildSessionService(null);
@@ -107,11 +104,11 @@ describe('SessionService.create', () => {
       hostID: '',
       players: [],
     });
-    expect(redisService.setJSON).toHaveBeenCalledWith(
-      'session:new-session',
-      result,
-      600,
-    );
+    expect(sessionRepository.save).toHaveBeenCalledWith({
+      session: result,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     expect(eventService.trackEvent).toHaveBeenCalledWith({
       name: 'session_created',
       visitorId: 'visitor-1',
@@ -122,7 +119,7 @@ describe('SessionService.create', () => {
   it('creates and persists a solo session waiting for its player', async () => {
     const {
       sessionService,
-      redisService,
+      sessionRepository,
       idService,
     }: ReturnType<typeof buildSessionService> = buildSessionService(null);
     idService.generateNanoId.mockReturnValue('solo-session');
@@ -137,11 +134,11 @@ describe('SessionService.create', () => {
       hostID: '',
       players: [],
     });
-    expect(redisService.setJSON).toHaveBeenCalledWith(
-      'session:solo-session',
-      result,
-      600,
-    );
+    expect(sessionRepository.save).toHaveBeenCalledWith({
+      session: result,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
   });
 
   it('creates a quick play solo session with the default game config', async () => {
@@ -234,7 +231,7 @@ describe('SessionService lobby operations', () => {
       const user: User = buildUser({ username: playerId('alice') });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
       const result: JoinedSession = await sessionService.join(
@@ -252,7 +249,7 @@ describe('SessionService lobby operations', () => {
           connected: true,
         }),
       ]);
-      expect(redisService.setJSON).toHaveBeenCalledTimes(1);
+      expect(sessionRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it('issues a reconnect token only to a guest player', async () => {
@@ -275,23 +272,27 @@ describe('SessionService lobby operations', () => {
       expect(userJoin.reconnectToken).toBeUndefined();
     });
 
-    it('expires the reconnect tokens together with the session', async () => {
+    it('stores the reconnect token hash together with the session', async () => {
       const session: Session = buildSession({ players: [] });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      await sessionService.join(session.id, playerId('guest'));
-
-      expect(redisService.setJSON).toHaveBeenCalledWith(
-        `session:${session.id}`,
-        expect.anything(),
-        600,
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
       );
-      expect(redisService.expire).toHaveBeenCalledWith(
-        `session:${session.id}:reconnect-token-hashes`,
-        600,
+
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          session: expect.objectContaining({ id: session.id }),
+          reconnectTokenHashes: {
+            guest: createHash('sha256')
+              .update(reconnectToken ?? '')
+              .digest('hex'),
+          },
+        }),
       );
     });
 
@@ -325,7 +326,7 @@ describe('SessionService lobby operations', () => {
       });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
       await expect(
@@ -333,7 +334,7 @@ describe('SessionService lobby operations', () => {
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_SOLO_NOT_JOINABLE },
       });
-      expect(redisService.setJSON).not.toHaveBeenCalled();
+      expect(sessionRepository.save).not.toHaveBeenCalled();
     });
 
     it('rejects a duplicate player', async () => {
@@ -447,7 +448,7 @@ describe('SessionService game operations', () => {
       const lightGame: Game = buildGame({ id: game.id });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.createGame.mockResolvedValue(game);
@@ -462,10 +463,10 @@ describe('SessionService game operations', () => {
 
       expect(result.status).toBe(SessionStatus.IN_GAME);
       expect(result.currentGame).toBe(startedGame);
-      expect(redisService.setJSON).toHaveBeenCalledWith(
-        `session:${session.id}`,
-        expect.objectContaining({ currentGame: lightGame }),
-        600,
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          session: expect.objectContaining({ currentGame: lightGame }),
+        }),
       );
     });
 
@@ -496,7 +497,7 @@ describe('SessionService game operations', () => {
       const game: Game = buildGame({ config: buildGameConfig({ timer: 25 }) });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.createGame.mockResolvedValue(game);
@@ -505,10 +506,8 @@ describe('SessionService game operations', () => {
 
       await sessionService.startGame(playerId('host'), session.id);
 
-      expect(redisService.set).toHaveBeenCalledWith(
-        `session:${session.id}:round-deadline`,
-        '1030000',
-        600,
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ roundDeadline: 1_030_000 }),
       );
     });
 
@@ -538,7 +537,7 @@ describe('SessionService game operations', () => {
       });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.applyGuess.mockResolvedValue(updatedGame);
@@ -556,17 +555,21 @@ describe('SessionService game operations', () => {
         connectedPlayerIDs: [playerId('host'), playerId('bob')],
       });
       expect(result.currentGame).toBe(updatedGame);
-      expect(redisService.setJSON).toHaveBeenCalledTimes(1);
+      expect(sessionRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it('scores a guess received after the round deadline as a guess without coordinates', async () => {
       const session: Session = buildSession({ currentGame: guessingGame });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      redisService.get.mockResolvedValue('1000000');
+      sessionRepository.find.mockResolvedValue({
+        session,
+        reconnectTokenHashes: {},
+        roundDeadline: 1_000_000,
+      });
       jest.spyOn(Date, 'now').mockReturnValue(1_000_001);
 
       await sessionService.submitGuess({
@@ -575,9 +578,6 @@ describe('SessionService game operations', () => {
         guess: { coordinates: { lat: 48.85, lng: 2.35 } },
       });
 
-      expect(redisService.get).toHaveBeenCalledWith(
-        `session:${session.id}:round-deadline`,
-      );
       expect(gameService.applyGuess).toHaveBeenCalledWith(
         expect.objectContaining({ coordinates: undefined }),
       );
@@ -587,10 +587,8 @@ describe('SessionService game operations', () => {
       const session: Session = buildSession({ currentGame: guessingGame });
       const {
         sessionService,
-        redisService,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      redisService.get.mockResolvedValue(null);
 
       await sessionService.submitGuess({
         playerID: playerId('host'),
@@ -686,7 +684,7 @@ describe('SessionService game operations', () => {
       });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.resolveNextRound.mockReturnValue({
@@ -708,13 +706,13 @@ describe('SessionService game operations', () => {
         quickPlay: false,
         visitorId: 'visitor-1',
       });
-      expect(redisService.setJSON).toHaveBeenCalledWith(
-        `session:${session.id}`,
+      expect(sessionRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: SessionStatus.IN_LOBBY,
-          currentGame: undefined,
+          session: expect.objectContaining({
+            status: SessionStatus.IN_LOBBY,
+            currentGame: undefined,
+          }),
         }),
-        600,
       );
       expect(result.currentGame).toBe(completedGame);
     });
@@ -745,7 +743,7 @@ describe('SessionService game operations', () => {
       const session: Session = buildSession({ currentGame: game });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.resolveNextRound.mockReturnValue({
@@ -756,10 +754,8 @@ describe('SessionService game operations', () => {
 
       await sessionService.handleNextRound(playerId('host'), session.id);
 
-      expect(redisService.set).toHaveBeenCalledWith(
-        `session:${session.id}:round-deadline`,
-        '1045000',
-        600,
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ roundDeadline: 1_045_000 }),
       );
     });
   });
@@ -829,17 +825,26 @@ describe('SessionService game operations', () => {
       const session: Session = buildSession({ currentGame: buildGame() });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      sessionRepository.find.mockResolvedValue({
+        session,
+        reconnectTokenHashes: {
+          [playerId('host')]: 'host-hash',
+          [playerId('bob')]: 'bob-hash',
+        },
+        roundDeadline: null,
+      });
 
       await sessionService.leaveGame({
         playerID: playerId('bob'),
         sessionID: session.id,
       });
 
-      expect(redisService.hdel).toHaveBeenCalledWith(
-        `session:${session.id}:reconnect-token-hashes`,
-        playerId('bob'),
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reconnectTokenHashes: { host: 'host-hash' },
+        }),
       );
     });
 
@@ -854,7 +859,7 @@ describe('SessionService game operations', () => {
       });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.abandonGame.mockRejectedValue(new Error('reveal failed'));
@@ -866,8 +871,7 @@ describe('SessionService game operations', () => {
         }),
       ).rejects.toThrow('reveal failed');
 
-      expect(redisService.hdel).not.toHaveBeenCalled();
-      expect(redisService.setJSON).not.toHaveBeenCalled();
+      expect(sessionRepository.save).not.toHaveBeenCalled();
     });
 
     it('drops the game once its last player has left', async () => {
@@ -879,7 +883,7 @@ describe('SessionService game operations', () => {
       });
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
       const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
@@ -895,10 +899,13 @@ describe('SessionService game operations', () => {
         },
         gameId: 'game-1',
       });
-      expect(redisService.setJSON).toHaveBeenCalledWith(
-        `session:${session.id}`,
-        expect.objectContaining({ currentGame: undefined, players: [] }),
-        600,
+      expect(sessionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          session: expect.objectContaining({
+            currentGame: undefined,
+            players: [],
+          }),
+        }),
       );
     });
 
@@ -1147,6 +1154,29 @@ describe('SessionService connection operations', () => {
       );
     });
 
+    it('reconnects a guest player named __proto__ with the token issued when joining', async () => {
+      const session: Session = buildSession({ players: [] });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('__proto__'),
+      );
+
+      const result: Session = await sessionService.reconnectPlayer(
+        session.id,
+        playerId('__proto__'),
+        reconnectToken,
+      );
+
+      expect(result.players[0]).toEqual(
+        expect.objectContaining({
+          username: playerId('__proto__'),
+          connected: true,
+        }),
+      );
+    });
+
     it('rejects reconnecting a guest player with the token of another player', async () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
@@ -1222,7 +1252,7 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession();
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
       await sessionService.reconcilePlayerPresence({
@@ -1237,7 +1267,7 @@ describe('SessionService connection operations', () => {
         });
 
       expect(result).toBeNull();
-      expect(redisService.setJSON).not.toHaveBeenCalled();
+      expect(sessionRepository.save).not.toHaveBeenCalled();
     });
 
     it('disconnects a player absent for the grace period and reassigns the host', async () => {
@@ -1364,13 +1394,13 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession();
       const {
         sessionService,
-        redisService,
+        sessionRepository,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       await sessionService.reconcilePlayerPresence({
         sessionID: session.id,
         presentPlayerIDs: [playerId('bob')],
       });
-      redisService.redisClient.zrange.mockResolvedValue([]);
+      sessionRepository.listActiveIds.mockResolvedValue([]);
 
       await sessionService.pruneExpiredSessionsAndListIDs();
 
