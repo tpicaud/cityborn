@@ -33,7 +33,7 @@
     "db:dev:migrate": "pnpm backend db:dev:migrate",
     "db:dev:reset": "pnpm backend db:dev:reset",
     "db:restore": "node --env-file-if-exists=apps/backend/.env.restore scripts/database-backup/restore.mts",
-    "test:db-restore": "pnpm backend test:int --runTestsByPath test/integration/database-restore.integration.spec.ts",
+    "test:db-restore": "pnpm backend test:db-restore",
     "check:agent-docs": "node scripts/check-agent-docs.mts",
     "check:axiom-dashboards": "node scripts/axiom-dashboards.mts check",
     "deploy:axiom-dashboards": "node scripts/axiom-dashboards.mts deploy",
