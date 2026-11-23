@@ -83,7 +83,7 @@ Les apps écoutent sur les ports du slot : `http://localhost:3000` (frontend), `
 
 `pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. `pnpm test:all` lance toutes les suites sur la base `cityborn_test` et le Redis de test de l'env du checkout, sans toucher aux données de dev. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre.
 
-`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à `main` : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Il demande l'env du checkout lancé.
+`pnpm verify` lance les contrôles de la CI des PR, hors prebuild mobile, sur ce qui change par rapport à la branche cible (`gh-merge-base` de la branche, à défaut `main`) : Biome, docs agents, dashboards Axiom, compatibilité API, typecheck, toutes les suites et builds statiques des clients web touchés. Il demande l'env du checkout lancé.
 
 La seed crée deux comptes :
 
