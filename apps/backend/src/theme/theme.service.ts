@@ -45,9 +45,15 @@ export class ThemeService {
     const themeIcon: ThemeIcon = icon
       ? await this.findIcon(icon)
       : defaultThemeIcon;
-    return this.save(() =>
-      this.themeRepository.create({ name, icon: themeIcon }),
-    );
+    return this.createAtEnd({ name, icon: themeIcon });
+  }
+  @Transactional()
+  private async createAtEnd(theme: {
+    name: string;
+    icon: ThemeIcon;
+  }): Promise<Theme> {
+    await this.themeRepository.lockOrder();
+    return this.save(() => this.themeRepository.create(theme));
   }
   async update({
     id,
@@ -73,6 +79,7 @@ export class ThemeService {
     id: ThemeId;
     direction: ThemeMoveDirection;
   }): Promise<AdminTheme[]> {
+    await this.themeRepository.lockOrder();
     const themes: AdminTheme[] = await this.themeRepository.findAll();
     const index: number = themes.findIndex((theme) => theme.id === id);
     const movedTheme: AdminTheme | undefined = themes[index];

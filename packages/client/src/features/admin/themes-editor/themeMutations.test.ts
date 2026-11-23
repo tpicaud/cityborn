@@ -10,6 +10,7 @@ import {
   type ThemeIcon,
   ThemeIconSchema,
   ThemeMoveDirection,
+  UserFacingError,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
@@ -43,6 +44,7 @@ type ManagementFixture = {
   state: ThemeEditorState;
   movingStates: boolean[];
   deletionStates: boolean[];
+  reportedErrors: unknown[];
 };
 
 const divers: AdminTheme = buildAdminTheme();
@@ -128,6 +130,7 @@ function createManagementFixture({
   let currentState: ThemeEditorState = state;
   const movingStates: boolean[] = [];
   const deletionStates: boolean[] = [];
+  const reportedErrors: unknown[] = [];
   const mutations: ThemeMutations = createThemeMutations({
     themeApi,
     queryClient,
@@ -138,6 +141,7 @@ function createManagementFixture({
     dispatch: (action) => {
       currentState = themeEditorReducer(currentState, action);
     },
+    reportError: (error: unknown) => reportedErrors.push(error),
     setIsMoving: (isMoving: boolean) => movingStates.push(isMoving),
     setIsDeleting: (isDeleting: boolean) => deletionStates.push(isDeleting),
   });
@@ -152,6 +156,7 @@ function createManagementFixture({
     },
     movingStates,
     deletionStates,
+    reportedErrors,
   };
 }
 
@@ -192,7 +197,7 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the creation input and cache after a rejected creation', async (context: TestContext) => {
+  it('reports a rejected creation and keeps the creation input and cache', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themeApi: {
@@ -205,8 +210,8 @@ describe('createThemeMutations', () => {
 
     await fixture.mutations.createTheme();
 
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.equal(fixture.creationForm.getValues('name'), 'sport');
-    assert.equal(fixture.state.creationError, 'Ce thème existe déjà');
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
@@ -254,7 +259,7 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the edit input and row open after a rejected update', async (context: TestContext) => {
+  it('reports a rejected update and keeps the edit input and row open', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       state: { ...initialThemeEditorState, editedThemeId: sport.id },
@@ -268,9 +273,9 @@ describe('createThemeMutations', () => {
 
     await fixture.mutations.updateTheme();
 
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.equal(fixture.editForm.getValues('name'), 'divers');
     assert.equal(fixture.state.editedThemeId, sport.id);
-    assert.equal(fixture.state.rowErrors[sport.id], 'Ce thème existe déjà');
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
@@ -284,10 +289,6 @@ describe('createThemeMutations', () => {
   it('shows the order returned for a moved theme and releases the moving state', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
-      state: {
-        ...initialThemeEditorState,
-        rowErrors: { [sport.id]: "Quelque chose s'est mal passé." },
-      },
       themeApi: {
         moveTheme: async ({ id, move }) => {
           assert.equal(id, sport.id);
@@ -307,16 +308,16 @@ describe('createThemeMutations', () => {
       sport,
       divers,
     ]);
-    assert.equal(fixture.state.rowErrors[sport.id], undefined);
     assert.deepEqual(fixture.movingStates, [true, false]);
   });
 
-  it('keeps the order and shows the error on the row after a rejected move', async (context: TestContext) => {
+  it('reports a rejected move and keeps the order', async (context: TestContext) => {
+    const networkError: TypeError = new TypeError('Network request failed');
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themeApi: {
         moveTheme: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
@@ -326,14 +327,11 @@ describe('createThemeMutations', () => {
       direction: ThemeMoveDirection.UP,
     });
 
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
     ]);
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Quelque chose s'est mal passé.",
-    );
     assert.deepEqual(fixture.movingStates, [true, false]);
   });
 
@@ -397,7 +395,7 @@ describe('createThemeMutations', () => {
 
       await fixture.mutations.deleteTheme(sport);
 
-      assert.equal(fixture.state.rowErrors[sport.id], message);
+      assert.deepEqual(fixture.reportedErrors, [new UserFacingError(message)]);
       assert.equal(fixture.state.deletionThemeId, sport.id);
       assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
         divers,
@@ -424,10 +422,11 @@ describe('createThemeMutations', () => {
 
     await fixture.mutations.deleteTheme(attachedSport);
 
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Impossible de supprimer « Sport » : 2 packs y sont encore rattachés. Change d'abord leur thème.",
-    );
+    assert.deepEqual(fixture.reportedErrors, [
+      new UserFacingError(
+        "Impossible de supprimer « Sport » : 2 packs y sont encore rattachés. Change d'abord leur thème.",
+      ),
+    ]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       attachedSport,
@@ -435,23 +434,21 @@ describe('createThemeMutations', () => {
     assert.deepEqual(fixture.deletionStates, [true, false]);
   });
 
-  it('shows a local error and releases the deletion state after a network failure', async (context: TestContext) => {
+  it('reports a network failure and releases the deletion state', async (context: TestContext) => {
+    const networkError: TypeError = new TypeError('Network request failed');
     const fixture: ManagementFixture = createManagementFixture({
       context,
       state: { ...initialThemeEditorState, deletionThemeId: sport.id },
       themeApi: {
         deleteTheme: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
 
     await fixture.mutations.deleteTheme(sport);
 
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Quelque chose s'est mal passé.",
-    );
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
     assert.equal(fixture.state.deletionThemeId, sport.id);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,

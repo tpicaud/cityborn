@@ -23,11 +23,10 @@ export function ThemeRow({
     if (isEditing) editor.editForm.setFocus('name');
   }, [isEditing, editor.editForm]);
   const isConfirming: boolean = editor.state.deletionThemeId === theme.id;
-  const error: string | undefined =
-    (isEditing
-      ? (editor.editForm.formState.errors.name?.message ??
-        editor.editForm.formState.errors.icon?.message)
-      : undefined) ?? editor.state.rowErrors[theme.id];
+  const error: string | undefined = isEditing
+    ? (editor.editForm.formState.errors.name?.message ??
+      editor.editForm.formState.errors.icon?.message)
+    : undefined;
   const errorId: string = `theme-error-${theme.id}`;
   return (
     <li className="rounded-lg border border-zinc-700 p-3 flex flex-col gap-2">

@@ -76,6 +76,7 @@ describe('Prisma transactions', () => {
   let userService: UserService;
   let passwordResetService: PasswordResetService;
   let rateLimitService: RateLimitService;
+  let themeService: ThemeService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -137,11 +138,73 @@ describe('Prisma transactions', () => {
     userService = module.get(UserService);
     passwordResetService = module.get(PasswordResetService);
     rateLimitService = module.get(RateLimitService);
+    themeService = module.get(ThemeService);
   });
 
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  describe('ThemeService', () => {
+    describe('create', () => {
+      it('places a creation racing another one after it', async () => {
+        const txHost: PrismaTransactionHost = module.get(TransactionHost);
+        let releaseFirstCreation: () => void = () => {};
+        const released: Promise<void> = new Promise((resolve) => {
+          releaseFirstCreation = resolve;
+        });
+        let confirmFirstCreation: () => void = () => {};
+        const created: Promise<void> = new Promise((resolve) => {
+          confirmFirstCreation = resolve;
+        });
+        const firstCreation: Promise<Theme> = txHost.withTransaction(
+          async () => {
+            const theme: Theme = await themeService.create({
+              name: 'Zoologie',
+            });
+            confirmFirstCreation();
+            await released;
+            return theme;
+          },
+        );
+        await created;
+        const secondCreation: Promise<Theme> = themeService.create({
+          name: 'Architecture',
+        });
+        async function waitForBlockedCreation(
+          remainingAttempts: number,
+        ): Promise<void> {
+          const waiting: { count: bigint }[] = await prisma.$queryRaw`
+            SELECT count(*) AS count FROM pg_stat_activity
+            WHERE datname = current_database() AND usename = current_user
+              AND wait_event_type = 'Lock' AND query LIKE 'LOCK TABLE "Theme"%'
+          `;
+          if (waiting[0]?.count === 1n) return;
+          if (remainingAttempts === 0)
+            throw new Error('Creation did not wait for the racing one');
+          await new Promise<void>((resolve) => setTimeout(resolve, 10));
+          await waitForBlockedCreation(remainingAttempts - 1);
+        }
+
+        try {
+          await waitForBlockedCreation(100);
+        } finally {
+          releaseFirstCreation();
+        }
+        await Promise.all([firstCreation, secondCreation]);
+
+        expect(
+          await prisma.theme.findMany({
+            select: { name: true, position: true },
+            orderBy: { position: 'asc' },
+          }),
+        ).toEqual([
+          { name: 'Zoologie', position: 0 },
+          { name: 'Architecture', position: 1 },
+        ]);
+      });
+    });
   });
 
   describe('PackService', () => {

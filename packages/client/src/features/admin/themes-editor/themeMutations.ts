@@ -2,7 +2,6 @@ import {
   type AdminTheme,
   ApiResponseError,
   ErrorCode,
-  resolveErrorMessage,
   type SaveTheme,
   type SaveThemeSchema,
   type Theme,
@@ -19,6 +18,7 @@ import {
   invalidateThemes,
   updateThemesCache,
 } from '../../../domains/theme/themeQueries';
+import type { ReportError } from '../../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../../shared/formSubmitHandler';
 import type { themeEditorReducer } from './themeEditorState';
 
@@ -47,6 +47,7 @@ export function createThemeMutations({
   creationForm,
   editForm,
   dispatch,
+  reportError,
   setIsMoving,
   setIsDeleting,
 }: {
@@ -57,6 +58,7 @@ export function createThemeMutations({
   creationForm: ThemeForm;
   editForm: ThemeForm;
   dispatch: (action: Parameters<typeof themeEditorReducer>[1]) => void;
+  reportError: ReportError;
   setIsMoving: (isMoving: boolean) => void;
   setIsDeleting: (isDeleting: boolean) => void;
 }): ThemeMutations {
@@ -68,7 +70,6 @@ export function createThemeMutations({
   };
   return {
     createTheme: creationForm.handleSubmit(async (data: SaveTheme) => {
-      dispatch({ type: 'creationError', message: null });
       try {
         const theme: Theme = await themeApi.createTheme(data);
         updateThemesCache({
@@ -78,10 +79,7 @@ export function createThemeMutations({
         creationForm.reset();
         await refresh();
       } catch (error: unknown) {
-        dispatch({
-          type: 'creationError',
-          message: resolveErrorMessage(error),
-        });
+        reportError(error);
       }
     }),
     updateTheme: editForm.handleSubmit(async (data: SaveTheme) => {
@@ -95,10 +93,10 @@ export function createThemeMutations({
             item.id === id ? { ...item, ...theme } : item,
           ),
         });
-        dispatch({ type: 'saved', id });
+        dispatch({ type: 'saved' });
         await refresh();
       } catch (error: unknown) {
-        dispatch({ type: 'rowError', id, message: resolveErrorMessage(error) });
+        reportError(error);
       }
     }),
     moveTheme: async ({ theme, direction }) => {
@@ -109,13 +107,8 @@ export function createThemeMutations({
           move: { direction },
         });
         updateThemesCache({ queryClient, themes: movedThemes });
-        dispatch({ type: 'moved', id: theme.id });
       } catch (error: unknown) {
-        dispatch({
-          type: 'rowError',
-          id: theme.id,
-          message: resolveErrorMessage(error),
-        });
+        reportError(error);
       } finally {
         setIsMoving(false);
       }
@@ -128,29 +121,28 @@ export function createThemeMutations({
           queryClient,
           themes: themes.filter((item) => item.id !== theme.id),
         });
-        dispatch({ type: 'saved', id: theme.id });
+        dispatch({ type: 'saved' });
         await refresh();
       } catch (error: unknown) {
-        let message: string = resolveErrorMessage(error);
         if (
-          error instanceof ApiResponseError &&
-          error.code === ErrorCode.THEME_HAS_PACKS
+          !(error instanceof ApiResponseError) ||
+          error.code !== ErrorCode.THEME_HAS_PACKS
         ) {
-          let count: number = theme.packCount;
-          const refreshedThemes: AdminTheme[] = await themeApi
-            .getThemes()
-            .catch(() => themes);
-          updateThemesCache({ queryClient, themes: refreshedThemes });
-          count =
-            refreshedThemes.find((item) => item.id === theme.id)?.packCount ??
-            count;
-          message = resolveErrorMessage(
-            new UserFacingError(
-              `Impossible de supprimer « ${theme.name} » : ${count} pack${count > 1 ? 's' : ''} y ${count > 1 ? 'sont encore rattachés' : 'est encore rattaché'}. Change d'abord leur thème.`,
-            ),
-          );
+          reportError(error);
+          return;
         }
-        dispatch({ type: 'rowError', id: theme.id, message });
+        const refreshedThemes: AdminTheme[] = await themeApi
+          .getThemes()
+          .catch(() => themes);
+        updateThemesCache({ queryClient, themes: refreshedThemes });
+        const count: number =
+          refreshedThemes.find((item) => item.id === theme.id)?.packCount ??
+          theme.packCount;
+        reportError(
+          new UserFacingError(
+            `Impossible de supprimer « ${theme.name} » : ${count} pack${count > 1 ? 's' : ''} y ${count > 1 ? 'sont encore rattachés' : 'est encore rattaché'}. Change d'abord leur thème.`,
+          ),
+        );
       } finally {
         setIsDeleting(false);
       }
