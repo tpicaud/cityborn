@@ -189,6 +189,30 @@ describe('AuthTokenService', () => {
       expect(wideEvent).not.toHaveProperty('rejectedTokenUserId');
     });
 
+    it('records a token whose payload is not an object as not decodable', async () => {
+      const {
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      const header: string = Buffer.from(
+        JSON.stringify({ alg: 'HS256', typ: 'JWT' }),
+      ).toString('base64url');
+      const payload: string = Buffer.from(JSON.stringify(['x'])).toString(
+        'base64url',
+      );
+      const accessToken: string = `${header}.${payload}.signature`;
+
+      const { error, wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.verifyAccessToken(accessToken),
+      );
+
+      expect(error).toBeInstanceOf(JsonWebTokenError);
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'invalid signature',
+        tokenDecodable: false,
+      });
+    });
+
     it('records the expiry of an expired token', async () => {
       const user: User = buildUser();
       const {

@@ -172,13 +172,13 @@ export class AuthTokenService {
     token: string;
     reason: string;
   }): WideEventTokenRejectionContext {
-    const decodedPayload: unknown = this.decodeUnverified(token);
-    if (typeof decodedPayload !== 'object' || decodedPayload === null) {
+    const parsedClaims: z.SafeParseReturnType<unknown, RejectedTokenClaims> =
+      RejectedTokenClaimsSchema.safeParse(this.decodeUnverified(token));
+    if (!parsedClaims.success) {
       return { tokenRejectionReason: reason, tokenDecodable: false };
     }
 
-    const claims: RejectedTokenClaims =
-      RejectedTokenClaimsSchema.parse(decodedPayload);
+    const claims: RejectedTokenClaims = parsedClaims.data;
     return {
       tokenRejectionReason: reason,
       tokenDecodable: true,
