@@ -1,6 +1,5 @@
 'use client';
 import {
-  allPacksFilterValue,
   type CatalogSectionsManagement,
   useCatalogSectionsManagement,
 } from '@cityborn/client/admin';
@@ -55,10 +54,9 @@ export function CatalogSectionsEditor() {
             disabled={isBusy}
             className="rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2"
           >
-            <option value={allPacksFilterValue}>Tous</option>
-            {editor.themes.map((theme) => (
-              <option key={theme.id} value={theme.id}>
-                {theme.name}
+            {editor.sectionGroups.map((group) => (
+              <option key={group.key} value={group.filterValue}>
+                {group.title}
               </option>
             ))}
           </select>

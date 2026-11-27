@@ -26,8 +26,8 @@ import {
   catalogSectionEditorReducer,
   initialCatalogSectionEditorState,
 } from './catalogSectionEditorState';
+import { allPacksFilterValue } from './catalogSectionGroups';
 import {
-  allPacksFilterValue,
   type CatalogSectionCreationFormInput,
   CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,

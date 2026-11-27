@@ -43,9 +43,14 @@ describe('createCatalogSectionGroups', () => {
     });
 
     assert.deepEqual(groups, [
-      { key: 'all', title: 'Tous', sections: [news] },
-      { key: sport.id, title: 'Sport', sections: [tennis, football] },
-      { key: music.id, title: 'Musique', sections: [] },
+      { key: 'all', filterValue: '', title: 'Tous', sections: [news] },
+      {
+        key: sport.id,
+        filterValue: sport.id,
+        title: 'Sport',
+        sections: [tennis, football],
+      },
+      { key: music.id, filterValue: music.id, title: 'Musique', sections: [] },
     ]);
   });
 });

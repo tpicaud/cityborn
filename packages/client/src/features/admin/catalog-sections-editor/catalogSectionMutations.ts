@@ -15,6 +15,7 @@ import { updateCatalogSectionsCache } from '../../../domains/catalog-section/cat
 import type { ReportError } from '../../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../../shared/formSubmitHandler';
 import type { catalogSectionEditorReducer } from './catalogSectionEditorState';
+import { allPacksFilterValue } from './catalogSectionGroups';
 
 export type CatalogSectionMutations = {
   createCatalogSection: FormSubmitHandler;
@@ -27,8 +28,6 @@ export type CatalogSectionMutations = {
 };
 
 export type CatalogSectionFormInput = z.input<typeof SaveCatalogSectionSchema>;
-
-export const allPacksFilterValue: '' = '';
 
 export const CatalogSectionCreationFormSchema = SaveCatalogSectionSchema.extend(
   {

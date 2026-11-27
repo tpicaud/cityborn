@@ -5,7 +5,6 @@ export {
   useCatalogSectionPacks,
 } from './catalog-sections-editor/catalog-section-packs-editor/useCatalogSectionPacks';
 export { isCatalogSectionDeletable } from './catalog-sections-editor/catalogSectionDeletable';
-export { allPacksFilterValue } from './catalog-sections-editor/catalogSectionMutations';
 export {
   type CatalogSectionsManagement,
   useCatalogSectionsManagement,

@@ -30,11 +30,11 @@ import {
   initialCatalogSectionEditorState,
 } from './catalogSectionEditorState';
 import {
+  allPacksFilterValue,
   type CatalogSectionGroup,
   createCatalogSectionGroups,
 } from './catalogSectionGroups';
 import {
-  allPacksFilterValue,
   type CatalogSectionCreationFormInput,
   CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,
@@ -56,7 +56,6 @@ type CatalogSectionCreationForm = UseFormReturn<
 
 export type CatalogSectionsManagement = CatalogSectionMutations & {
   sectionGroups: CatalogSectionGroup[];
-  themes: AdminTheme[];
   state: CatalogSectionEditorState;
   creationForm: CatalogSectionCreationForm;
   editForm: CatalogSectionForm;
@@ -107,14 +106,12 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
     resolver: zodResolver(SaveCatalogSectionSchema),
     defaultValues: { name: '' },
   });
-  const themes: AdminTheme[] = themesQuery.data ?? noThemes;
   const loadError: Error | null = query.error ?? themesQuery.error;
   return {
     sectionGroups: createCatalogSectionGroups({
       sections: query.data ?? noSections,
-      themes,
+      themes: themesQuery.data ?? noThemes,
     }),
-    themes,
     state,
     creationForm,
     editForm,
