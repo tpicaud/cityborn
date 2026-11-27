@@ -3,8 +3,10 @@ import { describe, it } from 'node:test';
 import {
   buildCatalogSection,
   buildPack,
+  buildTheme,
   type CatalogSection,
   type Pack,
+  type ThemeId,
 } from '@cityborn/api';
 import {
   areCatalogSectionPacksEditable,
@@ -94,5 +96,27 @@ describe('searchCatalogSectionPackCandidates', () => {
     });
 
     assert.deepEqual(packs, [rivers, monuments]);
+  });
+
+  it('lists only the packs of the theme of a theme section', () => {
+    const sportThemeId: ThemeId = buildTheme({
+      id: '00000000-0000-4000-8000-000000000050',
+    }).id;
+    const football: Pack = buildPack({
+      id: '00000000-0000-4000-8000-000000000073',
+      name: 'Football',
+      themeId: sportThemeId,
+    });
+    const section: CatalogSection = buildCatalogSection({
+      themeId: sportThemeId,
+    });
+
+    const packs: Pack[] = searchCatalogSectionPackCandidates({
+      section,
+      packs: [monuments, football, rivers],
+      query: '',
+    });
+
+    assert.deepEqual(packs, [football]);
   });
 });

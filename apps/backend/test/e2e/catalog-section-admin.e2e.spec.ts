@@ -57,7 +57,7 @@ describe('Catalog section admin routes', () => {
     const response: request.Response = await request(app.getHttpServer())
       .post(contract.admin.catalogSection.createCatalogSection.path)
       .set('Authorization', `Bearer ${token}`)
-      .send({ name })
+      .send({ name, themeId: null })
       .expect(201);
     return CatalogSectionSchema.parse(response.body);
   }
@@ -96,11 +96,18 @@ describe('Catalog section admin routes', () => {
       .expect(200);
 
     expect(CatalogSectionsSchema.parse(listResponse.body)).toEqual([
-      { id: section.id, name: 'Évènements', isDefault: false, packIds: [] },
+      {
+        id: section.id,
+        name: 'Évènements',
+        isDefault: false,
+        themeId: null,
+        packIds: [],
+      },
       {
         id: defaultCatalogSectionId,
         name: 'Tous les packs',
         isDefault: true,
+        themeId: null,
         packIds: [],
       },
     ]);
@@ -175,12 +182,14 @@ describe('Catalog section admin routes', () => {
         id: defaultCatalogSectionId,
         name: 'Tous les packs',
         isDefault: true,
+        themeId: null,
         packIds: [],
       },
       {
         id: section.id,
         name: 'Événements',
         isDefault: false,
+        themeId: null,
         packIds: [
           '00000000-0000-4000-8000-000000000072',
           '00000000-0000-4000-8000-000000000070',

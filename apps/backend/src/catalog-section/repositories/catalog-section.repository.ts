@@ -1,4 +1,9 @@
-import type { CatalogSection, CatalogSectionId, PackId } from '@cityborn/api';
+import type {
+  CatalogSection,
+  CatalogSectionId,
+  CreateCatalogSection,
+  PackId,
+} from '@cityborn/api';
 
 export const CATALOG_SECTION_REPOSITORY = Symbol('CATALOG_SECTION_REPOSITORY');
 
@@ -8,7 +13,7 @@ export interface CatalogSectionRepository {
   lockOrder(): Promise<void>;
   findAll(): Promise<CatalogSection[]>;
   findPlayable(): Promise<CatalogSection[]>;
-  create(name: string): Promise<CatalogSection>;
+  create(section: CreateCatalogSection): Promise<CatalogSection>;
   rename(data: {
     id: CatalogSectionId;
     name: string;
@@ -24,6 +29,7 @@ export interface CatalogSectionRepository {
     packId: PackId;
   }): Promise<CatalogSection | null>;
   lockPacks(id: CatalogSectionId): Promise<CatalogSection | null>;
+  lockPack(packId: PackId): Promise<void>;
   reorderPacks(data: {
     id: CatalogSectionId;
     packIds: PackId[];

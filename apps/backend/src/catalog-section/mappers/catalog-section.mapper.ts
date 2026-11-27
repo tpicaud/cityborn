@@ -17,6 +17,7 @@ export const CatalogSectionMapper = {
       id: prismaCatalogSection.id,
       name: prismaCatalogSection.name,
       isDefault: prismaCatalogSection.id === defaultCatalogSectionId,
+      themeId: prismaCatalogSection.themeId,
       packIds: prismaCatalogSection.packs.map(({ packId }) => packId),
     });
   },

@@ -145,7 +145,7 @@ export function ThemeRow({
       )}
       {isConfirming && (
         <div className="flex flex-wrap items-center gap-2">
-          <span>Supprimer « {theme.name} » ?</span>
+          <span>Supprimer « {theme.name} » et ses sections ?</span>
           <Button
             type="button"
             variant="destructive"

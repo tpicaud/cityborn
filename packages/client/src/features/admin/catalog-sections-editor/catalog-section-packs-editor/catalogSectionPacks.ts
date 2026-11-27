@@ -43,6 +43,7 @@ export function searchCatalogSectionPackCandidates({
   return packs
     .filter(
       (pack: Pack) =>
+        (section.themeId === null || pack.themeId === section.themeId) &&
         !section.packIds.includes(pack.id) &&
         normalizePackName(pack.name).includes(normalizedQuery),
     )

@@ -1,13 +1,15 @@
-import type {
-  CatalogSection,
-  CatalogSectionId,
-  CatalogSectionMoveDirection,
-  SaveCatalogSection,
+import {
+  type CatalogSection,
+  type CatalogSectionId,
+  type CatalogSectionMoveDirection,
+  type CreateCatalogSection,
+  type SaveCatalogSection,
   SaveCatalogSectionSchema,
+  ThemeIdSchema,
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
-import type { z } from 'zod';
+import { z } from 'zod';
 import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
 import { updateCatalogSectionsCache } from '../../../domains/catalog-section/catalogSectionQueries';
 import type { ReportError } from '../../../shared/errorReporter';
@@ -26,8 +28,32 @@ export type CatalogSectionMutations = {
 
 export type CatalogSectionFormInput = z.input<typeof SaveCatalogSectionSchema>;
 
+export const allPacksFilterValue: '' = '';
+
+export const CatalogSectionCreationFormSchema = SaveCatalogSectionSchema.extend(
+  {
+    themeId: z
+      .literal(allPacksFilterValue)
+      .transform((): null => null)
+      .or(ThemeIdSchema),
+  },
+);
+
+export type CatalogSectionCreationFormInput = z.input<
+  typeof CatalogSectionCreationFormSchema
+>;
+
 type CatalogSectionForm = Pick<
   UseFormReturn<CatalogSectionFormInput, undefined, SaveCatalogSection>,
+  'handleSubmit' | 'reset'
+>;
+
+type CatalogSectionCreationForm = Pick<
+  UseFormReturn<
+    CatalogSectionCreationFormInput,
+    undefined,
+    CreateCatalogSection
+  >,
   'handleSubmit' | 'reset'
 >;
 
@@ -45,7 +71,7 @@ export function createCatalogSectionMutations({
   catalogSectionApi: CatalogSectionApi;
   queryClient: QueryClient;
   editedSectionId: CatalogSectionId | null;
-  creationForm: CatalogSectionForm;
+  creationForm: CatalogSectionCreationForm;
   editForm: CatalogSectionForm;
   dispatch: (action: Parameters<typeof catalogSectionEditorReducer>[1]) => void;
   reportError: ReportError;
@@ -54,7 +80,7 @@ export function createCatalogSectionMutations({
 }): CatalogSectionMutations {
   return {
     createCatalogSection: creationForm.handleSubmit(
-      async (data: SaveCatalogSection) => {
+      async (data: CreateCatalogSection) => {
         try {
           const section: CatalogSection =
             await catalogSectionApi.createCatalogSection(data);
@@ -62,7 +88,10 @@ export function createCatalogSectionMutations({
             queryClient,
             update: (sections) => [...sections, section],
           });
-          creationForm.reset();
+          creationForm.reset({
+            name: '',
+            themeId: data.themeId ?? allPacksFilterValue,
+          });
         } catch (error: unknown) {
           reportError(error);
         }

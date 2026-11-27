@@ -240,6 +240,7 @@ describe('Prisma transactions', () => {
           async () => {
             const section: CatalogSection = await catalogSectionService.create({
               name: 'Z',
+              themeId: null,
             });
             confirmFirstCreation();
             await released;
@@ -248,7 +249,7 @@ describe('Prisma transactions', () => {
         );
         await created;
         const secondCreation: Promise<CatalogSection> =
-          catalogSectionService.create({ name: 'A' });
+          catalogSectionService.create({ name: 'A', themeId: null });
         async function waitForBlockedCreation(
           remainingAttempts: number,
         ): Promise<void> {

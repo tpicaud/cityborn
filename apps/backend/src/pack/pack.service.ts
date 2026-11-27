@@ -90,25 +90,19 @@ export class PackService {
     return this.packRepository.create(data);
   }
 
+  @Transactional()
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
     await this.ensureUpdatedPackHasImageIfPublished({ packId, data });
     if (data.themeId !== undefined) {
       await this.themeService.findById(data.themeId);
     }
-    if (!data.disconnectIds?.length) {
-      return this.packRepository.update(packId, data);
-    }
-    return this.updateWithOrphanCleanup(packId, data, data.disconnectIds);
-  }
-
-  @Transactional()
-  private async updateWithOrphanCleanup(
-    packId: PackId,
-    data: UpdatePack,
-    disconnectIds: GuessObjectId[],
-  ): Promise<Pack> {
     const updatedPack: Pack = await this.packRepository.update(packId, data);
-    await this.deleteOrphanGuessObjects(disconnectIds);
+    if (data.themeId !== undefined)
+      await this.packRepository.leaveOtherThemeCatalogSections({
+        packId,
+        themeId: data.themeId,
+      });
+    await this.deleteOrphanGuessObjects(data.disconnectIds ?? []);
     return updatedPack;
   }
 

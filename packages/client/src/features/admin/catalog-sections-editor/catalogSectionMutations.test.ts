@@ -3,11 +3,14 @@ import { describe, it, type TestContext } from 'node:test';
 import {
   ApiResponseError,
   buildCatalogSection,
+  buildTheme,
   type CatalogSection,
   CatalogSectionMoveDirection,
+  type CreateCatalogSection,
   ErrorCode,
   type SaveCatalogSection,
   SaveCatalogSectionSchema,
+  type ThemeId,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -24,6 +27,9 @@ import {
   initialCatalogSectionEditorState,
 } from './catalogSectionEditorState';
 import {
+  allPacksFilterValue,
+  type CatalogSectionCreationFormInput,
+  CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,
   type CatalogSectionMutations,
   createCatalogSectionMutations,
@@ -37,10 +43,18 @@ type CatalogSectionForm = ReturnType<
   >
 >;
 
+type CatalogSectionCreationForm = ReturnType<
+  typeof createFormControl<
+    CatalogSectionCreationFormInput,
+    undefined,
+    CreateCatalogSection
+  >
+>;
+
 type MutationsFixture = {
   queryClient: QueryClient;
   sectionsKey: QueryKey;
-  creationForm: CatalogSectionForm;
+  creationForm: CatalogSectionCreationForm;
   editForm: CatalogSectionForm;
   mutations: CatalogSectionMutations;
   state: CatalogSectionEditorState;
@@ -75,6 +89,23 @@ function createCatalogSectionForm(context: TestContext): CatalogSectionForm {
   >({
     resolver: zodResolver(SaveCatalogSectionSchema),
     defaultValues: { name: '' },
+  });
+  context.after(
+    form.subscribe({ formState: { values: true }, callback: () => undefined }),
+  );
+  return form;
+}
+
+function createCatalogSectionCreationForm(
+  context: TestContext,
+): CatalogSectionCreationForm {
+  const form: CatalogSectionCreationForm = createFormControl<
+    CatalogSectionCreationFormInput,
+    undefined,
+    CreateCatalogSection
+  >({
+    resolver: zodResolver(CatalogSectionCreationFormSchema),
+    defaultValues: { name: '', themeId: allPacksFilterValue },
   });
   context.after(
     form.subscribe({ formState: { values: true }, callback: () => undefined }),
@@ -128,7 +159,8 @@ function createMutationsFixture({
   if (isLoadingSections)
     observeSections({ context, queryClient, catalogSectionApi });
   if (!isLoadingSections) queryClient.setQueryData(sectionsKey, [news, events]);
-  const creationForm: CatalogSectionForm = createCatalogSectionForm(context);
+  const creationForm: CatalogSectionCreationForm =
+    createCatalogSectionCreationForm(context);
   const editForm: CatalogSectionForm = createCatalogSectionForm(context);
   let currentState: CatalogSectionEditorState = state;
   const reportedErrors: unknown[] = [];
@@ -166,11 +198,11 @@ describe('createCatalogSectionMutations', () => {
       id: '00000000-0000-4000-8000-000000000062',
       name: 'Classiques',
     });
-    let submitted: SaveCatalogSection | undefined;
+    let submitted: CreateCatalogSection | undefined;
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       catalogSectionApi: {
-        createCatalogSection: async (section: SaveCatalogSection) => {
+        createCatalogSection: async (section: CreateCatalogSection) => {
           submitted = section;
           return classics;
         },
@@ -180,13 +212,42 @@ describe('createCatalogSectionMutations', () => {
 
     await fixture.mutations.createCatalogSection();
 
-    assert.deepEqual(submitted, { name: 'Classiques' });
+    assert.deepEqual(submitted, { name: 'Classiques', themeId: null });
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
       events,
       classics,
     ]);
     assert.equal(fixture.creationForm.getValues('name'), '');
+  });
+
+  it('creates a section in the selected theme and keeps the theme selected', async (context: TestContext) => {
+    const sportThemeId: ThemeId = buildTheme({
+      id: '00000000-0000-4000-8000-000000000050',
+    }).id;
+    const tennis: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000062',
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+    let submitted: CreateCatalogSection | undefined;
+    const fixture: MutationsFixture = createMutationsFixture({
+      context,
+      catalogSectionApi: {
+        createCatalogSection: async (section: CreateCatalogSection) => {
+          submitted = section;
+          return tennis;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', 'Tennis');
+    fixture.creationForm.setValue('themeId', sportThemeId);
+
+    await fixture.mutations.createCatalogSection();
+
+    assert.deepEqual(submitted, { name: 'Tennis', themeId: sportThemeId });
+    assert.equal(fixture.creationForm.getValues('name'), '');
+    assert.equal(fixture.creationForm.getValues('themeId'), sportThemeId);
   });
 
   it('adds a created section to the sections loaded during its request', async (context: TestContext) => {
@@ -288,6 +349,7 @@ describe('createCatalogSectionMutations', () => {
           id,
           name: section.name,
           isDefault: false,
+          themeId: null,
           packIds: [],
         }),
       },

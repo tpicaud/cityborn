@@ -306,6 +306,28 @@ describe('PackService.update', () => {
     );
   });
 
+  it('removes the pack from the catalog sections of its other themes', async () => {
+    const {
+      packRepository,
+      packService,
+      themeService,
+    }: ReturnType<typeof buildPackService> = buildPackService();
+    const theme: Theme = buildTheme({
+      id: '00000000-0000-4000-8000-000000000050',
+      name: 'Musique',
+    });
+    const payload: UpdatePack = buildUpdatePack({ themeId: theme.id });
+    themeService.findById.mockResolvedValue(theme);
+    packRepository.update.mockResolvedValue(buildPack(payload));
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(packRepository.leaveOtherThemeCatalogSections).toHaveBeenCalledWith({
+      packId: packId('pack-1'),
+      themeId: theme.id,
+    });
+  });
+
   it('rejects an unknown theme without updating the pack', async () => {
     const {
       packRepository,
@@ -401,6 +423,9 @@ describe('PackService.update', () => {
     await packService.update(packId('pack-1'), payload);
 
     expect(themeService.findById).not.toHaveBeenCalled();
+    expect(
+      packRepository.leaveOtherThemeCatalogSections,
+    ).not.toHaveBeenCalled();
   });
 });
 

@@ -4,6 +4,7 @@ import type {
   GuessObjectId,
   Pack,
   PackId,
+  ThemeId,
   UpdatePack,
 } from '@cityborn/api';
 
@@ -19,6 +20,10 @@ export interface PackRepository {
   findFullBy(filter: PackFilter): Promise<FullPack[]>;
   create(data: CreatePack): Promise<Pack>;
   update(packId: PackId, data: UpdatePack): Promise<Pack>;
+  leaveOtherThemeCatalogSections(data: {
+    packId: PackId;
+    themeId: ThemeId;
+  }): Promise<void>;
   countByGuessObjectId(id: GuessObjectId): Promise<number>;
   delete(id: PackId): Promise<void>;
 }

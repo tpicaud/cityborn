@@ -126,7 +126,8 @@ model Theme {
   icon     Json
   position Int    @default(0)
 
-  packs Pack[]
+  packs           Pack[]
+  catalogSections CatalogSection[]
 }
 
 model Pack {
@@ -145,11 +146,15 @@ model Pack {
 }
 
 model CatalogSection {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String
   position Int
+  themeId  String? @db.Uuid
 
+  theme Theme?               @relation(fields: [themeId], references: [id], onDelete: Cascade)
   packs CatalogSectionPack[]
+
+  @@index([themeId])
 }
 
 model CatalogSectionPack {

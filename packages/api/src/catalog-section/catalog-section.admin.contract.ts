@@ -8,6 +8,7 @@ import {
   CatalogSectionPackParamSchema,
   CatalogSectionSchema,
   CatalogSectionsSchema,
+  CreateCatalogSectionSchema,
   MoveCatalogSectionSchema,
   SaveCatalogSectionSchema,
 } from './catalog-section.schema';
@@ -24,7 +25,7 @@ export const catalogSectionAdminContract = c.router(
     createCatalogSection: {
       method: 'POST',
       path: '/',
-      body: SaveCatalogSectionSchema,
+      body: CreateCatalogSectionSchema,
       responses: { 201: CatalogSectionSchema },
     },
     renameCatalogSection: {

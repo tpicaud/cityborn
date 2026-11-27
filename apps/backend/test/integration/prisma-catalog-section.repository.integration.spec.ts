@@ -5,6 +5,7 @@ import type {
   CatalogSectionId,
   Pack,
   PackId,
+  Theme,
 } from '@cityborn/api';
 import { buildCatalogSection, buildPack, buildTheme } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -49,7 +50,12 @@ describe('PrismaCatalogSectionRepository', () => {
     position: number;
   }): Promise<void> {
     await prisma.catalogSection.create({
-      data: { id: section.id, name: section.name, position },
+      data: {
+        id: section.id,
+        name: section.name,
+        themeId: section.themeId,
+        position,
+      },
     });
   }
 
@@ -92,8 +98,14 @@ describe('PrismaCatalogSectionRepository', () => {
     name: 'Fleuves',
   });
 
+  const sport: Theme = buildTheme({
+    id: '00000000-0000-4000-8000-000000000050',
+    name: 'Sport',
+  });
+
   beforeEach(async () => {
     await prisma.theme.create({ data: buildTheme() });
+    await prisma.theme.create({ data: sport });
   });
 
   describe('findAll', () => {
@@ -163,6 +175,26 @@ describe('PrismaCatalogSectionRepository', () => {
       await expect(catalogSectionRepository.findAll()).resolves.toEqual([
         { ...events, packIds: [capitals.id] },
       ]);
+    });
+
+    it('drops the sections of a deleted theme', async () => {
+      const news: CatalogSection = buildCatalogSection({
+        id: '00000000-0000-4000-8000-000000000060',
+        name: 'Nouveautés',
+      });
+      await insertCatalogSection({ section: news, position: 0 });
+      await insertCatalogSection({
+        section: buildCatalogSection({
+          id: '00000000-0000-4000-8000-000000000061',
+          name: 'Tennis',
+          themeId: sport.id,
+        }),
+        position: 0,
+      });
+
+      await prisma.theme.delete({ where: { id: sport.id } });
+
+      await expect(catalogSectionRepository.findAll()).resolves.toEqual([news]);
     });
   });
 
@@ -292,8 +324,10 @@ describe('PrismaCatalogSectionRepository', () => {
         position: 4,
       });
 
-      const section: CatalogSection =
-        await catalogSectionRepository.create('Évènements');
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
 
       expect(section.name).toBe('Évènements');
       await expect(
@@ -301,11 +335,65 @@ describe('PrismaCatalogSectionRepository', () => {
       ).resolves.toMatchObject({ position: 5 });
     });
 
-    it('rejects a name differing only by case', async () => {
-      await catalogSectionRepository.create('Évènements');
+    it('places a new theme section after the last one of its theme', async () => {
+      await insertCatalogSection({
+        section: buildCatalogSection({
+          id: '00000000-0000-4000-8000-000000000060',
+        }),
+        position: 4,
+      });
+      await insertCatalogSection({
+        section: buildCatalogSection({
+          id: '00000000-0000-4000-8000-000000000061',
+          themeId: sport.id,
+        }),
+        position: 1,
+      });
+
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Tennis',
+        themeId: sport.id,
+      });
+
+      expect(section).toMatchObject({ name: 'Tennis', themeId: sport.id });
+      await expect(
+        prisma.catalogSection.findUnique({ where: { id: section.id } }),
+      ).resolves.toMatchObject({ position: 2 });
+    });
+
+    it('accepts a name already used in another filter', async () => {
+      await catalogSectionRepository.create({
+        name: 'Nouveautés',
+        themeId: null,
+      });
+
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Nouveautés',
+        themeId: sport.id,
+      });
+
+      expect(section).toMatchObject({ name: 'Nouveautés', themeId: sport.id });
+    });
+
+    it('rejects a name differing only by case within a theme', async () => {
+      await catalogSectionRepository.create({
+        name: 'Tennis',
+        themeId: sport.id,
+      });
 
       await expect(
-        catalogSectionRepository.create('évènements'),
+        catalogSectionRepository.create({ name: 'TENNIS', themeId: sport.id }),
+      ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
+    });
+
+    it('rejects a name differing only by case', async () => {
+      await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
+
+      await expect(
+        catalogSectionRepository.create({ name: 'évènements', themeId: null }),
       ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
     });
 
@@ -313,15 +401,23 @@ describe('PrismaCatalogSectionRepository', () => {
       await insertCatalogSection({ section: defaultSection, position: 0 });
 
       await expect(
-        catalogSectionRepository.create('tous les packs'),
+        catalogSectionRepository.create({
+          name: 'tous les packs',
+          themeId: null,
+        }),
       ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
     });
 
     it('accepts a name differing by its accents', async () => {
-      await catalogSectionRepository.create('Évènements');
+      await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
 
-      const section: CatalogSection =
-        await catalogSectionRepository.create('Événements');
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Événements',
+        themeId: null,
+      });
 
       expect(section.name).toBe('Événements');
     });
@@ -329,8 +425,10 @@ describe('PrismaCatalogSectionRepository', () => {
 
   describe('rename', () => {
     it('renames the section', async () => {
-      const section: CatalogSection =
-        await catalogSectionRepository.create('Événements');
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Événements',
+        themeId: null,
+      });
 
       const renamedSection: CatalogSection | null =
         await catalogSectionRepository.rename({
@@ -342,14 +440,20 @@ describe('PrismaCatalogSectionRepository', () => {
         id: section.id,
         name: 'Évènements',
         isDefault: false,
+        themeId: null,
         packIds: [],
       });
     });
 
     it('rejects renaming to an existing name with different case', async () => {
-      await catalogSectionRepository.create('Nouveautés');
-      const section: CatalogSection =
-        await catalogSectionRepository.create('Évènements');
+      await catalogSectionRepository.create({
+        name: 'Nouveautés',
+        themeId: null,
+      });
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
 
       await expect(
         catalogSectionRepository.rename({ id: section.id, name: 'NOUVEAUTÉS' }),
@@ -372,10 +476,14 @@ describe('PrismaCatalogSectionRepository', () => {
 
   describe('reorder', () => {
     it('positions sections in the given order', async () => {
-      const news: CatalogSection =
-        await catalogSectionRepository.create('Nouveautés');
-      const events: CatalogSection =
-        await catalogSectionRepository.create('Évènements');
+      const news: CatalogSection = await catalogSectionRepository.create({
+        name: 'Nouveautés',
+        themeId: null,
+      });
+      const events: CatalogSection = await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
 
       await catalogSectionRepository.reorder([events.id, news.id]);
 
@@ -388,8 +496,10 @@ describe('PrismaCatalogSectionRepository', () => {
 
   describe('delete', () => {
     it('removes the section', async () => {
-      const section: CatalogSection =
-        await catalogSectionRepository.create('Évènements');
+      const section: CatalogSection = await catalogSectionRepository.create({
+        name: 'Évènements',
+        themeId: null,
+      });
 
       const isDeleted: boolean = await catalogSectionRepository.delete(
         section.id,

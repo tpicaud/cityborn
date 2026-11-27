@@ -101,6 +101,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'La section par défaut contient déjà tous les packs publiés.',
   [ErrorCode.CATALOG_SECTION_PACK_NOT_FOUND]:
     'Ce pack ne fait pas partie de la section.',
+  [ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME]:
+    "Ce pack n'appartient pas au thème de la section.",
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

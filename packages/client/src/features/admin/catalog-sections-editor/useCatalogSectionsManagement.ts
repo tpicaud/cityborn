@@ -1,7 +1,9 @@
 'use client';
 import {
+  type AdminTheme,
   type CatalogSection,
   type CatalogSectionId,
+  type CreateCatalogSection,
   resolveErrorMessage,
   type SaveCatalogSection,
   SaveCatalogSectionSchema,
@@ -17,6 +19,7 @@ import { useReducer, useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
 import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
+import { themesQueryOptions } from '../../../domains/theme/themeQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -27,6 +30,13 @@ import {
   initialCatalogSectionEditorState,
 } from './catalogSectionEditorState';
 import {
+  type CatalogSectionGroup,
+  createCatalogSectionGroups,
+} from './catalogSectionGroups';
+import {
+  allPacksFilterValue,
+  type CatalogSectionCreationFormInput,
+  CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,
   type CatalogSectionMutations,
   createCatalogSectionMutations,
@@ -38,10 +48,17 @@ type CatalogSectionForm = UseFormReturn<
   SaveCatalogSection
 >;
 
+type CatalogSectionCreationForm = UseFormReturn<
+  CatalogSectionCreationFormInput,
+  undefined,
+  CreateCatalogSection
+>;
+
 export type CatalogSectionsManagement = CatalogSectionMutations & {
-  sections: CatalogSection[];
+  sectionGroups: CatalogSectionGroup[];
+  themes: AdminTheme[];
   state: CatalogSectionEditorState;
-  creationForm: CatalogSectionForm;
+  creationForm: CatalogSectionCreationForm;
   editForm: CatalogSectionForm;
   startEditing: (section: CatalogSection) => void;
   confirmDeletion: (id: CatalogSectionId) => void;
@@ -54,13 +71,18 @@ export type CatalogSectionsManagement = CatalogSectionMutations & {
 };
 
 const noSections: CatalogSection[] = [];
+const noThemes: AdminTheme[] = [];
 
 export function useCatalogSectionsManagement(): CatalogSectionsManagement {
-  const { catalogSectionApi }: DomainApis = useDomainApis();
+  const { catalogSectionApi, themeApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const query: UseQueryResult<CatalogSection[]> = useQuery({
     ...catalogSectionsQueryOptions(catalogSectionApi),
+    meta: { reportsError: false },
+  });
+  const themesQuery: UseQueryResult<AdminTheme[]> = useQuery({
+    ...themesQueryOptions(themeApi),
     meta: { reportsError: false },
   });
   const [state, dispatch] = useReducer(
@@ -69,13 +91,13 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
   );
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const creationForm: CatalogSectionForm = useForm<
-    CatalogSectionFormInput,
+  const creationForm: CatalogSectionCreationForm = useForm<
+    CatalogSectionCreationFormInput,
     undefined,
-    SaveCatalogSection
+    CreateCatalogSection
   >({
-    resolver: zodResolver(SaveCatalogSectionSchema),
-    defaultValues: { name: '' },
+    resolver: zodResolver(CatalogSectionCreationFormSchema),
+    defaultValues: { name: '', themeId: allPacksFilterValue },
   });
   const editForm: CatalogSectionForm = useForm<
     CatalogSectionFormInput,
@@ -85,18 +107,24 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
     resolver: zodResolver(SaveCatalogSectionSchema),
     defaultValues: { name: '' },
   });
-  const sections: CatalogSection[] = query.data ?? noSections;
+  const themes: AdminTheme[] = themesQuery.data ?? noThemes;
+  const loadError: Error | null = query.error ?? themesQuery.error;
   return {
-    sections,
+    sectionGroups: createCatalogSectionGroups({
+      sections: query.data ?? noSections,
+      themes,
+    }),
+    themes,
     state,
     creationForm,
     editForm,
     isMoving,
     isDeleting,
-    isLoading: query.isPending,
-    loadError: query.isError ? resolveErrorMessage(query.error) : null,
+    isLoading: query.isPending || themesQuery.isPending,
+    loadError: loadError ? resolveErrorMessage(loadError) : null,
     reload: () => {
-      query.refetch();
+      if (query.isError) query.refetch();
+      if (themesQuery.isError) themesQuery.refetch();
     },
     startEditing: (section) => {
       editForm.reset({ name: section.name });
