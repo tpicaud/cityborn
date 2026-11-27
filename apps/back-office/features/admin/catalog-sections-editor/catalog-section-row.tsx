@@ -2,7 +2,10 @@ import {
   type CatalogSection,
   CatalogSectionMoveDirection,
 } from '@cityborn/api';
-import type { CatalogSectionsManagement } from '@cityborn/client/admin';
+import {
+  type CatalogSectionsManagement,
+  isCatalogSectionDeletable,
+} from '@cityborn/client/admin';
 import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -77,6 +80,9 @@ export function CatalogSectionRow({
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium flex-1 break-all">{section.name}</span>
+          {section.isDefault && (
+            <span className="text-zinc-400 text-xs">Par défaut</span>
+          )}
           {!isConfirming && (
             <>
               <Button
@@ -116,15 +122,17 @@ export function CatalogSectionRow({
               >
                 <Pencil size={18} />
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy}
-                onClick={() => editor.confirmDeletion(section.id)}
-                aria-label={`Supprimer ${section.name}`}
-              >
-                <Trash2 size={18} />
-              </Button>
+              {isCatalogSectionDeletable(section) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={isBusy}
+                  onClick={() => editor.confirmDeletion(section.id)}
+                  aria-label={`Supprimer ${section.name}`}
+                >
+                  <Trash2 size={18} />
+                </Button>
+              )}
             </>
           )}
         </div>
