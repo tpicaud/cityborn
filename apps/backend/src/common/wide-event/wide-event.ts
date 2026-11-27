@@ -69,11 +69,9 @@ export interface WideEventEnrichment {
   playerId: string;
   gameId: string;
   tokenRejectionReason: string;
-  tokenDecodable: boolean;
   rejectedTokenUserId: string;
   rejectedTokenIat: number;
   rejectedTokenExp: number;
-  rejectedTokenAuthVersion: number;
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
@@ -108,17 +106,16 @@ export type WideEventAuthContext =
   | { isAuthenticated: false; userId?: never }
   | { isAuthenticated: true; userId: string };
 
-export type WideEventTokenRejectionContext =
-  | { tokenRejectionReason: string; tokenDecodable: false }
-  | ({ tokenRejectionReason: string; tokenDecodable: true } & Partial<
-      Pick<
-        WideEventEnrichment,
-        | 'rejectedTokenUserId'
-        | 'rejectedTokenIat'
-        | 'rejectedTokenExp'
-        | 'rejectedTokenAuthVersion'
-      >
-    >);
+export type WideEventTokenRejectionContext = Pick<
+  WideEventEnrichment,
+  'tokenRejectionReason'
+> &
+  Partial<
+    Pick<
+      WideEventEnrichment,
+      'rejectedTokenUserId' | 'rejectedTokenIat' | 'rejectedTokenExp'
+    >
+  >;
 
 export type WideEventRateLimitContext =
   | {

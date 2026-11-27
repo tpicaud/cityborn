@@ -38,7 +38,6 @@ const RejectedTokenClaimsSchema = z.object({
   id: z.string().max(64).optional().catch(undefined),
   iat: z.number().int().optional().catch(undefined),
   exp: z.number().int().optional().catch(undefined),
-  authVersion: z.number().int().optional().catch(undefined),
 });
 
 type RejectedTokenClaims = z.infer<typeof RejectedTokenClaimsSchema>;
@@ -175,17 +174,15 @@ export class AuthTokenService {
     const parsedClaims: z.SafeParseReturnType<unknown, RejectedTokenClaims> =
       RejectedTokenClaimsSchema.safeParse(this.decodeUnverified(token));
     if (!parsedClaims.success) {
-      return { tokenRejectionReason: reason, tokenDecodable: false };
+      return { tokenRejectionReason: reason };
     }
 
     const claims: RejectedTokenClaims = parsedClaims.data;
     return {
       tokenRejectionReason: reason,
-      tokenDecodable: true,
       rejectedTokenUserId: claims.id,
       rejectedTokenIat: claims.iat,
       rejectedTokenExp: claims.exp,
-      rejectedTokenAuthVersion: claims.authVersion,
     };
   }
 

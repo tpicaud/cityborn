@@ -129,7 +129,7 @@ describe('AuthTokenService', () => {
         buildTokenRejectionScenario();
       const issuedAt: number = nowInSeconds() - 60;
       const accessToken: string = await jwtService.signAsync(
-        { id: user.id, authVersion: 3, iat: issuedAt },
+        { id: user.id, iat: issuedAt },
         { secret: 'other-secret', expiresIn: 900 },
       );
 
@@ -140,11 +140,9 @@ describe('AuthTokenService', () => {
       expect(error).toBeInstanceOf(JsonWebTokenError);
       expect(wideEvent).toMatchObject({
         tokenRejectionReason: 'invalid signature',
-        tokenDecodable: true,
         rejectedTokenUserId: user.id,
         rejectedTokenIat: issuedAt,
         rejectedTokenExp: issuedAt + 900,
-        rejectedTokenAuthVersion: 3,
         isAuthenticated: false,
       });
       expect(wideEvent).not.toHaveProperty('userId');
@@ -172,7 +170,7 @@ describe('AuthTokenService', () => {
       expect(serializedWideEvent).not.toContain(signature);
     });
 
-    it('records a malformed token as not decodable', async () => {
+    it('records a malformed token without claims', async () => {
       const {
         rejectInsideWideEvent,
       }: ReturnType<typeof buildTokenRejectionScenario> =
@@ -184,12 +182,13 @@ describe('AuthTokenService', () => {
 
       expect(wideEvent).toMatchObject({
         tokenRejectionReason: 'jwt malformed',
-        tokenDecodable: false,
       });
       expect(wideEvent).not.toHaveProperty('rejectedTokenUserId');
+      expect(wideEvent).not.toHaveProperty('rejectedTokenIat');
+      expect(wideEvent).not.toHaveProperty('rejectedTokenExp');
     });
 
-    it('records a token whose payload is not an object as not decodable', async () => {
+    it('records a token whose payload is not an object without claims', async () => {
       const {
         rejectInsideWideEvent,
       }: ReturnType<typeof buildTokenRejectionScenario> =
@@ -209,8 +208,8 @@ describe('AuthTokenService', () => {
       expect(error).toBeInstanceOf(JsonWebTokenError);
       expect(wideEvent).toMatchObject({
         tokenRejectionReason: 'invalid signature',
-        tokenDecodable: false,
       });
+      expect(wideEvent).not.toHaveProperty('rejectedTokenUserId');
     });
 
     it('records the expiry of an expired token', async () => {
@@ -232,7 +231,6 @@ describe('AuthTokenService', () => {
 
       expect(wideEvent).toMatchObject({
         tokenRejectionReason: 'jwt expired',
-        tokenDecodable: true,
         rejectedTokenUserId: user.id,
         rejectedTokenExp: issuedAt + 900,
       });
@@ -316,7 +314,6 @@ describe('AuthTokenService', () => {
 
       expect(wideEvent).toMatchObject({
         tokenRejectionReason: 'invalid signature',
-        tokenDecodable: true,
         rejectedTokenUserId: user.id,
       });
     });

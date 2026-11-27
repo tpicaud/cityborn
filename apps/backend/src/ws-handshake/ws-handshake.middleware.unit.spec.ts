@@ -354,7 +354,6 @@ describe('WsHandshakeMiddleware', () => {
         id: user.id,
         iat: 1_700_000_000,
         exp: 1_700_000_900,
-        authVersion: 2,
       });
       const socket: AppSocket = buildSocket({
         auth: { access_token: 'invalid-token' },
@@ -366,11 +365,9 @@ describe('WsHandshakeMiddleware', () => {
         expect.objectContaining({
           event: 'ws_connection',
           tokenRejectionReason: 'invalid signature',
-          tokenDecodable: true,
           rejectedTokenUserId: user.id,
           rejectedTokenIat: 1_700_000_000,
           rejectedTokenExp: 1_700_000_900,
-          rejectedTokenAuthVersion: 2,
           isAuthenticated: false,
         }),
         'connection',
