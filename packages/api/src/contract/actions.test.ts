@@ -79,6 +79,7 @@ describe('httpActionRoutes', () => {
       'auth.updateEmail',
       'auth.updatePassword',
       'auth.verifyEmail',
+      'catalog-section.getPlayableCatalogSections',
       'category.getCategories',
       'category.getCategory',
       'category.getCategoryTrees',

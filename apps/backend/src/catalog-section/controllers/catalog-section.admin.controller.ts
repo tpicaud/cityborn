@@ -1,8 +1,8 @@
 import { contract } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { AdminGuard } from '../auth/guards/access-token.guard';
-import { CatalogSectionService } from './catalog-section.service';
+import { AdminGuard } from '../../auth/guards/access-token.guard';
+import { CatalogSectionService } from '../catalog-section.service';
 
 @UseGuards(AdminGuard)
 @Controller()

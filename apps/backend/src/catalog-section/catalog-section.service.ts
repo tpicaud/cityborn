@@ -6,12 +6,14 @@ import {
   type SaveCatalogSection,
 } from '@cityborn/api';
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { defaultCatalogSectionId } from './default-catalog-section';
 import {
   CATALOG_SECTION_REPOSITORY,
   CatalogSectionNameAlreadyExistsError,
@@ -27,6 +29,10 @@ export class CatalogSectionService {
 
   async findAll(): Promise<CatalogSection[]> {
     return this.catalogSectionRepository.findAll();
+  }
+
+  async findPlayable(): Promise<CatalogSection[]> {
+    return this.catalogSectionRepository.findPlayable();
   }
 
   @Transactional()
@@ -77,6 +83,11 @@ export class CatalogSectionService {
   }
 
   async delete(id: CatalogSectionId): Promise<void> {
+    if (id === defaultCatalogSectionId)
+      throw new BadRequestException({
+        code: ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE,
+        message: 'Default catalog section cannot be deleted',
+      });
     if (!(await this.catalogSectionRepository.delete(id)))
       throw this.sectionNotFound();
   }

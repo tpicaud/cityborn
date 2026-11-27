@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-export const allPacksCatalogSectionName: string = 'Tous les packs';
-
 export const CatalogSectionIdSchema = z
   .string()
   .uuid()
@@ -12,6 +10,7 @@ export type CatalogSectionId = z.infer<typeof CatalogSectionIdSchema>;
 export const CatalogSectionSchema = z.object({
   id: CatalogSectionIdSchema,
   name: z.string(),
+  isDefault: z.boolean(),
 });
 
 export type CatalogSection = z.infer<typeof CatalogSectionSchema>;
@@ -22,12 +21,7 @@ export const CatalogSectionNameSchema = z
   .string()
   .trim()
   .min(1, 'Le nom est obligatoire')
-  .max(40, 'Le nom ne peut pas dépasser 40 caractères')
-  .refine(
-    (name: string): boolean =>
-      name.toLowerCase() !== allPacksCatalogSectionName.toLowerCase(),
-    `« ${allPacksCatalogSectionName} » est réservé`,
-  );
+  .max(40, 'Le nom ne peut pas dépasser 40 caractères');
 
 export const SaveCatalogSectionSchema = z.object({
   name: CatalogSectionNameSchema,

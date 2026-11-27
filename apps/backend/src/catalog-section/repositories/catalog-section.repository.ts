@@ -7,6 +7,7 @@ export class CatalogSectionNameAlreadyExistsError extends Error {}
 export interface CatalogSectionRepository {
   lockOrder(): Promise<void>;
   findAll(): Promise<CatalogSection[]>;
+  findPlayable(): Promise<CatalogSection[]>;
   create(name: string): Promise<CatalogSection>;
   rename(data: {
     id: CatalogSectionId;

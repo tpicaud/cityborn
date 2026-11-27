@@ -6,6 +6,7 @@ import {
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import { CatalogSectionService } from './catalog-section.service';
+import { defaultCatalogSectionId } from './default-catalog-section';
 import {
   CatalogSectionNameAlreadyExistsError,
   type CatalogSectionRepository,
@@ -80,7 +81,11 @@ describe('CatalogSectionService.rename', () => {
       section: { name: 'Événements' },
     });
 
-    expect(section).toEqual({ id: events.id, name: 'Événements' });
+    expect(section).toEqual({
+      id: events.id,
+      name: 'Événements',
+      isDefault: false,
+    });
     expect(catalogSectionRepository.rename).toHaveBeenCalledWith({
       id: events.id,
       name: 'Événements',
@@ -240,5 +245,20 @@ describe('CatalogSectionService.delete', () => {
         response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
       },
     );
+  });
+
+  it('rejects the default section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+
+    await expect(
+      catalogSectionService.delete(defaultCatalogSectionId),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE },
+    });
+    expect(catalogSectionRepository.delete).not.toHaveBeenCalled();
   });
 });

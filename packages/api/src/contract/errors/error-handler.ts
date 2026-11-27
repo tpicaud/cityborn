@@ -96,6 +96,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS]: 'Cette section existe déjà',
   [ErrorCode.CATALOG_SECTION_NOT_FOUND]:
     'Aucune section trouvée pour cet identifiant.',
+  [ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE]:
+    'La section de tous les packs ne peut pas être supprimée.',
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

@@ -11,6 +11,7 @@ import {
 } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
+import { defaultCatalogSectionId } from '../../src/catalog-section/default-catalog-section';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
@@ -32,13 +33,19 @@ describe('Catalog section admin routes', () => {
     return createAccessToken(app, user.id);
   }
 
+  async function insertDefaultSection(): Promise<void> {
+    await app.get(PrismaService).catalogSection.create({
+      data: {
+        id: defaultCatalogSectionId,
+        name: 'Tous les packs',
+        position: 0,
+      },
+    });
+  }
+
   it('creates, renames and moves a section to the top of the list', async () => {
     const token: string = await authenticateAdmin();
-    await request(app.getHttpServer())
-      .post(contract.admin.catalogSection.createCatalogSection.path)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Nouveautés' })
-      .expect(201);
+    await insertDefaultSection();
 
     const createdResponse: request.Response = await request(app.getHttpServer())
       .post(contract.admin.catalogSection.createCatalogSection.path)
@@ -73,25 +80,32 @@ describe('Catalog section admin routes', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(
-      CatalogSectionsSchema.parse(listResponse.body).map(({ name }) => name),
-    ).toEqual(['Évènements', 'Nouveautés']);
+    expect(CatalogSectionsSchema.parse(listResponse.body)).toEqual([
+      { id: section.id, name: 'Évènements', isDefault: false },
+      { id: defaultCatalogSectionId, name: 'Tous les packs', isDefault: true },
+    ]);
   });
 
-  it('rejects the reserved name through the request validation pipeline', async () => {
+  it('refuses to delete the default section', async () => {
     const token: string = await authenticateAdmin();
+    await insertDefaultSection();
 
     const response: request.Response = await request(app.getHttpServer())
-      .post(contract.admin.catalogSection.createCatalogSection.path)
+      .delete(
+        contract.admin.catalogSection.deleteCatalogSection.path.replace(
+          ':id',
+          defaultCatalogSectionId,
+        ),
+      )
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: ' tous les packs ' })
+      .send({})
       .expect(400);
 
     expect(ApiErrorSchema.parse(response.body)).toMatchObject({
-      code: ErrorCode.BAD_REQUEST,
-      fieldErrors: [
-        { path: 'name', message: '« Tous les packs » est réservé' },
-      ],
+      code: ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE,
     });
+    await expect(app.get(PrismaService).catalogSection.count()).resolves.toBe(
+      1,
+    );
   });
 });

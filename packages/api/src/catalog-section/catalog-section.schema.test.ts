@@ -33,24 +33,4 @@ describe('SaveCatalogSectionSchema', () => {
       false,
     );
   });
-
-  ['Tous les packs', '  tous les PACKS  '].forEach((name: string) => {
-    it(`rejects the reserved name "${name}"`, () => {
-      assert.deepEqual(
-        SaveCatalogSectionSchema.safeParse({ name }).error?.issues.map(
-          ({ message }) => message,
-        ),
-        ['« Tous les packs » est réservé'],
-      );
-    });
-  });
-
-  it('accepts the reserved name with different accents', () => {
-    assert.deepEqual(
-      SaveCatalogSectionSchema.parse({ name: 'Tous les pâcks' }),
-      {
-        name: 'Tous les pâcks',
-      },
-    );
-  });
 });

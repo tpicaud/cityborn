@@ -6,11 +6,17 @@ import {
   type CatalogSection as PrismaCatalogSection,
 } from '@prisma/client';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
+import { defaultCatalogSectionId } from '../default-catalog-section';
 import { CatalogSectionMapper } from '../mappers/catalog-section.mapper';
 import {
   CatalogSectionNameAlreadyExistsError,
   type CatalogSectionRepository,
 } from './catalog-section.repository';
+
+const catalogSectionOrder: Prisma.CatalogSectionOrderByWithRelationInput[] = [
+  { position: 'asc' },
+  { name: 'asc' },
+];
 
 @Injectable()
 export class PrismaCatalogSectionRepository
@@ -28,7 +34,18 @@ export class PrismaCatalogSectionRepository
   async findAll(): Promise<CatalogSection[]> {
     const sections: PrismaCatalogSection[] =
       await this.txHost.tx.catalogSection.findMany({
-        orderBy: [{ position: 'asc' }, { name: 'asc' }],
+        orderBy: catalogSectionOrder,
+      });
+    return sections.map((section) =>
+      CatalogSectionMapper.toCatalogSection(section),
+    );
+  }
+
+  async findPlayable(): Promise<CatalogSection[]> {
+    const sections: PrismaCatalogSection[] =
+      await this.txHost.tx.catalogSection.findMany({
+        where: { id: defaultCatalogSectionId },
+        orderBy: catalogSectionOrder,
       });
     return sections.map((section) =>
       CatalogSectionMapper.toCatalogSection(section),
