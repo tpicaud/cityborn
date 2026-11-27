@@ -1,5 +1,6 @@
 import type { Pack, Theme, ThemeIcon } from '@cityborn/api';
 import {
+  type CatalogRow,
   type PackImageFallback,
   type ThemeFilteredPacks,
   usePackImageFallback,
@@ -7,6 +8,7 @@ import {
 } from '@cityborn/client/session';
 import {
   BodyText,
+  Button,
   CardRow,
   FilterBar,
   FilterTag,
@@ -58,8 +60,9 @@ export function PackCatalog({
     themes,
     selectedTheme,
     selectTheme,
-    packs,
-    allPacksRowTitle,
+    catalogRows,
+    catalogSectionsLoadFailed,
+    reloadCatalogSections,
   }: ThemeFilteredPacks = useThemeFilteredPacks({ isScreenFocused });
 
   if (isLoading) return <LoadingScreen />;
@@ -83,14 +86,29 @@ export function PackCatalog({
             />
           ))}
         </FilterBar>
-        {packs.length === 0 ? (
+        {catalogRows.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardRow key={selectedTheme?.id ?? 'all'} title={allPacksRowTitle}>
-            {packs.map((pack: Pack) => (
-              <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
-            ))}
-          </CardRow>
+          catalogRows.map((row: CatalogRow) => (
+            <CardRow key={row.key} title={row.title}>
+              {row.packs.map((pack: Pack) => (
+                <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
+              ))}
+            </CardRow>
+          ))
+        )}
+        {catalogSectionsLoadFailed && (
+          <View gap="2" items="flex-start">
+            <BodyText>
+              Les sections du catalogue n’ont pas pu être chargées.
+            </BodyText>
+            <Button
+              compact
+              variant="outline"
+              label="Réessayer"
+              onPress={reloadCatalogSections}
+            />
+          </View>
         )}
       </View>
     </Screen>
