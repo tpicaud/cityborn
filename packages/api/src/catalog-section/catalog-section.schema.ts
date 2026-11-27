@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PackIdSchema } from '../pack/pack.schema';
+import { ThemeIdSchema } from '../theme/theme.schema';
 
 export const CatalogSectionIdSchema = z
   .string()
@@ -12,6 +13,7 @@ export const CatalogSectionSchema = z.object({
   id: CatalogSectionIdSchema,
   name: z.string(),
   isDefault: z.boolean(),
+  themeId: ThemeIdSchema.nullable(),
   packIds: z.array(PackIdSchema),
 });
 
@@ -30,6 +32,12 @@ export const SaveCatalogSectionSchema = z.object({
 });
 
 export type SaveCatalogSection = z.infer<typeof SaveCatalogSectionSchema>;
+
+export const CreateCatalogSectionSchema = SaveCatalogSectionSchema.extend({
+  themeId: ThemeIdSchema.nullable(),
+});
+
+export type CreateCatalogSection = z.infer<typeof CreateCatalogSectionSchema>;
 
 export const CatalogSectionIdParamSchema = z.object({
   id: CatalogSectionIdSchema,

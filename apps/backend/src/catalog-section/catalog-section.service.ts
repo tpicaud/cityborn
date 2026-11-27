@@ -2,7 +2,9 @@ import {
   type CatalogSection,
   type CatalogSectionId,
   type CatalogSectionMoveDirection,
+  type CreateCatalogSection,
   ErrorCode,
+  type Pack,
   type PackId,
   type SaveCatalogSection,
 } from '@cityborn/api';
@@ -16,6 +18,7 @@ import {
 import { Transactional } from '@nestjs-cls/transactional';
 import { swapWithNeighbour } from '../ordered-list';
 import { PackService } from '../pack/pack.service';
+import { ThemeService } from '../theme/theme.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
   CATALOG_SECTION_REPOSITORY,
@@ -29,6 +32,7 @@ export class CatalogSectionService {
     @Inject(CATALOG_SECTION_REPOSITORY)
     private readonly catalogSectionRepository: CatalogSectionRepository,
     private readonly packService: PackService,
+    private readonly themeService: ThemeService,
   ) {}
 
   async findAll(): Promise<CatalogSection[]> {
@@ -40,9 +44,11 @@ export class CatalogSectionService {
   }
 
   @Transactional()
-  async create({ name }: SaveCatalogSection): Promise<CatalogSection> {
+  async create(section: CreateCatalogSection): Promise<CatalogSection> {
+    if (section.themeId !== null)
+      await this.themeService.findById(section.themeId);
     await this.catalogSectionRepository.lockOrder();
-    return this.save(() => this.catalogSectionRepository.create(name));
+    return this.save(() => this.catalogSectionRepository.create(section));
   }
 
   async rename({
@@ -70,18 +76,23 @@ export class CatalogSectionService {
     await this.catalogSectionRepository.lockOrder();
     const sections: CatalogSection[] =
       await this.catalogSectionRepository.findAll();
-    const index: number = sections.findIndex((section) => section.id === id);
-    if (index === -1) throw this.sectionNotFound();
-    const reorderedSections: CatalogSection[] | null = swapWithNeighbour({
-      items: sections,
-      index,
+    const movedSection: CatalogSection | undefined = sections.find(
+      (section) => section.id === id,
+    );
+    if (!movedSection) throw this.sectionNotFound();
+    const filterSections: CatalogSection[] = sections.filter(
+      (section) => section.themeId === movedSection.themeId,
+    );
+    const reorderedFilterSections: CatalogSection[] | null = swapWithNeighbour({
+      items: filterSections,
+      index: filterSections.indexOf(movedSection),
       direction,
     });
-    if (!reorderedSections) return sections;
+    if (!reorderedFilterSections) return sections;
     await this.catalogSectionRepository.reorder(
-      reorderedSections.map((section) => section.id),
+      reorderedFilterSections.map((section) => section.id),
     );
-    return reorderedSections;
+    return this.catalogSectionRepository.findAll();
   }
 
   async delete(id: CatalogSectionId): Promise<void> {
@@ -103,11 +114,20 @@ export class CatalogSectionService {
     packId: PackId;
   }): Promise<CatalogSection> {
     this.ensurePacksEditable(id);
-    await this.packService.findById(packId);
     const section: CatalogSection | null =
-      await this.catalogSectionRepository.addPack({ id, packId });
+      await this.catalogSectionRepository.lockPacks(id);
     if (!section) throw this.sectionNotFound();
-    return section;
+    await this.catalogSectionRepository.lockPack(packId);
+    const pack: Pack = await this.packService.findById(packId);
+    if (section.themeId !== null && pack.themeId !== section.themeId)
+      throw new BadRequestException({
+        code: ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME,
+        message: 'Pack does not belong to the catalog section theme',
+      });
+    const sectionWithPack: CatalogSection | null =
+      await this.catalogSectionRepository.addPack({ id, packId });
+    if (!sectionWithPack) throw this.sectionNotFound();
+    return sectionWithPack;
   }
 
   async removePack({

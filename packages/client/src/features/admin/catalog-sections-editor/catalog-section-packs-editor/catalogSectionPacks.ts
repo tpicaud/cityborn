@@ -30,6 +30,16 @@ export function selectCatalogSectionPacks({
   });
 }
 
+function isPackInSectionFilter({
+  section,
+  pack,
+}: {
+  section: CatalogSection;
+  pack: Pack;
+}): boolean {
+  return section.themeId === null || pack.themeId === section.themeId;
+}
+
 export function searchCatalogSectionPackCandidates({
   section,
   packs,
@@ -43,10 +53,28 @@ export function searchCatalogSectionPackCandidates({
   return packs
     .filter(
       (pack: Pack) =>
+        isPackInSectionFilter({ section, pack }) &&
         !section.packIds.includes(pack.id) &&
         normalizePackName(pack.name).includes(normalizedQuery),
     )
     .sort((first: Pack, second: Pack) =>
       first.name.localeCompare(second.name, 'fr'),
     );
+}
+
+export function createEmptyPackCandidatesMessage({
+  section,
+  packs,
+}: {
+  section: CatalogSection;
+  packs: Pack[];
+}): string {
+  const filterPacks: Pack[] = packs.filter((pack: Pack) =>
+    isPackInSectionFilter({ section, pack }),
+  );
+  const scope: string = section.themeId === null ? '' : ' de ce thème';
+  if (filterPacks.length === 0) return `Aucun pack${scope} disponible.`;
+  if (filterPacks.every((pack: Pack) => section.packIds.includes(pack.id)))
+    return `Tous les packs${scope} sont déjà dans la section.`;
+  return `Aucun pack${scope} ne correspond à la recherche.`;
 }

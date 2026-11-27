@@ -333,6 +333,56 @@ describe('PrismaPackRepository', () => {
     });
   });
 
+  describe('leaveOtherThemeCatalogSections', () => {
+    it('removes the pack from the sections of other themes only', async () => {
+      const sport: Theme = buildTheme({
+        id: '00000000-0000-4000-8000-000000000050',
+        name: 'Sport',
+      });
+      const music: Theme = buildTheme({
+        id: '00000000-0000-4000-8000-000000000051',
+        name: 'Musique',
+      });
+      await prisma.theme.create({ data: sport });
+      await prisma.theme.create({ data: music });
+      const pack: Pack = await packRepository.create(buildCreatePack());
+      const sections: { id: string; themeId: string | null }[] = [
+        { id: '00000000-0000-4000-8000-000000000060', themeId: null },
+        { id: '00000000-0000-4000-8000-000000000061', themeId: sport.id },
+        { id: '00000000-0000-4000-8000-000000000062', themeId: music.id },
+      ];
+      await Promise.all(
+        sections.map(({ id, themeId }, position) =>
+          prisma.catalogSection.create({
+            data: {
+              id,
+              name: `Section ${position}`,
+              themeId,
+              position,
+              packs: { create: { packId: pack.id, position: 0 } },
+            },
+          }),
+        ),
+      );
+
+      await packRepository.leaveOtherThemeCatalogSections({
+        packId: pack.id,
+        themeId: music.id,
+      });
+
+      await expect(
+        prisma.catalogSectionPack.findMany({
+          where: { packId: pack.id },
+          select: { sectionId: true },
+          orderBy: { sectionId: 'asc' },
+        }),
+      ).resolves.toEqual([
+        { sectionId: '00000000-0000-4000-8000-000000000060' },
+        { sectionId: '00000000-0000-4000-8000-000000000062' },
+      ]);
+    });
+  });
+
   describe('countByGuessObjectId', () => {
     it('counts only packs linked to the requested guess object', async () => {
       const location: WorldLocation = buildWorldLocation();

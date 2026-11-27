@@ -86,6 +86,45 @@ describe('createCatalogRows', () => {
     ]);
   });
 
+  it('lists the sections of the selected theme before its packs', () => {
+    const tennisSection: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000063',
+      name: 'Tennis',
+      themeId: sportThemeId,
+      packIds: [tennis.id],
+    });
+
+    const rows: CatalogRow[] = createCatalogRows({
+      sections: [catalog, tennisSection, events],
+      publishedPacks: [tennis, capitals, rivers],
+      themeId: sportThemeId,
+    });
+
+    assert.deepEqual(rows, [
+      { key: tennisSection.id, title: 'Tennis', packs: [tennis] },
+      { key: sportThemeId, title: 'Catalogue', packs: [tennis] },
+    ]);
+  });
+
+  it('hides the sections of a theme on the all packs filter', () => {
+    const tennisSection: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000063',
+      name: 'Tennis',
+      themeId: sportThemeId,
+      packIds: [tennis.id],
+    });
+
+    const rows: CatalogRow[] = createCatalogRows({
+      sections: [tennisSection, catalog],
+      publishedPacks: [tennis, capitals],
+      themeId: undefined,
+    });
+
+    assert.deepEqual(rows, [
+      { key: 'all', title: 'Catalogue', packs: [capitals, tennis] },
+    ]);
+  });
+
   it('keeps every published pack under the original title without sections', () => {
     const rows: CatalogRow[] = createCatalogRows({
       sections: [],

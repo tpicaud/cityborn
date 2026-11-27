@@ -1,14 +1,17 @@
 import {
   buildCatalogSection,
   buildPack,
+  buildTheme,
   type CatalogSection,
   CatalogSectionMoveDirection,
   ErrorCode,
   type Pack,
+  type ThemeId,
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
 import type { PackService } from '../pack/pack.service';
+import type { ThemeService } from '../theme/theme.service';
 import { CatalogSectionService } from './catalog-section.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
@@ -31,11 +34,25 @@ function buildCatalogSectionService() {
   const catalogSectionRepository: DeepMocked<CatalogSectionRepository> =
     createMock<CatalogSectionRepository>();
   const packService: DeepMocked<PackService> = createMock<PackService>();
+  const themeService: DeepMocked<ThemeService> = createMock<ThemeService>();
   const catalogSectionService: CatalogSectionService =
-    new CatalogSectionService(catalogSectionRepository, packService);
+    new CatalogSectionService(
+      catalogSectionRepository,
+      packService,
+      themeService,
+    );
 
-  return { catalogSectionRepository, packService, catalogSectionService };
+  return {
+    catalogSectionRepository,
+    packService,
+    themeService,
+    catalogSectionService,
+  };
 }
+
+const sportThemeId: ThemeId = buildTheme({
+  id: '00000000-0000-4000-8000-000000000050',
+}).id;
 
 const news: CatalogSection = buildCatalogSection({
   id: '00000000-0000-4000-8000-000000000060',
@@ -51,6 +68,51 @@ const classics: CatalogSection = buildCatalogSection({
 });
 
 describe('CatalogSectionService.create', () => {
+  it('creates a section in an existing theme', async () => {
+    const {
+      catalogSectionRepository,
+      themeService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    const tennis: CatalogSection = buildCatalogSection({
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+    catalogSectionRepository.create.mockResolvedValue(tennis);
+
+    const section: CatalogSection = await catalogSectionService.create({
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+
+    expect(section).toEqual(tennis);
+    expect(themeService.findById).toHaveBeenCalledWith(sportThemeId);
+    expect(catalogSectionRepository.create).toHaveBeenCalledWith({
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+  });
+
+  it('rejects an unknown theme', async () => {
+    const {
+      catalogSectionRepository,
+      themeService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    themeService.findById.mockRejectedValue(
+      new NotFoundException({ code: ErrorCode.THEME_NOT_FOUND }),
+    );
+
+    await expect(
+      catalogSectionService.create({ name: 'Tennis', themeId: sportThemeId }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.THEME_NOT_FOUND },
+    });
+    expect(catalogSectionRepository.create).not.toHaveBeenCalled();
+  });
+
   it('translates a name conflict', async () => {
     const {
       catalogSectionRepository,
@@ -62,7 +124,7 @@ describe('CatalogSectionService.create', () => {
     );
 
     await expect(
-      catalogSectionService.create({ name: 'évènements' }),
+      catalogSectionService.create({ name: 'évènements', themeId: null }),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS },
     });
@@ -90,6 +152,7 @@ describe('CatalogSectionService.rename', () => {
       id: events.id,
       name: 'Événements',
       isDefault: false,
+      themeId: null,
       packIds: [],
     });
     expect(catalogSectionRepository.rename).toHaveBeenCalledWith({
@@ -138,17 +201,15 @@ describe('CatalogSectionService.rename', () => {
 });
 
 describe('CatalogSectionService.move', () => {
-  it('swaps a section with the previous one', async () => {
+  it('swaps a section with the previous one and returns every section', async () => {
     const {
       catalogSectionRepository,
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
-    catalogSectionRepository.findAll.mockResolvedValue([
-      news,
-      events,
-      classics,
-    ]);
+    catalogSectionRepository.findAll
+      .mockResolvedValueOnce([news, events, classics])
+      .mockResolvedValueOnce([events, news, classics]);
 
     const sections: CatalogSection[] = await catalogSectionService.move({
       id: events.id,
@@ -175,16 +236,49 @@ describe('CatalogSectionService.move', () => {
       classics,
     ]);
 
-    const sections: CatalogSection[] = await catalogSectionService.move({
+    await catalogSectionService.move({
       id: events.id,
       direction: CatalogSectionMoveDirection.DOWN,
     });
 
-    expect(sections).toEqual([news, classics, events]);
     expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
       news.id,
       classics.id,
       events.id,
+    ]);
+  });
+
+  it('reorders only the sections of the moved section filter', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    const tennis: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000063',
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+    const football: CatalogSection = buildCatalogSection({
+      id: '00000000-0000-4000-8000-000000000064',
+      name: 'Foot',
+      themeId: sportThemeId,
+    });
+    catalogSectionRepository.findAll.mockResolvedValue([
+      tennis,
+      news,
+      football,
+      events,
+    ]);
+
+    await catalogSectionService.move({
+      id: football.id,
+      direction: CatalogSectionMoveDirection.UP,
+    });
+
+    expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
+      football.id,
+      tennis.id,
     ]);
   });
 
@@ -279,6 +373,7 @@ describe('CatalogSectionService.addPack', () => {
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(events);
     packService.findById.mockResolvedValue(pack);
     catalogSectionRepository.addPack.mockResolvedValue({
       ...events,
@@ -293,6 +388,53 @@ describe('CatalogSectionService.addPack', () => {
     expect(section).toEqual({ ...events, packIds: [pack.id] });
   });
 
+  it('adds a pack of the section theme', async () => {
+    const {
+      catalogSectionRepository,
+      packService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    const tennis: CatalogSection = buildCatalogSection({
+      name: 'Tennis',
+      themeId: sportThemeId,
+    });
+    const sportPack: Pack = buildPack({ themeId: sportThemeId });
+    catalogSectionRepository.lockPacks.mockResolvedValue(tennis);
+    packService.findById.mockResolvedValue(sportPack);
+    catalogSectionRepository.addPack.mockResolvedValue({
+      ...tennis,
+      packIds: [sportPack.id],
+    });
+
+    const section: CatalogSection = await catalogSectionService.addPack({
+      id: tennis.id,
+      packId: sportPack.id,
+    });
+
+    expect(section).toEqual({ ...tennis, packIds: [sportPack.id] });
+  });
+
+  it('rejects a pack of another theme', async () => {
+    const {
+      catalogSectionRepository,
+      packService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(
+      buildCatalogSection({ name: 'Tennis', themeId: sportThemeId }),
+    );
+    packService.findById.mockResolvedValue(pack);
+
+    await expect(
+      catalogSectionService.addPack({ id: events.id, packId: pack.id }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME },
+    });
+    expect(catalogSectionRepository.addPack).not.toHaveBeenCalled();
+  });
+
   it('rejects an unknown pack', async () => {
     const {
       catalogSectionRepository,
@@ -300,6 +442,7 @@ describe('CatalogSectionService.addPack', () => {
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(events);
     packService.findById.mockRejectedValue(
       new NotFoundException({ code: ErrorCode.PACK_NOT_FOUND }),
     );
@@ -315,18 +458,17 @@ describe('CatalogSectionService.addPack', () => {
   it('rejects an unknown section', async () => {
     const {
       catalogSectionRepository,
-      packService,
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
-    packService.findById.mockResolvedValue(pack);
-    catalogSectionRepository.addPack.mockResolvedValue(null);
+    catalogSectionRepository.lockPacks.mockResolvedValue(null);
 
     await expect(
       catalogSectionService.addPack({ id: events.id, packId: pack.id }),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
     });
+    expect(catalogSectionRepository.addPack).not.toHaveBeenCalled();
   });
 
   it('rejects the default section', async () => {

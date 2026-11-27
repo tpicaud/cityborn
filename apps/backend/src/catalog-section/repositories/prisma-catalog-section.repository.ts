@@ -1,4 +1,9 @@
-import type { CatalogSection, CatalogSectionId, PackId } from '@cityborn/api';
+import type {
+  CatalogSection,
+  CatalogSectionId,
+  CreateCatalogSection,
+  PackId,
+} from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma } from '@prisma/client';
@@ -67,15 +72,19 @@ export class PrismaCatalogSectionRepository
     );
   }
 
-  async create(name: string): Promise<CatalogSection> {
+  async create({
+    name,
+    themeId,
+  }: CreateCatalogSection): Promise<CatalogSection> {
     return this.save(async () => {
       const lastPosition: number | null = (
         await this.txHost.tx.catalogSection.aggregate({
+          where: { themeId },
           _max: { position: true },
         })
       )._max.position;
       return this.txHost.tx.catalogSection.create({
-        data: { name, position: (lastPosition ?? -1) + 1 },
+        data: { name, themeId, position: (lastPosition ?? -1) + 1 },
         include: sectionPacks,
       });
     });
@@ -161,6 +170,11 @@ export class PrismaCatalogSectionRepository
   async lockPacks(id: CatalogSectionId): Promise<CatalogSection | null> {
     if (!(await this.lockSection(id))) return null;
     return this.findById(id);
+  }
+
+  async lockPack(packId: PackId): Promise<void> {
+    await this.txHost.tx.$queryRaw`
+      SELECT "id" FROM "Pack" WHERE "id" = ${packId}::uuid FOR SHARE`;
   }
 
   async reorderPacks({

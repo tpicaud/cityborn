@@ -1,6 +1,7 @@
 import type {
   CatalogSection,
   CatalogSectionId,
+  CreateCatalogSection,
   MoveCatalogSection,
   PackId,
   SaveCatalogSection,
@@ -15,7 +16,7 @@ type CatalogSectionContractClient = Pick<ContractClient, 'catalogSection'> & {
 export interface CatalogSectionApi {
   getPlayableCatalogSections(): Promise<CatalogSection[]>;
   getCatalogSections(): Promise<CatalogSection[]>;
-  createCatalogSection(section: SaveCatalogSection): Promise<CatalogSection>;
+  createCatalogSection(section: CreateCatalogSection): Promise<CatalogSection>;
   renameCatalogSection(data: {
     id: CatalogSectionId;
     section: SaveCatalogSection;

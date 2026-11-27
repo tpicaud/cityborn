@@ -52,6 +52,7 @@ describe('Catalog section player routes', () => {
         id: defaultCatalogSectionId,
         name: 'Catalogue',
         isDefault: true,
+        themeId: null,
         packIds: [],
       },
     ]);
