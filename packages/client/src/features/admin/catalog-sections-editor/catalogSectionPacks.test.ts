@@ -7,6 +7,7 @@ import {
   type Pack,
 } from '@cityborn/api';
 import {
+  areCatalogSectionPacksEditable,
   searchCatalogSectionPackCandidates,
   selectCatalogSectionPacks,
 } from './catalogSectionPacks';
@@ -23,6 +24,19 @@ const capitals: Pack = buildPack({
 const rivers: Pack = buildPack({
   id: '00000000-0000-4000-8000-000000000072',
   name: 'Fleuves',
+});
+
+describe('areCatalogSectionPacksEditable', () => {
+  it('lets the packs of an admin section be edited', () => {
+    assert.equal(areCatalogSectionPacksEditable(buildCatalogSection()), true);
+  });
+
+  it('keeps the default section holding every published pack', () => {
+    assert.equal(
+      areCatalogSectionPacksEditable(buildCatalogSection({ isDefault: true })),
+      false,
+    );
+  });
 });
 
 describe('selectCatalogSectionPacks', () => {

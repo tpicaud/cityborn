@@ -50,7 +50,7 @@ export function useThemeFilteredPacks({
   const {
     data: catalogSections = noCatalogSections,
     isPending: isLoadingCatalogSections,
-    isLoadingError: catalogSectionsLoadFailed,
+    isLoadingError: isCatalogSectionsLoadError,
     refetch: refetchCatalogSections,
   }: UseQueryResult<CatalogSection[]> = useQuery({
     ...playableCatalogSectionsQueryOptions(catalogSectionApi),
@@ -92,7 +92,8 @@ export function useThemeFilteredPacks({
     selectTheme: setSelectedThemeId,
     packs,
     catalogRows,
-    catalogSectionsLoadFailed,
+    catalogSectionsLoadFailed:
+      isCatalogSectionsLoadError && selectedTheme === undefined,
     reloadCatalogSections: async () => {
       await refetchCatalogSections();
     },

@@ -8,6 +8,12 @@ function normalizePackName(name: string): string {
     .trim();
 }
 
+export function areCatalogSectionPacksEditable(
+  section: CatalogSection,
+): boolean {
+  return !section.isDefault;
+}
+
 export function selectCatalogSectionPacks({
   section,
   packs,
