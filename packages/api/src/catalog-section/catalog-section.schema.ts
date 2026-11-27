@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PackIdSchema } from '../pack/pack.schema';
 
 export const CatalogSectionIdSchema = z
   .string()
@@ -11,6 +12,7 @@ export const CatalogSectionSchema = z.object({
   id: CatalogSectionIdSchema,
   name: z.string(),
   isDefault: z.boolean(),
+  packIds: z.array(PackIdSchema),
 });
 
 export type CatalogSection = z.infer<typeof CatalogSectionSchema>;
@@ -31,6 +33,11 @@ export type SaveCatalogSection = z.infer<typeof SaveCatalogSectionSchema>;
 
 export const CatalogSectionIdParamSchema = z.object({
   id: CatalogSectionIdSchema,
+});
+
+export const CatalogSectionPackParamSchema = z.object({
+  id: CatalogSectionIdSchema,
+  packId: z.string().uuid().pipe(PackIdSchema),
 });
 
 export enum CatalogSectionMoveDirection {

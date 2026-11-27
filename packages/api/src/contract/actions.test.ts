@@ -31,10 +31,12 @@ describe('httpActionRoutes', () => {
       .sort();
 
     assert.deepEqual(actions, [
+      'admin.catalog-section.addPackToCatalogSection',
       'admin.catalog-section.createCatalogSection',
       'admin.catalog-section.deleteCatalogSection',
       'admin.catalog-section.getCatalogSections',
       'admin.catalog-section.moveCatalogSection',
+      'admin.catalog-section.removePackFromCatalogSection',
       'admin.catalog-section.renameCatalogSection',
       'admin.guess-object.createGuessObject',
       'admin.guess-object.deleteGuessObject',
