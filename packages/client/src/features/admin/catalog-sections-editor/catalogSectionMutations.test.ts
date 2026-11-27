@@ -118,6 +118,7 @@ function createMutationsFixture({
     deleteCatalogSection: unexpectedCall,
     addPackToCatalogSection: unexpectedCall,
     removePackFromCatalogSection: unexpectedCall,
+    movePackInCatalogSection: unexpectedCall,
     ...overrides,
   };
   const queryClient: QueryClient = new QueryClient();

@@ -5,6 +5,8 @@ import {
   buildPack,
   type CatalogSection,
   type CatalogSectionId,
+  CatalogSectionMoveDirection,
+  type MoveCatalogSection,
   type Pack,
   type PackId,
 } from '@cityborn/api';
@@ -17,6 +19,8 @@ import {
 } from './catalogSectionPackMutations';
 
 type SectionPackChange = { id: CatalogSectionId; packId: PackId };
+
+type SectionPackMove = SectionPackChange & { move: MoveCatalogSection };
 
 type PackMutationsFixture = {
   queryClient: QueryClient;
@@ -34,6 +38,10 @@ const capitals: Pack = buildPack({
   id: '00000000-0000-4000-8000-000000000071',
   name: 'Capitales',
 });
+const rivers: Pack = buildPack({
+  id: '00000000-0000-4000-8000-000000000072',
+  name: 'Fleuves',
+});
 const news: CatalogSection = buildCatalogSection({
   id: '00000000-0000-4000-8000-000000000060',
   name: 'Nouveautés',
@@ -41,7 +49,7 @@ const news: CatalogSection = buildCatalogSection({
 const events: CatalogSection = buildCatalogSection({
   id: '00000000-0000-4000-8000-000000000061',
   name: 'Événements',
-  packIds: [monuments.id],
+  packIds: [monuments.id, capitals.id],
 });
 
 const networkError: TypeError = new TypeError('Network request failed');
@@ -66,6 +74,7 @@ function createPackMutationsFixture({
     deleteCatalogSection: unexpectedCall,
     addPackToCatalogSection: unexpectedCall,
     removePackFromCatalogSection: unexpectedCall,
+    movePackInCatalogSection: unexpectedCall,
     ...overrides,
   };
   const queryClient: QueryClient = new QueryClient();
@@ -98,17 +107,20 @@ describe('createCatalogSectionPackMutations', () => {
       catalogSectionApi: {
         addPackToCatalogSection: async (data: SectionPackChange) => {
           change = data;
-          return { ...events, packIds: [monuments.id, capitals.id] };
+          return {
+            ...events,
+            packIds: [monuments.id, capitals.id, rivers.id],
+          };
         },
       },
     });
 
-    await fixture.mutations.addPack(capitals);
+    await fixture.mutations.addPack(rivers);
 
-    assert.deepEqual(change, { id: events.id, packId: capitals.id });
+    assert.deepEqual(change, { id: events.id, packId: rivers.id });
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
-      { ...events, packIds: [monuments.id, capitals.id] },
+      { ...events, packIds: [monuments.id, capitals.id, rivers.id] },
     ]);
     assert.deepEqual(fixture.savingStates, [true, false]);
   });
@@ -117,7 +129,10 @@ describe('createCatalogSectionPackMutations', () => {
     const fixture: PackMutationsFixture = createPackMutationsFixture({
       context,
       catalogSectionApi: {
-        removePackFromCatalogSection: async () => ({ ...events, packIds: [] }),
+        removePackFromCatalogSection: async () => ({
+          ...events,
+          packIds: [capitals.id],
+        }),
       },
     });
 
@@ -125,7 +140,35 @@ describe('createCatalogSectionPackMutations', () => {
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
-      { ...events, packIds: [] },
+      { ...events, packIds: [capitals.id] },
+    ]);
+  });
+
+  it('shows the section packs in their new order after a move', async (context: TestContext) => {
+    let move: SectionPackMove | undefined;
+    const fixture: PackMutationsFixture = createPackMutationsFixture({
+      context,
+      catalogSectionApi: {
+        movePackInCatalogSection: async (data: SectionPackMove) => {
+          move = data;
+          return { ...events, packIds: [capitals.id, monuments.id] };
+        },
+      },
+    });
+
+    await fixture.mutations.movePack({
+      pack: monuments,
+      direction: CatalogSectionMoveDirection.DOWN,
+    });
+
+    assert.deepEqual(move, {
+      id: events.id,
+      packId: monuments.id,
+      move: { direction: CatalogSectionMoveDirection.DOWN },
+    });
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
+      news,
+      { ...events, packIds: [capitals.id, monuments.id] },
     ]);
   });
 
@@ -139,7 +182,7 @@ describe('createCatalogSectionPackMutations', () => {
       },
     });
 
-    await fixture.mutations.addPack(capitals);
+    await fixture.mutations.addPack(rivers);
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,

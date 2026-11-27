@@ -33,6 +33,11 @@ export interface CatalogSectionApi {
     id: CatalogSectionId;
     packId: PackId;
   }): Promise<CatalogSection>;
+  movePackInCatalogSection(data: {
+    id: CatalogSectionId;
+    packId: PackId;
+    move: MoveCatalogSection;
+  }): Promise<CatalogSection>;
 }
 
 export function createCatalogSectionApi(
@@ -93,6 +98,14 @@ export function createCatalogSectionApi(
         await contractClient.admin.catalogSection.removePackFromCatalogSection({
           params: { id, packId },
           body: {},
+        }),
+      );
+    },
+    async movePackInCatalogSection({ id, packId, move }) {
+      return unwrapApiResponse(
+        await contractClient.admin.catalogSection.movePackInCatalogSection({
+          params: { id, packId },
+          body: move,
         }),
       );
     },

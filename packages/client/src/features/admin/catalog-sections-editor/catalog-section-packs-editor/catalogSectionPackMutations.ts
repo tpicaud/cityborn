@@ -1,4 +1,8 @@
-import type { CatalogSection, Pack } from '@cityborn/api';
+import type {
+  CatalogSection,
+  CatalogSectionMoveDirection,
+  Pack,
+} from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { CatalogSectionApi } from '../../../../domains/catalog-section/catalogSectionApi';
 import { updateCatalogSectionsCache } from '../../../../domains/catalog-section/catalogSectionQueries';
@@ -7,6 +11,10 @@ import type { ReportError } from '../../../../shared/errorReporter';
 export type CatalogSectionPackMutations = {
   addPack: (pack: Pack) => Promise<void>;
   removePack: (pack: Pack) => Promise<void>;
+  movePack: (move: {
+    pack: Pack;
+    direction: CatalogSectionMoveDirection;
+  }) => Promise<void>;
 };
 
 export function createCatalogSectionPackMutations({
@@ -55,6 +63,14 @@ export function createCatalogSectionPackMutations({
         catalogSectionApi.removePackFromCatalogSection({
           id: section.id,
           packId: pack.id,
+        }),
+      ),
+    movePack: ({ pack, direction }) =>
+      saveSectionPacks(() =>
+        catalogSectionApi.movePackInCatalogSection({
+          id: section.id,
+          packId: pack.id,
+          move: { direction },
         }),
       ),
   };
