@@ -7,8 +7,8 @@ Usage: scripts/teardown-worktree.sh [chemin_du_worktree]
        scripts/teardown-worktree.sh --orphans
 
 Sans argument, supprime le worktree courant et son env de dev :
-  - refuse un worktree d'un autre dépôt, le checkout principal, un worktree verrouillé
-    ou qui a des changements non commités
+  - refuse un worktree d'un autre dépôt, le checkout principal, un worktree verrouillé,
+    qui contient d'autres worktrees ou qui a des changements non commités
   - arrête les processus lancés dans son dossier
   - revérifie ces critères, puis supprime son projet Docker Compose : conteneurs, volumes, réseau
   - supprime son dossier avec `git worktree remove` ; la branche locale est conservée
@@ -176,7 +176,12 @@ if [ "$target_root" = "$main_root" ]; then
 fi
 
 worktree_blocker() {
-  local changes
+  local changes nested
+  nested="$(checkouts | awk -v root="$target_root/" 'index($0, root) == 1')"
+  if [ -n "$nested" ]; then
+    printf 'il contient des worktrees :\n%s\n' "$nested"
+    return
+  fi
   if git --git-dir="$script_repo" worktree list --porcelain |
     awk -v root="$target_root" '/^worktree / {current = substr($0, 10)} current == root && /^locked/ {found = 1} END {exit !found}'; then
     echo "le worktree est verrouillé"
@@ -195,10 +200,10 @@ refuse_if_blocked() {
 refuse_if_blocked
 
 project="$(env_value "$target_root/apps/backend/.env" COMPOSE_PROJECT_NAME)"
+project="${project:-$(project_of_checkout "$target_root")}"
 if [ "$project" = "$main_project" ]; then
   project=""
 fi
-project="${project:-$(project_of_checkout "$target_root")}"
 if [ -n "$project" ]; then
   owners="$(project_checkouts "$project")"
   if [ -n "$owners" ] && ! grep -qxF "$target_root" <<< "$owners"; then
