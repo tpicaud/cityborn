@@ -1,9 +1,13 @@
-import type { CatalogSection, Pack } from '@cityborn/api';
+import {
+  type CatalogSection,
+  CatalogSectionMoveDirection,
+  type Pack,
+} from '@cityborn/api';
 import {
   type CatalogSectionPacks,
   useCatalogSectionPacks,
 } from '@cityborn/client/admin';
-import { Minus, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 
@@ -49,9 +53,39 @@ export function CatalogSectionPackEditor({
           aria-label={`Packs de ${section.name}`}
           className="flex flex-col gap-1"
         >
-          {sectionPacks.sectionPacks.map((pack) => (
+          {sectionPacks.sectionPacks.map((pack, index) => (
             <li key={pack.id} className="flex items-center gap-2">
               <PackSummary pack={pack} />
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isDisabled || index === 0}
+                onClick={() =>
+                  sectionPacks.movePack({
+                    pack,
+                    direction: CatalogSectionMoveDirection.UP,
+                  })
+                }
+                aria-label={`Monter ${pack.name}`}
+              >
+                <ChevronUp size={18} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={
+                  isDisabled || index === sectionPacks.sectionPacks.length - 1
+                }
+                onClick={() =>
+                  sectionPacks.movePack({
+                    pack,
+                    direction: CatalogSectionMoveDirection.DOWN,
+                  })
+                }
+                aria-label={`Descendre ${pack.name}`}
+              >
+                <ChevronDown size={18} />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
