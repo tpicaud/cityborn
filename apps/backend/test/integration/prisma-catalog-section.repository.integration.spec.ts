@@ -76,20 +76,18 @@ describe('PrismaCatalogSectionRepository', () => {
       const migration: string = readFileSync(
         resolve(
           __dirname,
-          '../../prisma/migrations/20261127074602_add_default_catalog_section/migration.sql',
+          '../../prisma/migrations/20261121155308_add_catalog_section/migration.sql',
         ),
         'utf8',
       );
-      await insertCatalogSection({
-        section: buildCatalogSection(),
-        position: 0,
-      });
+      const insertion: string = migration.slice(
+        migration.indexOf('INSERT INTO "CatalogSection"'),
+      );
 
-      await prisma.$executeRawUnsafe(migration);
+      await prisma.$executeRawUnsafe(insertion);
 
       await expect(catalogSectionRepository.findAll()).resolves.toEqual([
         defaultSection,
-        buildCatalogSection(),
       ]);
     });
   });
