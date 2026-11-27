@@ -33,6 +33,7 @@ export function CatalogSectionRow({
   const isConfirming: boolean = editor.state.deletionSectionId === section.id;
   const [isShowingPacks, setIsShowingPacks] = useState<boolean>(false);
   const packEditorId: string = `catalog-section-packs-${section.id}`;
+  const packCount: number = section.packIds.length;
   const error: string | undefined = isEditing
     ? editor.editForm.formState.errors.name?.message
     : undefined;
@@ -85,6 +86,11 @@ export function CatalogSectionRow({
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium flex-1 break-all">{section.name}</span>
+          {areCatalogSectionPacksEditable(section) && (
+            <span className="text-zinc-400 text-sm">
+              {packCount} pack{packCount > 1 ? 's' : ''}
+            </span>
+          )}
           {section.isDefault && (
             <span className="text-zinc-400 text-xs">Par défaut</span>
           )}
