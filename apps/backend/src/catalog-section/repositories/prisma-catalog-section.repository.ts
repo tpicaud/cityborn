@@ -130,9 +130,7 @@ export class PrismaCatalogSectionRepository
     id: CatalogSectionId;
     packId: PackId;
   }): Promise<CatalogSection | null> {
-    const lockedSections: { id: string }[] = await this.txHost.tx.$queryRaw`
-      SELECT "id" FROM "CatalogSection" WHERE "id" = ${id}::uuid FOR UPDATE`;
-    if (lockedSections.length === 0) return null;
+    if (!(await this.lockSection(id))) return null;
     const lastPosition: number | null = (
       await this.txHost.tx.catalogSectionPack.aggregate({
         where: { sectionId: id },
@@ -158,6 +156,34 @@ export class PrismaCatalogSectionRepository
       where: { sectionId: id, packId },
     });
     return this.findById(id);
+  }
+
+  async lockPacks(id: CatalogSectionId): Promise<CatalogSection | null> {
+    if (!(await this.lockSection(id))) return null;
+    return this.findById(id);
+  }
+
+  async reorderPacks({
+    id,
+    packIds,
+  }: {
+    id: CatalogSectionId;
+    packIds: PackId[];
+  }): Promise<void> {
+    await Promise.all(
+      packIds.map((packId, position) =>
+        this.txHost.tx.catalogSectionPack.update({
+          where: { sectionId_packId: { sectionId: id, packId } },
+          data: { position },
+        }),
+      ),
+    );
+  }
+
+  private async lockSection(id: CatalogSectionId): Promise<boolean> {
+    const lockedSections: { id: string }[] = await this.txHost.tx.$queryRaw`
+      SELECT "id" FROM "CatalogSection" WHERE "id" = ${id}::uuid FOR UPDATE`;
+    return lockedSections.length > 0;
   }
 
   private async findById(id: CatalogSectionId): Promise<CatalogSection | null> {

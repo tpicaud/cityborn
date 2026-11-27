@@ -1,8 +1,9 @@
 import { type AdminTheme, ThemeMoveDirection } from '@cityborn/api';
 import type { ThemesManagement } from '@cityborn/client/admin';
-import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { MoveControls } from '@/components/ui/MoveControls';
 import { IconifyIconPreview, ThemeIconGlyph } from './theme-icon-glyph';
 
 export function ThemeRow({
@@ -103,34 +104,21 @@ export function ThemeRow({
           )}
           {!isConfirming && (
             <>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy || isFirst}
-                onClick={() =>
-                  editor.moveTheme({
-                    theme,
-                    direction: ThemeMoveDirection.UP,
-                  })
+              <MoveControls
+                itemLabel={theme.name}
+                isFirst={isFirst}
+                isLast={isLast}
+                disabled={isBusy}
+                onMoveUp={() =>
+                  editor.moveTheme({ theme, direction: ThemeMoveDirection.UP })
                 }
-                aria-label={`Monter ${theme.name}`}
-              >
-                <ChevronUp size={18} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy || isLast}
-                onClick={() =>
+                onMoveDown={() =>
                   editor.moveTheme({
                     theme,
                     direction: ThemeMoveDirection.DOWN,
                   })
                 }
-                aria-label={`Descendre ${theme.name}`}
-              >
-                <ChevronDown size={18} />
-              </Button>
+              />
               <Button
                 type="button"
                 variant="ghost"

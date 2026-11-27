@@ -400,3 +400,119 @@ describe('CatalogSectionService.removePack', () => {
     expect(catalogSectionRepository.removePack).not.toHaveBeenCalled();
   });
 });
+
+describe('CatalogSectionService.movePack', () => {
+  const monuments: Pack = buildPack({
+    id: '00000000-0000-4000-8000-000000000070',
+  });
+  const capitals: Pack = buildPack({
+    id: '00000000-0000-4000-8000-000000000071',
+  });
+  const rivers: Pack = buildPack({
+    id: '00000000-0000-4000-8000-000000000072',
+  });
+  const filledEvents: CatalogSection = {
+    ...events,
+    packIds: [monuments.id, capitals.id, rivers.id],
+  };
+
+  it('swaps a pack with the next one', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(filledEvents);
+
+    const section: CatalogSection = await catalogSectionService.movePack({
+      id: events.id,
+      packId: monuments.id,
+      direction: CatalogSectionMoveDirection.DOWN,
+    });
+
+    expect(section).toEqual({
+      ...events,
+      packIds: [capitals.id, monuments.id, rivers.id],
+    });
+    expect(catalogSectionRepository.reorderPacks).toHaveBeenCalledWith({
+      id: events.id,
+      packIds: [capitals.id, monuments.id, rivers.id],
+    });
+  });
+
+  it('keeps the order when the pack is already at the edge', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(filledEvents);
+
+    const section: CatalogSection = await catalogSectionService.movePack({
+      id: events.id,
+      packId: monuments.id,
+      direction: CatalogSectionMoveDirection.UP,
+    });
+
+    expect(section).toEqual(filledEvents);
+    expect(catalogSectionRepository.reorderPacks).not.toHaveBeenCalled();
+  });
+
+  it('rejects a pack outside the section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(events);
+
+    await expect(
+      catalogSectionService.movePack({
+        id: events.id,
+        packId: monuments.id,
+        direction: CatalogSectionMoveDirection.DOWN,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_PACK_NOT_FOUND },
+    });
+    expect(catalogSectionRepository.reorderPacks).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.lockPacks.mockResolvedValue(null);
+
+    await expect(
+      catalogSectionService.movePack({
+        id: events.id,
+        packId: monuments.id,
+        direction: CatalogSectionMoveDirection.DOWN,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+    });
+  });
+
+  it('rejects the default section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+
+    await expect(
+      catalogSectionService.movePack({
+        id: defaultCatalogSectionId,
+        packId: monuments.id,
+        direction: CatalogSectionMoveDirection.DOWN,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_DEFAULT_PACKS_NOT_EDITABLE },
+    });
+    expect(catalogSectionRepository.lockPacks).not.toHaveBeenCalled();
+  });
+});

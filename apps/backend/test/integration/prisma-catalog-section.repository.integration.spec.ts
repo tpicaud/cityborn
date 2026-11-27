@@ -556,4 +556,95 @@ describe('PrismaCatalogSectionRepository', () => {
       expect(section).toBeNull();
     });
   });
+
+  describe('lockPacks', () => {
+    it('returns the section with its packs in order', async () => {
+      const events: CatalogSection = buildCatalogSection({
+        name: 'Évènements',
+      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all([insertPack(monuments), insertPack(capitals)]);
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 1,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 0,
+        }),
+      ]);
+
+      const section: CatalogSection | null =
+        await catalogSectionRepository.lockPacks(events.id);
+
+      expect(section).toEqual({
+        ...events,
+        packIds: [capitals.id, monuments.id],
+      });
+    });
+
+    it('returns null for an unknown section', async () => {
+      const section: CatalogSection | null =
+        await catalogSectionRepository.lockPacks(buildCatalogSection().id);
+
+      expect(section).toBeNull();
+    });
+  });
+
+  describe('reorderPacks', () => {
+    it('positions the packs of the section only in the given order', async () => {
+      const events: CatalogSection = buildCatalogSection({
+        name: 'Évènements',
+      });
+      const news: CatalogSection = buildCatalogSection({
+        id: '00000000-0000-4000-8000-000000000063',
+        name: 'Nouveautés',
+      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await insertCatalogSection({ section: news, position: 1 });
+      await Promise.all(
+        [monuments, capitals, rivers].map((pack) => insertPack(pack)),
+      );
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 1,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: rivers.id,
+          position: 2,
+        }),
+        insertCatalogSectionPack({
+          sectionId: news.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: news.id,
+          packId: rivers.id,
+          position: 1,
+        }),
+      ]);
+
+      await catalogSectionRepository.reorderPacks({
+        id: events.id,
+        packIds: [capitals.id, rivers.id, monuments.id],
+      });
+
+      await expect(catalogSectionRepository.findAll()).resolves.toEqual([
+        { ...events, packIds: [capitals.id, rivers.id, monuments.id] },
+        { ...news, packIds: [monuments.id, rivers.id] },
+      ]);
+    });
+  });
 });

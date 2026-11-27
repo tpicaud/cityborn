@@ -47,18 +47,29 @@ describe('Catalog section admin routes', () => {
     });
   }
 
+  async function createSection({
+    token,
+    name,
+  }: {
+    token: string;
+    name: string;
+  }): Promise<CatalogSection> {
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.admin.catalogSection.createCatalogSection.path)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name })
+      .expect(201);
+    return CatalogSectionSchema.parse(response.body);
+  }
+
   it('creates, renames and moves a section to the top of the list', async () => {
     const token: string = await authenticateAdmin();
     await insertDefaultSection();
 
-    const createdResponse: request.Response = await request(app.getHttpServer())
-      .post(contract.admin.catalogSection.createCatalogSection.path)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Événements' })
-      .expect(201);
-    const section: CatalogSection = CatalogSectionSchema.parse(
-      createdResponse.body,
-    );
+    const section: CatalogSection = await createSection({
+      token,
+      name: 'Événements',
+    });
     await request(app.getHttpServer())
       .put(
         contract.admin.catalogSection.renameCatalogSection.path.replace(
@@ -149,14 +160,10 @@ describe('Catalog section admin routes', () => {
       }),
     ];
     await insertPublishedPacks(packs);
-    const createdResponse: request.Response = await request(app.getHttpServer())
-      .post(contract.admin.catalogSection.createCatalogSection.path)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Événements' })
-      .expect(201);
-    const section: CatalogSection = CatalogSectionSchema.parse(
-      createdResponse.body,
-    );
+    const section: CatalogSection = await createSection({
+      token,
+      name: 'Événements',
+    });
 
     await addPack({ token, section, packs });
 
@@ -183,16 +190,93 @@ describe('Catalog section admin routes', () => {
     ]);
   });
 
+  function movePack({
+    token,
+    section,
+    pack,
+  }: {
+    token: string;
+    section: CatalogSection;
+    pack: Pack;
+  }): request.Test {
+    return request(app.getHttpServer())
+      .post(
+        contract.admin.catalogSection.movePackInCatalogSection.path
+          .replace(':id', section.id)
+          .replace(':packId', pack.id),
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ direction: CatalogSectionMoveDirection.DOWN });
+  }
+
+  it('shows the player the pack order of a section without changing the others', async () => {
+    const token: string = await authenticateAdmin();
+    const monuments: Pack = buildPack({
+      id: '00000000-0000-4000-8000-000000000070',
+      name: 'Monuments',
+    });
+    const capitals: Pack = buildPack({
+      id: '00000000-0000-4000-8000-000000000071',
+      name: 'Capitales',
+    });
+    const rivers: Pack = buildPack({
+      id: '00000000-0000-4000-8000-000000000072',
+      name: 'Fleuves',
+    });
+    await insertPublishedPacks([monuments, capitals, rivers]);
+    const news: CatalogSection = await createSection({
+      token,
+      name: 'Nouveautés',
+    });
+    const events: CatalogSection = await createSection({
+      token,
+      name: 'Événements',
+    });
+    await addPack({ token, section: news, packs: [monuments, rivers] });
+    await addPack({
+      token,
+      section: events,
+      packs: [monuments, capitals, rivers],
+    });
+
+    await movePack({ token, section: events, pack: monuments }).expect(200);
+    await movePack({ token, section: events, pack: monuments }).expect(200);
+
+    const response: request.Response = await request(app.getHttpServer())
+      .get(contract.catalogSection.getPlayableCatalogSections.path)
+      .expect(200);
+    expect(CatalogSectionsSchema.parse(response.body)).toEqual([
+      { ...news, packIds: [monuments.id, rivers.id] },
+      { ...events, packIds: [capitals.id, rivers.id, monuments.id] },
+    ]);
+  });
+
+  it('refuses to move a pack outside the section', async () => {
+    const token: string = await authenticateAdmin();
+    const monuments: Pack = buildPack({ name: 'Monuments' });
+    await insertPublishedPacks([monuments]);
+    const events: CatalogSection = await createSection({
+      token,
+      name: 'Événements',
+    });
+
+    const response: request.Response = await movePack({
+      token,
+      section: events,
+      pack: monuments,
+    }).expect(404);
+
+    expect(ApiErrorSchema.parse(response.body)).toMatchObject({
+      code: ErrorCode.CATALOG_SECTION_PACK_NOT_FOUND,
+    });
+  });
+
   it('refuses to add an unknown pack', async () => {
     const token: string = await authenticateAdmin();
-    const createdResponse: request.Response = await request(app.getHttpServer())
-      .post(contract.admin.catalogSection.createCatalogSection.path)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Événements' })
-      .expect(201);
-    const section: CatalogSection = CatalogSectionSchema.parse(
-      createdResponse.body,
-    );
+    const section: CatalogSection = await createSection({
+      token,
+      name: 'Événements',
+    });
 
     const response: request.Response = await request(app.getHttpServer())
       .put(

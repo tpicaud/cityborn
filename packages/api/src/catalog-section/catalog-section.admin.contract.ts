@@ -62,6 +62,13 @@ export const catalogSectionAdminContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: CatalogSectionSchema },
     },
+    movePackInCatalogSection: {
+      method: 'POST',
+      path: '/:id/packs/:packId/move',
+      pathParams: CatalogSectionPackParamSchema,
+      body: MoveCatalogSectionSchema,
+      responses: { 200: CatalogSectionSchema },
+    },
   },
   { pathPrefix: '/catalog-section' },
 );

@@ -1,4 +1,8 @@
-import type { CatalogSection, Pack } from '@cityborn/api';
+import {
+  type CatalogSection,
+  CatalogSectionMoveDirection,
+  type Pack,
+} from '@cityborn/api';
 import {
   type CatalogSectionPacks,
   useCatalogSectionPacks,
@@ -6,6 +10,7 @@ import {
 import { Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
+import { MoveControls } from '@/components/ui/MoveControls';
 
 function PackSummary({ pack }: { pack: Pack }) {
   return (
@@ -49,9 +54,27 @@ export function CatalogSectionPackEditor({
           aria-label={`Packs de ${section.name}`}
           className="flex flex-col gap-1"
         >
-          {sectionPacks.sectionPacks.map((pack) => (
+          {sectionPacks.sectionPacks.map((pack, index) => (
             <li key={pack.id} className="flex items-center gap-2">
               <PackSummary pack={pack} />
+              <MoveControls
+                itemLabel={pack.name}
+                isFirst={index === 0}
+                isLast={index === sectionPacks.sectionPacks.length - 1}
+                disabled={isDisabled}
+                onMoveUp={() =>
+                  sectionPacks.movePack({
+                    pack,
+                    direction: CatalogSectionMoveDirection.UP,
+                  })
+                }
+                onMoveDown={() =>
+                  sectionPacks.movePack({
+                    pack,
+                    direction: CatalogSectionMoveDirection.DOWN,
+                  })
+                }
+              />
               <Button
                 type="button"
                 variant="ghost"
