@@ -1,4 +1,9 @@
 export {
+  type SessionInvitation,
+  type SessionInvitationOptions,
+  useSessionInvitation,
+} from './invitation/useSessionInvitation';
+export {
   type PackImageFallback,
   type PackImageFallbackOptions,
   usePackImageFallback,

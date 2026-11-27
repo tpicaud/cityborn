@@ -6,8 +6,6 @@ import type {
   PlayerId,
   Session,
   SessionId,
-  SessionJoinAck,
-  SessionReconnectToken,
   UserId,
 } from '@cityborn/api';
 import {
@@ -22,7 +20,12 @@ import {
   sessionWsServerEvent,
   UserFacingError,
 } from '@cityborn/api';
-import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  type UseQueryResult,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   type RefObject,
   useCallback,
@@ -42,6 +45,15 @@ import {
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import {
+  admitSessionPlayer,
+  createSessionAdmissionDecision,
+  isSessionEntryRejected,
+  type JoinedSessionPlayer,
+  type SessionAdmission,
+  type SessionAdmissionDecision,
+} from './admission/sessionAdmission';
+import { sessionAdmissionQueryOptions } from './admission/sessionAdmissionQuery';
 import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
@@ -56,7 +68,9 @@ export type SessionControllerOptions = {
 
 export type SessionController = {
   session: Session | undefined;
+  sessionReceivedAt: number | undefined;
   localPlayerID: PlayerId | undefined;
+  isAdmitting: boolean;
   isHost: boolean;
   isLaunchingQuickPlay: boolean;
   connectionStatus: WsConnectionStatus;
@@ -78,9 +92,9 @@ export type SessionController = {
 const kickedFromLobbyMessage: string =
   "L'hôte t'a sorti du lobby. Tu peux revenir avec le code, s'il veut bien de toi.";
 
-type JoinedPlayer = {
-  playerID: PlayerId;
-  reconnectToken: SessionReconnectToken | undefined;
+type SessionSnapshot = {
+  session: Session;
+  receivedAt: number;
 };
 
 export async function enterSession({
@@ -122,17 +136,46 @@ export function useSessionController({
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
-  const [session, setSession] = useState<Session>();
-  const [joinedPlayerID, setJoinedPlayerID] = useState<PlayerId>();
+  const [snapshot, setSnapshot] = useState<SessionSnapshot>();
+  const session: Session | undefined = snapshot?.session;
   const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
     useState<boolean>(true);
-  const localPlayerID: PlayerId | undefined =
-    joinedPlayerID ??
-    presetPlayerID({ mode: session?.mode, username: user?.username });
-  const joinedPlayer: RefObject<JoinedPlayer | null> =
-    useRef<JoinedPlayer | null>(null);
-  const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
   const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
+  const [admission, setAdmission] = useState<SessionAdmission>({
+    status: 'idle',
+  });
+  const automaticPlayerID: PlayerId | undefined = presetPlayerID({
+    mode: session?.mode,
+    username: user?.username,
+  });
+  const {
+    localPlayerID,
+    isAdmitting,
+    error,
+    returnToHome,
+  }: SessionAdmissionDecision = createSessionAdmissionDecision({
+    session,
+    admission,
+    automaticPlayerID,
+  });
+  const joinedPlayer: RefObject<JoinedSessionPlayer | null> =
+    useRef<JoinedSessionPlayer | null>(null);
+  const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
+  const joinInProgress: RefObject<boolean> = useRef<boolean>(false);
+  const hasSnapshot: boolean = snapshot !== undefined;
+  const {
+    data: fetchedSession,
+    error: fetchSessionError,
+    isFetchedAfterMount,
+  }: UseQueryResult<Session> = useQuery(
+    sessionAdmissionQueryOptions({
+      sessionApi,
+      sessionID,
+      hasSnapshot,
+      admission,
+      automaticPlayerID,
+    }),
+  );
 
   const leaveKickedSession: () => void = useCallback(() => {
     joinedPlayer.current = null;
@@ -142,20 +185,26 @@ export function useSessionController({
 
   const restoreSession = useCallback(
     async (restoredChannel: SessionChannel) => {
-      const player: JoinedPlayer | null = joinedPlayer.current;
+      const player: JoinedSessionPlayer | null = joinedPlayer.current;
       if (!player) return;
-      await reconnectJoinedPlayer({
-        reconnect: async () => {
-          await restoredChannel.emit(sessionWsEvent.reconnect, {
-            sessionID,
-            playerID: player.playerID,
-            reconnectToken: player.reconnectToken,
-          });
-        },
-        leaveKickedSession,
-      });
+      try {
+        await reconnectJoinedPlayer({
+          reconnect: async () => {
+            await restoredChannel.emit(sessionWsEvent.reconnect, {
+              sessionID,
+              playerID: player.playerID,
+              reconnectToken: player.reconnectToken,
+            });
+          },
+          leaveKickedSession,
+        });
+      } catch (error: unknown) {
+        if (!isSessionEntryRejected(error)) throw error;
+        reportError(error);
+        navigation.returnTo('/');
+      }
     },
-    [sessionID, leaveKickedSession],
+    [sessionID, leaveKickedSession, reportError, navigation],
   );
 
   const {
@@ -167,16 +216,44 @@ export function useSessionController({
   });
 
   useEffect(() => {
-    const loadSession = async (): Promise<void> => {
-      try {
-        setSession(await sessionApi.fetchSession(sessionID));
-      } catch (error: unknown) {
-        reportError(error);
-        navigation.returnTo('/');
-      }
-    };
-    loadSession();
-  }, [sessionID, sessionApi, navigation, reportError]);
+    if (
+      !isFetchedAfterMount ||
+      joinInProgress.current ||
+      joinedPlayer.current ||
+      admission.status === 'pending' ||
+      returnToHome
+    ) {
+      return;
+    }
+    if (
+      fetchSessionError &&
+      (!hasSnapshot || isSessionEntryRejected(fetchSessionError))
+    ) {
+      reportError(
+        fetchSessionError,
+        'Impossible de charger la partie. Vérifiez votre connexion et réessayez.',
+      );
+      navigation.returnTo('/');
+      return;
+    }
+    if (fetchedSession) {
+      const receivedAt: number = performance.now();
+      setSnapshot((current) =>
+        current?.session === fetchedSession
+          ? current
+          : { session: fetchedSession, receivedAt },
+      );
+    }
+  }, [
+    admission.status,
+    fetchedSession,
+    fetchSessionError,
+    hasSnapshot,
+    isFetchedAfterMount,
+    navigation,
+    reportError,
+    returnToHome,
+  ]);
 
   const gameStatus: GameStatus | undefined = session?.currentGame?.status;
   const userId: UserId | undefined = user?.id;
@@ -189,7 +266,7 @@ export function useSessionController({
   useEffect(
     () =>
       sessionChannel?.on(sessionWsServerEvent.update, (incoming: Session) => {
-        setSession(incoming);
+        setSnapshot({ session: incoming, receivedAt: performance.now() });
       }),
     [sessionChannel],
   );
@@ -210,22 +287,30 @@ export function useSessionController({
 
   const join = useCallback(
     async (playerID: PlayerId) => {
+      if (joinInProgress.current || joinedPlayer.current) return;
       if (!session || !playerID)
         throw new Error(
           'Joining session failed: session or player not initialized',
         );
       joinAttempted.current = true;
-      const joinAck: SessionJoinAck = await emit(sessionWsEvent.join, {
-        sessionID: session.id,
-        playerID,
-      });
-      joinedPlayer.current = {
-        playerID,
-        reconnectToken: joinAck.reconnectToken,
-      };
-      setJoinedPlayerID(playerID);
+      joinInProgress.current = true;
+      setAdmission({ status: 'pending' });
+      try {
+        const admittedPlayer: JoinedSessionPlayer = await admitSessionPlayer({
+          session,
+          channel: { emit },
+          playerID,
+          userId: user?.id,
+        });
+        joinedPlayer.current = admittedPlayer;
+        setAdmission({ status: 'admitted', playerID: admittedPlayer.playerID });
+      } catch (error: unknown) {
+        setAdmission({ status: 'rejected', error });
+      } finally {
+        joinInProgress.current = false;
+      }
     },
-    [session, emit],
+    [session, emit, user?.id],
   );
 
   const startGame: SessionController['startGame'] = useCallback(async () => {
@@ -236,12 +321,20 @@ export function useSessionController({
     if (
       connectionStatus !== 'connected' ||
       !session ||
-      !localPlayerID ||
+      !automaticPlayerID ||
       joinAttempted.current
     )
       return;
 
-    enterSession({ session, playerID: localPlayerID, join, startGame })
+    enterSession({
+      session,
+      playerID: automaticPlayerID,
+      join,
+      startGame: async () => {
+        if (!joinedPlayer.current) return;
+        await startGame();
+      },
+    })
       .catch((error: unknown) => {
         reportError(error);
         if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
@@ -250,12 +343,21 @@ export function useSessionController({
   }, [
     connectionStatus,
     session,
-    localPlayerID,
+    automaticPlayerID,
     join,
     startGame,
     reportError,
     navigation,
   ]);
+
+  useEffect(() => {
+    if (error === undefined) return;
+    reportError(
+      error,
+      'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
+    );
+    if (returnToHome) navigation.returnTo('/');
+  }, [error, returnToHome, reportError, navigation]);
 
   const requireSession = (operation: string): Session => {
     if (!session)
@@ -302,7 +404,13 @@ export function useSessionController({
 
   const endGame = async () => {
     const current = requireGame('Ending game');
-    setSession(withStatus(current, SessionStatus.IN_LOBBY));
+    setSnapshot(
+      (previous) =>
+        previous && {
+          ...previous,
+          session: withStatus(current, SessionStatus.IN_LOBBY),
+        },
+    );
   };
 
   const playAgain = async () => {
@@ -323,13 +431,15 @@ export function useSessionController({
 
   return {
     session,
+    sessionReceivedAt: snapshot?.receivedAt,
     localPlayerID,
+    isAdmitting,
     isHost: isHostOf(session, localPlayerID),
     isLaunchingQuickPlay:
       isQuickPlayLaunchPending && session?.quickPlay === true,
     connectionStatus,
     retryConnection,
-    join: reportActionErrors({ action: join, reportError }),
+    join,
     updateHost: reportActionErrors({ action: updateHost, reportError }),
     kickPlayer: reportActionErrors({ action: kickPlayer, reportError }),
     updateGameConfig: reportActionErrors({

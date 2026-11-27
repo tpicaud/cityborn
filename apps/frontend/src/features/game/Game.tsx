@@ -16,8 +16,10 @@ import Results from './Results';
 export const Game = ({
   localPlayerID,
   isHost,
+  isConnectionReady,
   session,
   game,
+  gameReceivedAt,
   handleGuess,
   handleNextRound,
   handleEndGame,
@@ -39,6 +41,8 @@ export const Game = ({
       <Guess
         localPlayerID={activePlayerID}
         game={game}
+        gameReceivedAt={gameReceivedAt}
+        isConnectionReady={isConnectionReady}
         handleGuess={handleGuess}
       />
       {gameDisplay.showOptions && (

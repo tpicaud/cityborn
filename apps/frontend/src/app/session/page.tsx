@@ -19,5 +19,5 @@ export default function SessionPage() {
 
   if (!sessionID) return <LoadingDialog message="Chargement de la session" />;
 
-  return <Session sessionID={sessionID} />;
+  return <Session key={sessionID} sessionID={sessionID} />;
 }

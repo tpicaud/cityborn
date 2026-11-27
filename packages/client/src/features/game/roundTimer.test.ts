@@ -1,6 +1,48 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatTimeLeft } from './roundTimer';
+import { formatTimeLeft, remainingSeconds } from './roundTimer';
+
+describe('remainingSeconds', () => {
+  it('caps the time at the configured duration before the clock starts', () => {
+    const seconds: number = remainingSeconds({
+      now: 1_000_000,
+      endsAt: 1_028_000,
+      durationInSeconds: 25,
+    });
+
+    assert.equal(seconds, 25);
+  });
+
+  it('keeps only the remaining fraction of the preparation countdown', () => {
+    const seconds: number = remainingSeconds({
+      now: 1_001_700,
+      endsAt: 1_003_000,
+      durationInSeconds: 3,
+    });
+
+    assert.equal(seconds, 1.3);
+  });
+
+  it('keeps only the remaining time when reconnecting during a round', () => {
+    const seconds: number = remainingSeconds({
+      now: 1_011_500,
+      endsAt: 1_028_000,
+      durationInSeconds: 25,
+    });
+
+    assert.equal(seconds, 16.5);
+  });
+
+  it('returns zero after the round expires', () => {
+    const seconds: number = remainingSeconds({
+      now: 1_030_000,
+      endsAt: 1_028_000,
+      durationInSeconds: 25,
+    });
+
+    assert.equal(seconds, 0);
+  });
+});
 
 describe('formatTimeLeft', () => {
   it('formats whole seconds as minutes and seconds', () => {
