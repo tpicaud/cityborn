@@ -386,7 +386,6 @@ describe('CatalogSectionService.addPack', () => {
     });
 
     expect(section).toEqual({ ...events, packIds: [pack.id] });
-    expect(catalogSectionRepository.lockPack).toHaveBeenCalledWith(pack.id);
   });
 
   it('adds a pack of the section theme', async () => {

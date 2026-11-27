@@ -279,6 +279,77 @@ describe('Prisma transactions', () => {
         ]);
       });
     });
+
+    describe('addPack', () => {
+      it('rejects a pack whose theme changes while it is being added', async () => {
+        const txHost: PrismaTransactionHost = module.get(TransactionHost);
+        const repository: CatalogSectionRepository = module.get(
+          CATALOG_SECTION_REPOSITORY,
+        );
+        const sport: Theme = buildTheme({ name: 'Sport' });
+        const music: Theme = buildTheme({
+          id: '00000000-0000-4000-8000-000000000051',
+          name: 'Musique',
+        });
+        await prisma.theme.create({ data: sport });
+        await prisma.theme.create({ data: music });
+        const pack: Pack = await packRepository.create(buildCreatePack());
+        const tennis: CatalogSection = await catalogSectionService.create({
+          name: 'Tennis',
+          themeId: sport.id,
+        });
+        let releaseThemeChange: () => void = () => {};
+        const released: Promise<void> = new Promise((resolve) => {
+          releaseThemeChange = resolve;
+        });
+        let confirmThemeChange: () => void = () => {};
+        const themeChanged: Promise<void> = new Promise((resolve) => {
+          confirmThemeChange = resolve;
+        });
+        const themeChange: Promise<void> = txHost.withTransaction(async () => {
+          await packService.update(
+            pack.id,
+            buildUpdatePack({ id: pack.id, themeId: music.id }),
+          );
+          confirmThemeChange();
+          await released;
+        });
+        await themeChanged;
+        const addition: Promise<CatalogSection> = catalogSectionService.addPack(
+          { id: tennis.id, packId: pack.id },
+        );
+        async function waitForBlockedAddition(
+          remainingAttempts: number,
+        ): Promise<void> {
+          const waiting: { count: bigint }[] = await prisma.$queryRaw`
+            SELECT count(*) AS count FROM pg_stat_activity
+            WHERE datname = current_database() AND usename = current_user
+              AND wait_event_type = 'Lock' AND query LIKE '%FROM "Pack"%FOR SHARE%'
+          `;
+          if (waiting[0]?.count === 1n) return;
+          if (remainingAttempts === 0)
+            throw new Error('Addition did not wait for the theme change');
+          await new Promise<void>((resolve) => setTimeout(resolve, 10));
+          await waitForBlockedAddition(remainingAttempts - 1);
+        }
+
+        try {
+          await waitForBlockedAddition(100);
+        } finally {
+          releaseThemeChange();
+        }
+        await themeChange;
+
+        await expect(addition).rejects.toMatchObject({
+          response: { code: ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME },
+        });
+        expect(
+          (await repository.findAll()).find(
+            (section: CatalogSection) => section.id === tennis.id,
+          ),
+        ).toMatchObject({ packIds: [] });
+      });
+    });
   });
 
   describe('PackService', () => {
