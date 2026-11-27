@@ -33,7 +33,13 @@ export class OrderedNamedList<Item extends { id: string }> {
       repository: OrderedNamedListRepository<Item>;
       notFound: () => HttpException;
       nameConflict: { code: ErrorCode; message: string };
-      belongsToSameList?: (item: Item, movedItem: Item) => boolean;
+      belongsToSameList?: ({
+        item,
+        movedItem,
+      }: {
+        item: Item;
+        movedItem: Item;
+      }) => boolean;
     },
   ) {}
 
@@ -54,7 +60,7 @@ export class OrderedNamedList<Item extends { id: string }> {
     const movedItem: Item | undefined = items.find((item) => item.id === id);
     if (!movedItem) throw this.list.notFound();
     const isInMovedList: (item: Item) => boolean = (item) =>
-      this.list.belongsToSameList?.(item, movedItem) ?? true;
+      this.list.belongsToSameList?.({ item, movedItem }) ?? true;
     const movedList: Item[] = items.filter(isInMovedList);
     const reorderedList: Item[] | null = swapWithNeighbour({
       items: movedList,

@@ -60,7 +60,7 @@ export function ThemesEditor() {
           <OrderedList
             label="Thèmes"
             items={editor.themes}
-            renderItem={(theme, position) => (
+            renderItem={({ item: theme, position }) => (
               <ThemeRow theme={theme} editor={editor} position={position} />
             )}
           />

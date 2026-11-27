@@ -97,7 +97,7 @@ export function CatalogSectionsEditor() {
                 <OrderedList
                   label={`Sections de ${group.title}`}
                   items={group.sections}
-                  renderItem={(section, position) => (
+                  renderItem={({ item: section, position }) => (
                     <CatalogSectionRow
                       section={section}
                       editor={editor}

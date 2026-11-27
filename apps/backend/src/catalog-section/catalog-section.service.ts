@@ -44,7 +44,7 @@ export class CatalogSectionService {
         code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS,
         message: 'Catalog section name already exists',
       },
-      belongsToSameList: (section, movedSection) =>
+      belongsToSameList: ({ item: section, movedItem: movedSection }) =>
         section.themeId === movedSection.themeId,
     });
   }

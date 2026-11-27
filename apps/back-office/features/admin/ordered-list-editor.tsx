@@ -24,15 +24,24 @@ export function OrderedList<Item extends EditableItem>({
 }: {
   label: string;
   items: Item[];
-  renderItem: (item: Item, position: OrderedListPosition) => ReactNode;
+  renderItem: ({
+    item,
+    position,
+  }: {
+    item: Item;
+    position: OrderedListPosition;
+  }) => ReactNode;
 }) {
   return (
     <ul aria-label={label} className="flex flex-col gap-3">
       {items.map((item, index) => (
         <Fragment key={item.id}>
-          {renderItem(item, {
-            isFirst: index === 0,
-            isLast: index === items.length - 1,
+          {renderItem({
+            item,
+            position: {
+              isFirst: index === 0,
+              isLast: index === items.length - 1,
+            },
           })}
         </Fragment>
       ))}
