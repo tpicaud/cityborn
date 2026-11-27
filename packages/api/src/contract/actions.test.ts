@@ -36,6 +36,7 @@ describe('httpActionRoutes', () => {
       'admin.catalog-section.deleteCatalogSection',
       'admin.catalog-section.getCatalogSections',
       'admin.catalog-section.moveCatalogSection',
+      'admin.catalog-section.movePackInCatalogSection',
       'admin.catalog-section.removePackFromCatalogSection',
       'admin.catalog-section.renameCatalogSection',
       'admin.guess-object.createGuessObject',
