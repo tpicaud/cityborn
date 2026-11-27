@@ -40,11 +40,11 @@ export function createCatalogRows({
     packs: selectThemePacks({ packs: publishedPacks, themeId }),
   };
   if (allPacksRow.packs.length === 0) return [];
-  if (themeId !== undefined || !defaultSection) return [allPacksRow];
   const packsById: Map<PackId, Pack> = new Map(
     publishedPacks.map((pack: Pack) => [pack.id, pack]),
   );
-  return sections
+  const filterRows: CatalogRow[] = sections
+    .filter((section: CatalogSection) => section.themeId === (themeId ?? null))
     .map(
       (section: CatalogSection): CatalogRow =>
         section.isDefault
@@ -54,6 +54,10 @@ export function createCatalogRows({
               title: section.name,
               packs: selectSectionPacks({ section, packsById }),
             },
-    )
-    .filter((row: CatalogRow) => row.packs.length > 0);
+    );
+  const rows: CatalogRow[] =
+    themeId === undefined && defaultSection
+      ? filterRows
+      : [...filterRows, allPacksRow];
+  return rows.filter((row: CatalogRow) => row.packs.length > 0);
 }

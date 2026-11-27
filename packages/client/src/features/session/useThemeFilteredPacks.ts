@@ -92,8 +92,7 @@ export function useThemeFilteredPacks({
     selectTheme: setSelectedThemeId,
     packs,
     catalogRows,
-    catalogSectionsLoadFailed:
-      isCatalogSectionsLoadError && selectedTheme === undefined,
+    catalogSectionsLoadFailed: isCatalogSectionsLoadError,
     reloadCatalogSections: async () => {
       await refetchCatalogSections();
     },
