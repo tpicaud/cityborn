@@ -4,6 +4,7 @@ import type {
   GuessObjectId,
   Pack,
   PackId,
+  ThemeId,
   UpdatePack,
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
@@ -78,6 +79,21 @@ export class PrismaPackRepository implements PackRepository {
       include: { guessObjects: { include: { world_location: true } } },
     });
     return PackMapper.toPack(updated_pack);
+  }
+
+  async leaveOtherThemeCatalogSections({
+    packId,
+    themeId,
+  }: {
+    packId: PackId;
+    themeId: ThemeId;
+  }): Promise<void> {
+    await this.txHost.tx.catalogSectionPack.deleteMany({
+      where: {
+        packId,
+        section: { themeId: { not: null }, NOT: { themeId } },
+      },
+    });
   }
 
   async countByGuessObjectId(id: GuessObjectId): Promise<number> {

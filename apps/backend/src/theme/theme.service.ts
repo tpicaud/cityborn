@@ -6,30 +6,39 @@ import {
   type ThemeIcon,
   type ThemeIconName,
   type ThemeId,
-  ThemeMoveDirection,
+  type ThemeMoveDirection,
 } from '@cityborn/api';
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IconService } from '../icon/icon.service';
+import { OrderedNamedList } from '../ordered-list/ordered-named-list';
 import { defaultThemeIcon, defaultThemeId } from './default-theme';
 import {
   THEME_REPOSITORY,
   ThemeHasPacksError,
-  ThemeNameAlreadyExistsError,
   type ThemeRepository,
 } from './repositories/theme.repository';
 @Injectable()
 export class ThemeService {
+  private readonly orderedThemes: OrderedNamedList<AdminTheme>;
   constructor(
     @Inject(THEME_REPOSITORY) private readonly themeRepository: ThemeRepository,
     private readonly iconService: IconService,
-  ) {}
+  ) {
+    this.orderedThemes = new OrderedNamedList({
+      repository: themeRepository,
+      notFound: () => this.themeNotFound(),
+      nameConflict: {
+        code: ErrorCode.THEME_NAME_ALREADY_EXISTS,
+        message: 'Theme name already exists',
+      },
+    });
+  }
   async findAll(): Promise<AdminTheme[]> {
     return this.themeRepository.findAll();
   }
@@ -45,9 +54,14 @@ export class ThemeService {
     const themeIcon: ThemeIcon = icon
       ? await this.findIcon(icon)
       : defaultThemeIcon;
-    return this.save(() =>
-      this.themeRepository.create({ name, icon: themeIcon }),
-    );
+    return this.createAtEnd({ name, icon: themeIcon });
+  }
+  @Transactional()
+  private async createAtEnd(theme: {
+    name: string;
+    icon: ThemeIcon;
+  }): Promise<Theme> {
+    return this.orderedThemes.append(() => this.themeRepository.create(theme));
   }
   async update({
     id,
@@ -61,7 +75,7 @@ export class ThemeService {
       theme.icon && theme.icon !== currentTheme.icon.name
         ? await this.findIcon(theme.icon)
         : undefined;
-    return this.save(() =>
+    return this.orderedThemes.save(() =>
       this.themeRepository.update({ id, theme: { name: theme.name, icon } }),
     );
   }
@@ -73,21 +87,7 @@ export class ThemeService {
     id: ThemeId;
     direction: ThemeMoveDirection;
   }): Promise<AdminTheme[]> {
-    const themes: AdminTheme[] = await this.themeRepository.findAll();
-    const index: number = themes.findIndex((theme) => theme.id === id);
-    const movedTheme: AdminTheme | undefined = themes[index];
-    if (!movedTheme) throw this.themeNotFound();
-    const targetIndex: number =
-      direction === ThemeMoveDirection.UP ? index - 1 : index + 1;
-    const targetTheme: AdminTheme | undefined = themes[targetIndex];
-    if (!targetTheme) return themes;
-    const reorderedThemes: AdminTheme[] = themes
-      .with(index, targetTheme)
-      .with(targetIndex, movedTheme);
-    await this.themeRepository.reorder(
-      reorderedThemes.map((theme) => theme.id),
-    );
-    return reorderedThemes;
+    return this.orderedThemes.move({ id, direction });
   }
   @Transactional()
   async delete(id: ThemeId): Promise<void> {
@@ -127,17 +127,5 @@ export class ThemeService {
       code: ErrorCode.THEME_NOT_FOUND,
       message: 'Theme not found',
     });
-  }
-  private async save(write: () => Promise<Theme>): Promise<Theme> {
-    try {
-      return await write();
-    } catch (error: unknown) {
-      if (error instanceof ThemeNameAlreadyExistsError)
-        throw new ConflictException({
-          code: ErrorCode.THEME_NAME_ALREADY_EXISTS,
-          message: 'Theme name already exists',
-        });
-      throw error;
-    }
   }
 }

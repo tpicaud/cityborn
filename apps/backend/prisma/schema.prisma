@@ -126,7 +126,8 @@ model Theme {
   icon     Json
   position Int    @default(0)
 
-  packs Pack[]
+  packs           Pack[]
+  catalogSections CatalogSection[]
 }
 
 model Pack {
@@ -137,10 +138,35 @@ model Pack {
   image       String?
   themeId     String  @default(dbgenerated("'244b803a-63aa-460a-a40d-4eea0ec2be50'::uuid")) @db.Uuid
 
-  theme        Theme         @relation(fields: [themeId], references: [id])
-  guessObjects GuessObject[] @relation("PackGuessObjects")
+  theme           Theme                @relation(fields: [themeId], references: [id])
+  guessObjects    GuessObject[]        @relation("PackGuessObjects")
+  catalogSections CatalogSectionPack[]
 
   @@index([themeId])
+}
+
+model CatalogSection {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  position Int
+  themeId  String? @db.Uuid
+
+  theme Theme?               @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  packs CatalogSectionPack[]
+
+  @@index([themeId])
+}
+
+model CatalogSectionPack {
+  sectionId String @db.Uuid
+  packId    String @db.Uuid
+  position  Int
+
+  section CatalogSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  pack    Pack           @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, packId])
+  @@index([packId])
 }
 
 ///////////////////////

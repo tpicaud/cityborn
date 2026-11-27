@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { AuthErrorCode } from '../../auth/auth.error-codes';
+import { CatalogSectionErrorCode } from '../../catalog-section/catalog-section.error-codes';
 import { TechnicalErrorCode } from '../../errors/technical.error-codes';
 import { GameErrorCode } from '../../game/game.error-codes';
 import { GuessObjectErrorCode } from '../../guess-object/guess-object.error-codes';
@@ -24,6 +25,7 @@ const errorCodeEnums: Record<string, string>[] = [
   WorldLocationErrorCode,
   PackErrorCode,
   ThemeErrorCode,
+  CatalogSectionErrorCode,
   TechnicalErrorCode,
 ];
 

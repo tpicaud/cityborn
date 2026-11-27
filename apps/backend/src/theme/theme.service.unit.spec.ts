@@ -10,10 +10,10 @@ import {
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import type { IconService } from '../icon/icon.service';
+import { NameAlreadyExistsError } from '../ordered-list/ordered-named-list';
 import { defaultThemeIcon } from './default-theme';
 import {
   ThemeHasPacksError,
-  ThemeNameAlreadyExistsError,
   type ThemeRepository,
 } from './repositories/theme.repository';
 import { ThemeService } from './theme.service';
@@ -119,12 +119,25 @@ describe('ThemeService.create', () => {
     });
     expect(themeRepository.create).not.toHaveBeenCalled();
   });
+  it('locks the theme order before placing the new theme', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+
+    await themeService.create({ name: 'Cinéma' });
+
+    expect(themeRepository.lockOrder).toHaveBeenCalledTimes(1);
+    expect(themeRepository.lockOrder.mock.invocationCallOrder[0]).toBeLessThan(
+      themeRepository.create.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
   it('translates a name conflict', async () => {
     const {
       themeRepository,
       themeService,
     }: ReturnType<typeof buildThemeService> = buildThemeService();
-    themeRepository.create.mockRejectedValue(new ThemeNameAlreadyExistsError());
+    themeRepository.create.mockRejectedValue(new NameAlreadyExistsError());
 
     await expect(themeService.create({ name: 'sport' })).rejects.toMatchObject({
       response: { code: ErrorCode.THEME_NAME_ALREADY_EXISTS },
@@ -206,7 +219,7 @@ describe('ThemeService.update', () => {
     }: ReturnType<typeof buildThemeService> = buildThemeService();
     const theme: Theme = buildTheme();
     themeRepository.findById.mockResolvedValue(theme);
-    themeRepository.update.mockRejectedValue(new ThemeNameAlreadyExistsError());
+    themeRepository.update.mockRejectedValue(new NameAlreadyExistsError());
 
     await expect(
       themeService.update({ id: theme.id, theme: { name: 'sport' } }),
@@ -295,7 +308,9 @@ describe('ThemeService.move', () => {
       themeRepository,
       themeService,
     }: ReturnType<typeof buildThemeService> = buildThemeService();
-    themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
+    themeRepository.findAll
+      .mockResolvedValueOnce([sport, music, miscellaneous])
+      .mockResolvedValueOnce([music, sport, miscellaneous]);
 
     const themes: AdminTheme[] = await themeService.move({
       id: music.id,
@@ -310,6 +325,21 @@ describe('ThemeService.move', () => {
     ]);
   });
 
+  it('locks the theme order before reading it', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport, music]);
+
+    await themeService.move({ id: music.id, direction: ThemeMoveDirection.UP });
+
+    expect(themeRepository.lockOrder).toHaveBeenCalledTimes(1);
+    expect(themeRepository.lockOrder.mock.invocationCallOrder[0]).toBeLessThan(
+      themeRepository.findAll.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
   it('swaps a theme with the next one', async () => {
     const {
       themeRepository,
@@ -317,12 +347,11 @@ describe('ThemeService.move', () => {
     }: ReturnType<typeof buildThemeService> = buildThemeService();
     themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
 
-    const themes: AdminTheme[] = await themeService.move({
+    await themeService.move({
       id: music.id,
       direction: ThemeMoveDirection.DOWN,
     });
 
-    expect(themes).toEqual([sport, miscellaneous, music]);
     expect(themeRepository.reorder).toHaveBeenCalledWith([
       sport.id,
       miscellaneous.id,

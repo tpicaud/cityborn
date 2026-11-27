@@ -9,23 +9,29 @@ import {
   SaveThemeSchema,
   type ThemeIcon,
   ThemeIconSchema,
+  type ThemeId,
   ThemeMoveDirection,
+  UserFacingError,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  QueryClient,
+  type QueryKey,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { createFormControl } from 'react-hook-form';
 import type { ThemeApi } from '../../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../../domains/theme/themeQueries';
 import {
-  initialThemeEditorState,
-  type ThemeEditorState,
-  themeEditorReducer,
-} from './themeEditorState';
+  initialOrderedListEditorState,
+  type OrderedListEditorState,
+  orderedListEditorReducer,
+} from '../ordered-list-editor/orderedListEditorState';
 import {
-  createThemeMutations,
-  type ThemeFormInput,
-  type ThemeMutations,
-} from './themeMutations';
+  createOrderedListMutations,
+  type OrderedListMutations,
+} from '../ordered-list-editor/orderedListMutations';
+import { createThemeList, type ThemeFormInput } from './themeList';
 
 type ThemeForm = ReturnType<
   typeof createFormControl<ThemeFormInput, undefined, SaveTheme>
@@ -39,10 +45,11 @@ type ManagementFixture = {
   themeKey: QueryKey;
   creationForm: ThemeForm;
   editForm: ThemeForm;
-  mutations: ThemeMutations;
-  state: ThemeEditorState;
+  mutations: OrderedListMutations<AdminTheme>;
+  state: OrderedListEditorState<ThemeId>;
   movingStates: boolean[];
   deletionStates: boolean[];
+  reportedErrors: unknown[];
 };
 
 const divers: AdminTheme = buildAdminTheme();
@@ -79,12 +86,14 @@ function createManagementFixture({
   context,
   themeApi: overrides,
   themes = [divers, sport],
-  state = initialThemeEditorState,
+  state = initialOrderedListEditorState,
+  isLoadingThemes = false,
 }: {
   context: TestContext;
   themeApi: Partial<ThemeApi>;
   themes?: AdminTheme[];
-  state?: ThemeEditorState;
+  state?: OrderedListEditorState<ThemeId>;
+  isLoadingThemes?: boolean;
 }): ManagementFixture {
   const themeApi: ThemeApi = {
     getPlayableThemes: unexpectedCall,
@@ -98,7 +107,14 @@ function createManagementFixture({
   const queryClient: QueryClient = new QueryClient();
   context.after(() => queryClient.clear());
   const themeKey: QueryKey = themesQueryOptions(themeApi).queryKey;
-  queryClient.setQueryData(themeKey, themes);
+  if (isLoadingThemes) {
+    const observer: QueryObserver<AdminTheme[]> = new QueryObserver(
+      queryClient,
+      themesQueryOptions(themeApi),
+    );
+    context.after(observer.subscribe(() => undefined));
+  }
+  if (!isLoadingThemes) queryClient.setQueryData(themeKey, themes);
   queryClient.setQueryData(packListKey, []);
   queryClient.setQueryData(fullPackKey, {});
   const creationForm: ThemeForm = createFormControl<
@@ -125,22 +141,23 @@ function createManagementFixture({
       }),
     );
   });
-  let currentState: ThemeEditorState = state;
+  let currentState: OrderedListEditorState<ThemeId> = state;
   const movingStates: boolean[] = [];
   const deletionStates: boolean[] = [];
-  const mutations: ThemeMutations = createThemeMutations({
-    themeApi,
-    queryClient,
-    themes,
-    editedThemeId: state.editedThemeId,
-    creationForm,
-    editForm,
-    dispatch: (action) => {
-      currentState = themeEditorReducer(currentState, action);
-    },
-    setIsMoving: (isMoving: boolean) => movingStates.push(isMoving),
-    setIsDeleting: (isDeleting: boolean) => deletionStates.push(isDeleting),
-  });
+  const reportedErrors: unknown[] = [];
+  const mutations: OrderedListMutations<AdminTheme> =
+    createOrderedListMutations({
+      list: createThemeList({ themeApi, queryClient }),
+      creationForm,
+      editForm,
+      editedId: state.editedId,
+      dispatch: (action) => {
+        currentState = orderedListEditorReducer(currentState, action);
+      },
+      reportError: (error: unknown) => reportedErrors.push(error),
+      setIsMoving: (isMoving: boolean) => movingStates.push(isMoving),
+      setIsDeleting: (isDeleting: boolean) => deletionStates.push(isDeleting),
+    });
   return {
     queryClient,
     themeKey,
@@ -152,10 +169,11 @@ function createManagementFixture({
     },
     movingStates,
     deletionStates,
+    reportedErrors,
   };
 }
 
-describe('createThemeMutations', () => {
+describe('createThemeList', () => {
   it('appends a created theme, clears the input and invalidates themes and packs', async (context: TestContext) => {
     let submitted: SaveTheme | undefined;
     const fixture: ManagementFixture = createManagementFixture({
@@ -169,7 +187,7 @@ describe('createThemeMutations', () => {
     });
     fixture.creationForm.setValue('name', '  Cinéma  ');
 
-    await fixture.mutations.createTheme();
+    await fixture.mutations.create();
 
     assert.deepEqual(submitted, { name: 'Cinéma' });
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
@@ -192,7 +210,77 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the creation input and cache after a rejected creation', async (context: TestContext) => {
+  it('adds a created theme to the themes loaded during its request', async (context: TestContext) => {
+    let finishLoading: (themes: AdminTheme[]) => void = () => {};
+    const loading: Promise<AdminTheme[]> = new Promise((resolve) => {
+      finishLoading = resolve;
+    });
+    let finishCreation: () => void = () => {};
+    const creating: Promise<void> = new Promise((resolve) => {
+      finishCreation = resolve;
+    });
+    const loads: (() => Promise<AdminTheme[]>)[] = [
+      () => loading,
+      async () => {
+        throw new TypeError('Network request failed');
+      },
+    ];
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      isLoadingThemes: true,
+      themeApi: {
+        getThemes: () => (loads.shift() ?? unexpectedCall)(),
+        createTheme: async () => {
+          await creating;
+          return cinema;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', 'Cinéma');
+    const creation: Promise<void> = fixture.mutations.create();
+    finishLoading([divers, sport]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    finishCreation();
+
+    await creation;
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      divers,
+      sport,
+      cinema,
+    ]);
+  });
+
+  it('ignores themes loaded before a creation that responds after it', async (context: TestContext) => {
+    let finishLoading: (themes: AdminTheme[]) => void = () => {};
+    const loads: Promise<AdminTheme[]>[] = [
+      new Promise((resolve) => {
+        finishLoading = resolve;
+      }),
+      Promise.resolve([divers, sport, cinema]),
+    ];
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      isLoadingThemes: true,
+      themeApi: {
+        getThemes: () => loads.shift() ?? unexpectedCall(),
+        createTheme: async () => cinema,
+      },
+    });
+    fixture.creationForm.setValue('name', 'Cinéma');
+
+    await fixture.mutations.create();
+    finishLoading([divers, sport]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      divers,
+      sport,
+      cinema,
+    ]);
+  });
+
+  it('reports a rejected creation and keeps the creation input and cache', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themeApi: {
@@ -203,10 +291,10 @@ describe('createThemeMutations', () => {
     });
     fixture.creationForm.setValue('name', 'sport');
 
-    await fixture.mutations.createTheme();
+    await fixture.mutations.create();
 
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.equal(fixture.creationForm.getValues('name'), 'sport');
-    assert.equal(fixture.state.creationError, 'Ce thème existe déjà');
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
@@ -221,7 +309,7 @@ describe('createThemeMutations', () => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themes: [divers, { ...sport, packCount: 3 }],
-      state: { ...initialThemeEditorState, editedThemeId: sport.id },
+      state: { ...initialOrderedListEditorState, editedId: sport.id },
       themeApi: {
         updateTheme: async ({ id, theme }) => {
           assert.equal(id, sport.id);
@@ -233,13 +321,13 @@ describe('createThemeMutations', () => {
     fixture.editForm.setValue('name', 'Art');
     fixture.editForm.setValue('icon', cinemaIcon.name);
 
-    await fixture.mutations.updateTheme();
+    await fixture.mutations.update();
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       { ...sport, name: 'Art', icon: cinemaIcon, packCount: 3 },
     ]);
-    assert.equal(fixture.state.editedThemeId, null);
+    assert.equal(fixture.state.editedId, null);
     assert.equal(
       fixture.queryClient.getQueryState(fixture.themeKey)?.isInvalidated,
       true,
@@ -254,10 +342,10 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the edit input and row open after a rejected update', async (context: TestContext) => {
+  it('reports a rejected update and keeps the edit input and row open', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
-      state: { ...initialThemeEditorState, editedThemeId: sport.id },
+      state: { ...initialOrderedListEditorState, editedId: sport.id },
       themeApi: {
         updateTheme: async () => {
           throw duplicateNameError;
@@ -266,11 +354,11 @@ describe('createThemeMutations', () => {
     });
     fixture.editForm.setValue('name', 'divers');
 
-    await fixture.mutations.updateTheme();
+    await fixture.mutations.update();
 
+    assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.equal(fixture.editForm.getValues('name'), 'divers');
-    assert.equal(fixture.state.editedThemeId, sport.id);
-    assert.equal(fixture.state.rowErrors[sport.id], 'Ce thème existe déjà');
+    assert.equal(fixture.state.editedId, sport.id);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
@@ -284,10 +372,6 @@ describe('createThemeMutations', () => {
   it('shows the order returned for a moved theme and releases the moving state', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
-      state: {
-        ...initialThemeEditorState,
-        rowErrors: { [sport.id]: "Quelque chose s'est mal passé." },
-      },
       themeApi: {
         moveTheme: async ({ id, move }) => {
           assert.equal(id, sport.id);
@@ -298,49 +382,40 @@ describe('createThemeMutations', () => {
       },
     });
 
-    await fixture.mutations.moveTheme({
-      theme: sport,
-      direction: ThemeMoveDirection.UP,
-    });
+    await fixture.mutations.move({ item: sport, direction: 'UP' });
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       sport,
       divers,
     ]);
-    assert.equal(fixture.state.rowErrors[sport.id], undefined);
     assert.deepEqual(fixture.movingStates, [true, false]);
   });
 
-  it('keeps the order and shows the error on the row after a rejected move', async (context: TestContext) => {
+  it('reports a rejected move and keeps the order', async (context: TestContext) => {
+    const networkError: TypeError = new TypeError('Network request failed');
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themeApi: {
         moveTheme: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
 
-    await fixture.mutations.moveTheme({
-      theme: sport,
-      direction: ThemeMoveDirection.UP,
-    });
+    await fixture.mutations.move({ item: sport, direction: 'UP' });
 
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,
     ]);
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Quelque chose s'est mal passé.",
-    );
     assert.deepEqual(fixture.movingStates, [true, false]);
   });
 
   it('removes a deleted theme, closes confirmation and releases the deletion state', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
-      state: { ...initialThemeEditorState, deletionThemeId: sport.id },
+      state: { ...initialOrderedListEditorState, deletionId: sport.id },
       themeApi: {
         deleteTheme: async (id) => {
           assert.equal(id, sport.id);
@@ -349,12 +424,12 @@ describe('createThemeMutations', () => {
       },
     });
 
-    await fixture.mutations.deleteTheme(sport);
+    await fixture.mutations.delete(sport);
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
     ]);
-    assert.equal(fixture.state.deletionThemeId, null);
+    assert.equal(fixture.state.deletionId, null);
     assert.deepEqual(fixture.deletionStates, [true, false]);
     assert.equal(
       fixture.queryClient.getQueryState(fixture.themeKey)?.isInvalidated,
@@ -386,7 +461,7 @@ describe('createThemeMutations', () => {
       const refreshedSport: AdminTheme = { ...sport, packCount: count };
       const fixture: ManagementFixture = createManagementFixture({
         context,
-        state: { ...initialThemeEditorState, deletionThemeId: sport.id },
+        state: { ...initialOrderedListEditorState, deletionId: sport.id },
         themeApi: {
           deleteTheme: async () => {
             throw attachedPacksError;
@@ -395,10 +470,10 @@ describe('createThemeMutations', () => {
         },
       });
 
-      await fixture.mutations.deleteTheme(sport);
+      await fixture.mutations.delete(sport);
 
-      assert.equal(fixture.state.rowErrors[sport.id], message);
-      assert.equal(fixture.state.deletionThemeId, sport.id);
+      assert.deepEqual(fixture.reportedErrors, [new UserFacingError(message)]);
+      assert.equal(fixture.state.deletionId, sport.id);
       assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
         divers,
         refreshedSport,
@@ -422,12 +497,13 @@ describe('createThemeMutations', () => {
       },
     });
 
-    await fixture.mutations.deleteTheme(attachedSport);
+    await fixture.mutations.delete(attachedSport);
 
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Impossible de supprimer « Sport » : 2 packs y sont encore rattachés. Change d'abord leur thème.",
-    );
+    assert.deepEqual(fixture.reportedErrors, [
+      new UserFacingError(
+        "Impossible de supprimer « Sport » : 2 packs y sont encore rattachés. Change d'abord leur thème.",
+      ),
+    ]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       attachedSport,
@@ -435,24 +511,22 @@ describe('createThemeMutations', () => {
     assert.deepEqual(fixture.deletionStates, [true, false]);
   });
 
-  it('shows a local error and releases the deletion state after a network failure', async (context: TestContext) => {
+  it('reports a network failure and releases the deletion state', async (context: TestContext) => {
+    const networkError: TypeError = new TypeError('Network request failed');
     const fixture: ManagementFixture = createManagementFixture({
       context,
-      state: { ...initialThemeEditorState, deletionThemeId: sport.id },
+      state: { ...initialOrderedListEditorState, deletionId: sport.id },
       themeApi: {
         deleteTheme: async () => {
-          throw new TypeError('Network request failed');
+          throw networkError;
         },
       },
     });
 
-    await fixture.mutations.deleteTheme(sport);
+    await fixture.mutations.delete(sport);
 
-    assert.equal(
-      fixture.state.rowErrors[sport.id],
-      "Quelque chose s'est mal passé.",
-    );
-    assert.equal(fixture.state.deletionThemeId, sport.id);
+    assert.deepEqual(fixture.reportedErrors, [networkError]);
+    assert.equal(fixture.state.deletionId, sport.id);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
       sport,

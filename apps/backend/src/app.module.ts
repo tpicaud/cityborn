@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CsrfOriginGuard } from './auth/guards/csrf-origin.guard';
+import { CatalogSectionModule } from './catalog-section/catalog-section.module';
 import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
 import { BackendConfigModule } from './config/config.module';
@@ -51,6 +52,7 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
     WorldLocationModule,
     PackModule,
     ThemeModule,
+    CatalogSectionModule,
     SearchModule,
     RateLimitModule,
     WsHandshakeModule,

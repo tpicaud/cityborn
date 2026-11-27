@@ -1,5 +1,6 @@
 import type { Pack, Theme, ThemeIcon } from '@cityborn/api';
 import {
+  type CatalogRow,
   type PackImageFallback,
   type ThemeFilteredPacks,
   usePackImageFallback,
@@ -7,7 +8,8 @@ import {
 } from '@cityborn/client/session';
 import {
   BodyText,
-  CardGrid,
+  Button,
+  CardRow,
   FilterBar,
   FilterTag,
   ImageCard,
@@ -58,14 +60,16 @@ export function PackCatalog({
     themes,
     selectedTheme,
     selectTheme,
-    packs,
+    catalogRows,
+    catalogSectionsLoadFailed,
+    reloadCatalogSections,
   }: ThemeFilteredPacks = useThemeFilteredPacks({ isScreenFocused });
 
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <Screen title="Solo" bottomSafeArea={bottomSafeArea}>
-      <View flex={1} minH="0" gap="4 md:5">
+    <Screen title="Solo" bottomSafeArea={bottomSafeArea} scrollable>
+      <View gap="4 md:5">
         <FilterBar label="Filtrer les packs par thème">
           <FilterTag
             label="Tous"
@@ -82,14 +86,29 @@ export function PackCatalog({
             />
           ))}
         </FilterBar>
-        {packs.length === 0 ? (
+        {catalogRows.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardGrid>
-            {packs.map((pack: Pack) => (
-              <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
-            ))}
-          </CardGrid>
+          catalogRows.map((row: CatalogRow) => (
+            <CardRow key={row.key} title={row.title}>
+              {row.packs.map((pack: Pack) => (
+                <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
+              ))}
+            </CardRow>
+          ))
+        )}
+        {catalogSectionsLoadFailed && (
+          <View gap="2" items="flex-start">
+            <BodyText>
+              Les sections du catalogue n’ont pas pu être chargées.
+            </BodyText>
+            <Button
+              compact
+              variant="outline"
+              label="Réessayer"
+              onPress={reloadCatalogSections}
+            />
+          </View>
         )}
       </View>
     </Screen>

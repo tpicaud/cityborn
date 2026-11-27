@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import type {
+  CatalogSection,
   CreatePack,
   CreateWorldLocation,
   GuessObject,
@@ -32,6 +33,13 @@ import {
 } from '../../src/auth/repositories/password-reset.repository';
 import { PrismaPasswordResetRepository } from '../../src/auth/repositories/prisma-password-reset.repository';
 import { PasswordResetService } from '../../src/auth/services/password-reset.service';
+import { CatalogSectionService } from '../../src/catalog-section/catalog-section.service';
+import {
+  CATALOG_SECTION_REPOSITORY,
+  type CatalogSectionRepository,
+} from '../../src/catalog-section/repositories/catalog-section.repository';
+import { PrismaCatalogSectionRepository } from '../../src/catalog-section/repositories/prisma-catalog-section.repository';
+import type { AuthVersion } from '../../src/common/types/auth-session';
 import { WideEventService } from '../../src/common/wide-event/wide-event.service';
 import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
@@ -76,6 +84,8 @@ describe('Prisma transactions', () => {
   let userService: UserService;
   let passwordResetService: PasswordResetService;
   let rateLimitService: RateLimitService;
+  let themeService: ThemeService;
+  let catalogSectionService: CatalogSectionService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -86,6 +96,11 @@ describe('Prisma transactions', () => {
         WorldLocationService,
         UserService,
         ThemeService,
+        CatalogSectionService,
+        {
+          provide: CATALOG_SECTION_REPOSITORY,
+          useClass: PrismaCatalogSectionRepository,
+        },
         { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
         { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
         PasswordResetService,
@@ -137,11 +152,173 @@ describe('Prisma transactions', () => {
     userService = module.get(UserService);
     passwordResetService = module.get(PasswordResetService);
     rateLimitService = module.get(RateLimitService);
+    themeService = module.get(ThemeService);
+    catalogSectionService = module.get(CatalogSectionService);
   });
 
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  type LockWaiters = { queryPattern: string; count: bigint };
+
+  async function waitForLockWaiters({
+    queryPattern,
+    count,
+    remainingAttempts,
+  }: LockWaiters & { remainingAttempts: number }): Promise<void> {
+    const waiting: { count: bigint }[] = await prisma.$queryRaw`
+      SELECT count(*) AS count FROM pg_stat_activity
+      WHERE datname = current_database() AND usename = current_user
+        AND wait_event_type = 'Lock' AND query LIKE ${queryPattern}
+    `;
+    if (waiting[0]?.count === count) return;
+    if (remainingAttempts === 0)
+      throw new Error(`No ${count} queries like ${queryPattern} waited`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await waitForLockWaiters({
+      queryPattern,
+      count,
+      remainingAttempts: remainingAttempts - 1,
+    });
+  }
+
+  type HeldTransaction<Result> = {
+    committed: Promise<Result>;
+    releaseOnceWaited: (lockWaiters: LockWaiters) => Promise<void>;
+  };
+
+  async function holdTransaction<Result>(
+    work: () => Promise<Result>,
+  ): Promise<HeldTransaction<Result>> {
+    const txHost: PrismaTransactionHost = module.get(TransactionHost);
+    let release: () => void = () => {};
+    const released: Promise<void> = new Promise((resolve) => {
+      release = resolve;
+    });
+    let confirmWork: () => void = () => {};
+    const worked: Promise<void> = new Promise((resolve) => {
+      confirmWork = resolve;
+    });
+    const committed: Promise<Result> = txHost.withTransaction(async () => {
+      const result: Result = await work();
+      confirmWork();
+      await released;
+      return result;
+    });
+    await worked;
+    return {
+      committed,
+      releaseOnceWaited: async (lockWaiters: LockWaiters): Promise<void> => {
+        try {
+          await waitForLockWaiters({ ...lockWaiters, remainingAttempts: 100 });
+        } finally {
+          release();
+        }
+      },
+    };
+  }
+
+  describe('ThemeService', () => {
+    describe('create', () => {
+      it('places a creation racing another one after it', async () => {
+        const firstCreation: HeldTransaction<Theme> = await holdTransaction(
+          () => themeService.create({ name: 'Zoologie' }),
+        );
+        const secondCreation: Promise<Theme> = themeService.create({
+          name: 'Architecture',
+        });
+
+        await firstCreation.releaseOnceWaited({
+          queryPattern: 'LOCK TABLE "Theme"%',
+          count: 1n,
+        });
+        await Promise.all([firstCreation.committed, secondCreation]);
+
+        expect(
+          await prisma.theme.findMany({
+            select: { name: true, position: true },
+            orderBy: { position: 'asc' },
+          }),
+        ).toEqual([
+          { name: 'Zoologie', position: 0 },
+          { name: 'Architecture', position: 1 },
+        ]);
+      });
+    });
+  });
+
+  describe('CatalogSectionService', () => {
+    describe('create', () => {
+      it('places a creation racing another one after it', async () => {
+        const repository: CatalogSectionRepository = module.get(
+          CATALOG_SECTION_REPOSITORY,
+        );
+        const firstCreation: HeldTransaction<CatalogSection> =
+          await holdTransaction(() =>
+            catalogSectionService.create({ name: 'Z', themeId: null }),
+          );
+        const secondCreation: Promise<CatalogSection> =
+          catalogSectionService.create({ name: 'A', themeId: null });
+
+        await firstCreation.releaseOnceWaited({
+          queryPattern: 'LOCK TABLE "CatalogSection"%',
+          count: 1n,
+        });
+        const firstSection: CatalogSection = await firstCreation.committed;
+        const secondSection: CatalogSection = await secondCreation;
+
+        expect(await repository.findAll()).toEqual([
+          firstSection,
+          secondSection,
+        ]);
+      });
+    });
+
+    describe('addPack', () => {
+      it('rejects a pack whose theme changes while it is being added', async () => {
+        const repository: CatalogSectionRepository = module.get(
+          CATALOG_SECTION_REPOSITORY,
+        );
+        const sport: Theme = buildTheme({ name: 'Sport' });
+        const music: Theme = buildTheme({
+          id: '00000000-0000-4000-8000-000000000051',
+          name: 'Musique',
+        });
+        await prisma.theme.create({ data: sport });
+        await prisma.theme.create({ data: music });
+        const pack: Pack = await packRepository.create(buildCreatePack());
+        const tennis: CatalogSection = await catalogSectionService.create({
+          name: 'Tennis',
+          themeId: sport.id,
+        });
+        const themeChange: HeldTransaction<Pack> = await holdTransaction(() =>
+          packService.update(
+            pack.id,
+            buildUpdatePack({ id: pack.id, themeId: music.id }),
+          ),
+        );
+        const addition: Promise<CatalogSection> = catalogSectionService.addPack(
+          { id: tennis.id, packId: pack.id },
+        );
+
+        await themeChange.releaseOnceWaited({
+          queryPattern: '%FROM "Pack"%FOR SHARE%',
+          count: 1n,
+        });
+        await themeChange.committed;
+
+        await expect(addition).rejects.toMatchObject({
+          response: { code: ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME },
+        });
+        expect(
+          (await repository.findAll()).find(
+            (section: CatalogSection) => section.id === tennis.id,
+          ),
+        ).toMatchObject({ packIds: [] });
+      });
+    });
   });
 
   describe('PackService', () => {
@@ -261,24 +438,12 @@ describe('Prisma transactions', () => {
             expiresAt: new Date('2099-01-01'),
           },
         });
-        const txHost: PrismaTransactionHost = module.get(TransactionHost);
         const repository: PasswordResetRepository = module.get(
           PASSWORD_RESET_REPOSITORY,
         );
-        let releaseUpdate: () => void = () => {};
-        const released: Promise<void> = new Promise((resolve) => {
-          releaseUpdate = resolve;
-        });
-        let confirmUpdate: () => void = () => {};
-        const updated: Promise<void> = new Promise((resolve) => {
-          confirmUpdate = resolve;
-        });
-        const update: Promise<void> = txHost.withTransaction(async () => {
-          await userService.updatePassword(user.id, 'new-hash');
-          confirmUpdate();
-          await released;
-        });
-        await updated;
+        const update: HeldTransaction<AuthVersion> = await holdTransaction(() =>
+          userService.updatePassword(user.id, 'new-hash'),
+        );
         const issuance: Promise<boolean> = repository.replaceToken({
           userId: user.id,
           email: user.email,
@@ -292,29 +457,12 @@ describe('Prisma transactions', () => {
             now: new Date(),
           },
         );
-        async function waitForBlockedOperations(
-          remainingAttempts: number,
-        ): Promise<void> {
-          const waiting: { count: bigint }[] = await prisma.$queryRaw`
-            SELECT count(*) AS count FROM pg_stat_activity
-            WHERE datname = current_database() AND usename = current_user
-              AND wait_event_type = 'Lock' AND query LIKE '%WITH locked_user AS (%'
-          `;
-          if (waiting[0]?.count === 2n) return;
-          if (remainingAttempts === 0)
-            throw new Error(
-              'Reset operations did not wait for the password update',
-            );
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
-          await waitForBlockedOperations(remainingAttempts - 1);
-        }
 
-        try {
-          await waitForBlockedOperations(100);
-        } finally {
-          releaseUpdate();
-        }
-        await update;
+        await update.releaseOnceWaited({
+          queryPattern: '%WITH locked_user AS (%',
+          count: 2n,
+        });
+        await update.committed;
 
         expect(await issuance).toBe(false);
         expect(await consumption).toBeNull();
