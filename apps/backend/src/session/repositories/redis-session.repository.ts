@@ -7,6 +7,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import type Redis from 'ioredis';
 import { z } from 'zod';
+import { REDIS_CLIENT } from '../../redis/redis.module';
 import type { SessionRepository, StoredSession } from './session.repository';
 
 const SESSION_KEY_PREFIX: string = 'session:';
@@ -24,7 +25,7 @@ const StoredSessionSchema: z.ZodType<StoredSession, z.ZodTypeDef, unknown> =
 
 @Injectable()
 export class RedisSessionRepository implements SessionRepository {
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {}
 
   async find(id: SessionId): Promise<StoredSession | null> {
     const serializedStoredSession: string | null = await this.redisClient.get(

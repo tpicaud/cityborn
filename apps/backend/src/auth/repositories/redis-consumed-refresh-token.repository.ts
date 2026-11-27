@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type Redis from 'ioredis';
+import { REDIS_CLIENT } from '../../redis/redis.module';
 import type { ConsumedRefreshTokenRepository } from './consumed-refresh-token.repository';
 
 const CONSUMED_REFRESH_TOKEN_KEY_PREFIX: string =
@@ -9,7 +10,7 @@ const CONSUMED_REFRESH_TOKEN_KEY_PREFIX: string =
 export class RedisConsumedRefreshTokenRepository
   implements ConsumedRefreshTokenRepository
 {
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {}
 
   async consume({
     refreshTokenHash,
