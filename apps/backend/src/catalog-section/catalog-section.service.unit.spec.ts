@@ -246,7 +246,7 @@ describe('CatalogSectionService.move', () => {
     ]);
   });
 
-  it('reorders only the sections of the moved section filter', async () => {
+  it('reorders only the sections of the moved section filter and returns the stored order', async () => {
     const {
       catalogSectionRepository,
       catalogSectionService,
@@ -262,18 +262,16 @@ describe('CatalogSectionService.move', () => {
       name: 'Foot',
       themeId: sportThemeId,
     });
-    catalogSectionRepository.findAll.mockResolvedValue([
-      tennis,
-      news,
-      football,
-      events,
-    ]);
+    catalogSectionRepository.findAll
+      .mockResolvedValueOnce([tennis, news, football, events])
+      .mockResolvedValueOnce([football, news, events, tennis]);
 
-    await catalogSectionService.move({
+    const sections: CatalogSection[] = await catalogSectionService.move({
       id: football.id,
       direction: CatalogSectionMoveDirection.UP,
     });
 
+    expect(sections).toEqual([football, news, events, tennis]);
     expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
       football.id,
       tennis.id,
