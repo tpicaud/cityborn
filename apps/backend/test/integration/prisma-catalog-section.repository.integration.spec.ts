@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { CatalogSection, Pack } from '@cityborn/api';
+import type {
+  CatalogSection,
+  CatalogSectionId,
+  Pack,
+  PackId,
+} from '@cityborn/api';
 import { buildCatalogSection, buildPack, buildTheme } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { defaultCatalogSectionId } from '../../src/catalog-section/default-catalog-section';
@@ -60,28 +65,18 @@ describe('PrismaCatalogSectionRepository', () => {
     });
   }
 
-  async function insertSectionWithPacks({
-    section,
-    packs,
+  async function insertCatalogSectionPack({
+    sectionId,
+    packId,
+    position,
   }: {
-    section: CatalogSection;
-    packs: Pack[];
+    sectionId: CatalogSectionId;
+    packId: PackId;
+    position: number;
   }): Promise<void> {
-    await insertCatalogSection({ section, position: 0 });
-    await Promise.all(packs.map((pack) => insertPack(pack)));
-    await addPacks({ section, packs });
-  }
-
-  async function addPacks({
-    section,
-    packs: [pack, ...remainingPacks],
-  }: {
-    section: CatalogSection;
-    packs: Pack[];
-  }): Promise<void> {
-    if (!pack) return;
-    await catalogSectionRepository.addPack({ id: section.id, packId: pack.id });
-    await addPacks({ section, packs: remainingPacks });
+    await prisma.catalogSectionPack.create({
+      data: { sectionId, packId, position },
+    });
   }
 
   const monuments: Pack = buildPack({
@@ -148,10 +143,20 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [monuments, capitals],
-      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all([insertPack(monuments), insertPack(capitals)]);
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 1,
+        }),
+      ]);
 
       await prisma.pack.delete({ where: { id: monuments.id } });
 
@@ -183,10 +188,34 @@ describe('PrismaCatalogSectionRepository', () => {
         id: '00000000-0000-4000-8000-000000000073',
         isPublished: false,
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [rivers, hiddenPack, monuments, capitals],
-      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all(
+        [rivers, hiddenPack, monuments, capitals].map((pack) =>
+          insertPack(pack),
+        ),
+      );
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: rivers.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: hiddenPack.id,
+          position: 1,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 2,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 3,
+        }),
+      ]);
 
       const sections: CatalogSection[] =
         await catalogSectionRepository.findPlayable();
@@ -197,9 +226,14 @@ describe('PrismaCatalogSectionRepository', () => {
     });
 
     it('hides a section whose packs are all unpublished', async () => {
-      await insertSectionWithPacks({
-        section: buildCatalogSection(),
-        packs: [buildPack({ isPublished: false })],
+      const events: CatalogSection = buildCatalogSection();
+      const hiddenPack: Pack = buildPack({ isPublished: false });
+      await insertCatalogSection({ section: events, position: 0 });
+      await insertPack(hiddenPack);
+      await insertCatalogSectionPack({
+        sectionId: events.id,
+        packId: hiddenPack.id,
+        position: 0,
       });
 
       const sections: CatalogSection[] =
@@ -212,10 +246,27 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [monuments, capitals, rivers],
-      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all(
+        [monuments, capitals, rivers].map((pack) => insertPack(pack)),
+      );
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 1,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: rivers.id,
+          position: 2,
+        }),
+      ]);
       await prisma.pack.update({
         where: { id: capitals.id },
         data: { isPublished: false },
@@ -360,7 +411,13 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({ section: events, packs: [monuments] });
+      await insertCatalogSection({ section: events, position: 0 });
+      await insertPack(monuments);
+      await insertCatalogSectionPack({
+        sectionId: events.id,
+        packId: monuments.id,
+        position: 0,
+      });
 
       await catalogSectionRepository.delete(events.id);
 
@@ -373,13 +430,12 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [monuments, capitals],
-      });
-      await catalogSectionRepository.removePack({
-        id: events.id,
-        packId: monuments.id,
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all([insertPack(monuments), insertPack(capitals)]);
+      await insertCatalogSectionPack({
+        sectionId: events.id,
+        packId: capitals.id,
+        position: 1,
       });
 
       const section: CatalogSection | null =
@@ -395,10 +451,20 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [monuments, capitals],
-      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all([insertPack(monuments), insertPack(capitals)]);
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 1,
+        }),
+      ]);
 
       const section: CatalogSection | null =
         await catalogSectionRepository.addPack({
@@ -417,8 +483,14 @@ describe('PrismaCatalogSectionRepository', () => {
         id: '00000000-0000-4000-8000-000000000063',
         name: 'Nouveautés',
       });
-      await insertSectionWithPacks({ section: events, packs: [monuments] });
+      await insertCatalogSection({ section: events, position: 0 });
       await insertCatalogSection({ section: news, position: 1 });
+      await insertPack(monuments);
+      await insertCatalogSectionPack({
+        sectionId: events.id,
+        packId: monuments.id,
+        position: 0,
+      });
 
       await catalogSectionRepository.addPack({
         id: news.id,
@@ -449,10 +521,20 @@ describe('PrismaCatalogSectionRepository', () => {
       const events: CatalogSection = buildCatalogSection({
         name: 'Évènements',
       });
-      await insertSectionWithPacks({
-        section: events,
-        packs: [monuments, capitals],
-      });
+      await insertCatalogSection({ section: events, position: 0 });
+      await Promise.all([insertPack(monuments), insertPack(capitals)]);
+      await Promise.all([
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: monuments.id,
+          position: 0,
+        }),
+        insertCatalogSectionPack({
+          sectionId: events.id,
+          packId: capitals.id,
+          position: 1,
+        }),
+      ]);
 
       const section: CatalogSection | null =
         await catalogSectionRepository.removePack({
