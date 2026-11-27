@@ -48,7 +48,7 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 
 ## Branche d'intégration
 
-La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR draft vers `main`, où chaque sous-issue livre sa propre PR. Pour la retrouver depuis une sous-issue, l'ouvrir, y rattacher une issue ou fermer une sous-issue livrée, lire la [procédure](references/integration-branch.md).
+La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR draft vers `main`, ou vers la branche d'intégration de sa propre parente, où chaque sous-issue livre sa propre PR. Pour la retrouver depuis une sous-issue, l'ouvrir, y rattacher une issue ou fermer une sous-issue livrée, lire la [procédure](references/integration-branch.md).
 
 ## Garde-fous
 
@@ -57,4 +57,4 @@ La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR
 
 ## Critère de fin
 
-Chaque issue publiée porte ses labels, suit son template et les règles de [taille et contenu](#taille-et-contenu) ; son item de project porte son Type, son Status et son Sprint. Chaque sous-issue est rattachée à sa parente ; une branche d'intégration ouverte a sa PR draft vers `main`.
+Chaque issue publiée porte ses labels, suit son template et les règles de [taille et contenu](#taille-et-contenu) ; son item de project porte son Type, son Status et son Sprint. Chaque sous-issue est rattachée à sa parente ; une branche d'intégration ouverte a sa PR draft.
