@@ -7,17 +7,10 @@ import {
   type CatalogSectionsManagement,
   isCatalogSectionDeletable,
 } from '@cityborn/client/admin';
-import {
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Package,
-  Pencil,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { Check, Package, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { MoveControls } from '@/components/ui/MoveControls';
 import { CatalogSectionPackEditor } from './catalog-section-pack-editor';
 
 export function CatalogSectionRow({
@@ -97,34 +90,24 @@ export function CatalogSectionRow({
           )}
           {!isConfirming && (
             <>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy || isFirst}
-                onClick={() =>
+              <MoveControls
+                itemLabel={section.name}
+                isFirst={isFirst}
+                isLast={isLast}
+                disabled={isBusy}
+                onMoveUp={() =>
                   editor.moveCatalogSection({
                     section,
                     direction: CatalogSectionMoveDirection.UP,
                   })
                 }
-                aria-label={`Monter ${section.name}`}
-              >
-                <ChevronUp size={18} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy || isLast}
-                onClick={() =>
+                onMoveDown={() =>
                   editor.moveCatalogSection({
                     section,
                     direction: CatalogSectionMoveDirection.DOWN,
                   })
                 }
-                aria-label={`Descendre ${section.name}`}
-              >
-                <ChevronDown size={18} />
-              </Button>
+              />
               {areCatalogSectionPacksEditable(section) && (
                 <Button
                   type="button"

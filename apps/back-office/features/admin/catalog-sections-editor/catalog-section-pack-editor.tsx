@@ -7,9 +7,10 @@ import {
   type CatalogSectionPacks,
   useCatalogSectionPacks,
 } from '@cityborn/client/admin';
-import { ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
+import { MoveControls } from '@/components/ui/MoveControls';
 
 function PackSummary({ pack }: { pack: Pack }) {
   return (
@@ -56,36 +57,24 @@ export function CatalogSectionPackEditor({
           {sectionPacks.sectionPacks.map((pack, index) => (
             <li key={pack.id} className="flex items-center gap-2">
               <PackSummary pack={pack} />
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isDisabled || index === 0}
-                onClick={() =>
+              <MoveControls
+                itemLabel={pack.name}
+                isFirst={index === 0}
+                isLast={index === sectionPacks.sectionPacks.length - 1}
+                disabled={isDisabled}
+                onMoveUp={() =>
                   sectionPacks.movePack({
                     pack,
                     direction: CatalogSectionMoveDirection.UP,
                   })
                 }
-                aria-label={`Monter ${pack.name}`}
-              >
-                <ChevronUp size={18} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={
-                  isDisabled || index === sectionPacks.sectionPacks.length - 1
-                }
-                onClick={() =>
+                onMoveDown={() =>
                   sectionPacks.movePack({
                     pack,
                     direction: CatalogSectionMoveDirection.DOWN,
                   })
                 }
-                aria-label={`Descendre ${pack.name}`}
-              >
-                <ChevronDown size={18} />
-              </Button>
+              />
               <Button
                 type="button"
                 variant="ghost"
