@@ -45,11 +45,7 @@ function buildAccessTokenGuardScenario({
   const authSession: AuthSession = { user, authVersion: 0 };
   const authTokenService: DeepMocked<AuthTokenService> =
     createMock<AuthTokenService>();
-  authTokenService.verifyAccessToken.mockResolvedValue({
-    id: user.id,
-    authVersion: 0,
-  });
-  authTokenService.resolveAuthSession.mockResolvedValue(authSession);
+  authTokenService.authenticateAccessToken.mockResolvedValue(authSession);
   const authCookieService: DeepMocked<AuthCookieService> =
     createMock<AuthCookieService>();
   authCookieService.readAccessToken.mockImplementation(
@@ -210,7 +206,7 @@ describe('OptionalAuthGuard.canActivate', () => {
       user: buildUser(),
       headers: { authorization: 'Bearer unrecognized-token' },
     });
-    authTokenService.verifyAccessToken.mockRejectedValue(
+    authTokenService.authenticateAccessToken.mockRejectedValue(
       new JsonWebTokenError('invalid signature'),
     );
 
@@ -230,7 +226,7 @@ describe('OptionalAuthGuard.canActivate', () => {
       user: buildUser(),
       headers: { authorization: 'Bearer revoked-token' },
     });
-    authTokenService.resolveAuthSession.mockRejectedValue(
+    authTokenService.authenticateAccessToken.mockRejectedValue(
       new UnauthorizedException({
         code: ErrorCode.USER_INVALID_TOKEN,
         message: 'Session revoked',
@@ -249,7 +245,7 @@ describe('OptionalAuthGuard.canActivate', () => {
         user: buildUser(),
         headers: { authorization: 'Bearer expired-token' },
       });
-    authTokenService.verifyAccessToken.mockRejectedValue(
+    authTokenService.authenticateAccessToken.mockRejectedValue(
       new TokenExpiredError('jwt expired', new Date()),
     );
 
@@ -267,7 +263,7 @@ describe('BearerAuthGuard.canActivate', () => {
         user: buildUser(),
         headers: { authorization: 'Bearer unrecognized-token' },
       });
-    authTokenService.verifyAccessToken.mockRejectedValue(
+    authTokenService.authenticateAccessToken.mockRejectedValue(
       new JsonWebTokenError('invalid signature'),
     );
 

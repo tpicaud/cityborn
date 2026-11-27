@@ -15,10 +15,7 @@ import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
 import type { AuthRequest } from '../auth-request';
 import { AuthCookieService } from '../services/auth-cookie.service';
-import {
-  type AuthTokenPayload,
-  AuthTokenService,
-} from '../services/auth-token.service';
+import { AuthTokenService } from '../services/auth-token.service';
 import { extractBearerToken } from './bearer-token';
 
 type AccessTokenGuardPolicy = {
@@ -80,7 +77,7 @@ function createAccessTokenGuard(
 
       let authSession: AuthSession | null;
       try {
-        authSession = await this.resolveAuthSession(
+        authSession = await this.authTokenService.authenticateAccessToken(
           accessTokenSource.accessToken,
         );
       } catch (error: unknown) {
@@ -109,14 +106,6 @@ function createAccessTokenGuard(
         });
       }
       return true;
-    }
-
-    private async resolveAuthSession(
-      accessToken: string,
-    ): Promise<AuthSession | null> {
-      const payload: AuthTokenPayload =
-        await this.authTokenService.verifyAccessToken(accessToken);
-      return await this.authTokenService.resolveAuthSession(payload);
     }
 
     private assertAdminAccess({

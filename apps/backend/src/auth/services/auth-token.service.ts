@@ -92,6 +92,13 @@ export class AuthTokenService {
     return AuthTokenPayloadSchema.parse(payload);
   }
 
+  async authenticateAccessToken(
+    accessToken: string,
+  ): Promise<AuthSession | null> {
+    const payload: AuthTokenPayload = await this.verifyAccessToken(accessToken);
+    return await this.resolveAuthSession(payload);
+  }
+
   async redeemRefreshToken(refreshToken: string): Promise<AuthSession | null> {
     const payload: RefreshTokenPayload =
       await this.verifyRefreshToken(refreshToken);

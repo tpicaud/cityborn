@@ -291,6 +291,26 @@ describe('AuthTokenService', () => {
     });
   });
 
+  describe('authenticateAccessToken', () => {
+    it('resolves the auth session of a verified access token', async () => {
+      const user: User = buildUser();
+      const authSession: AuthSession = { user, authVersion: 1 };
+      const {
+        authTokenService,
+        jwtService,
+        userService,
+      }: ReturnType<typeof buildAuthTokenService> = buildAuthTokenService();
+      jwtService.verifyAsync.mockResolvedValue({ id: user.id, authVersion: 1 });
+      userService.findAuthSessionById.mockResolvedValue(authSession);
+
+      const resolvedAuthSession: AuthSession | null =
+        await authTokenService.authenticateAccessToken('access-token');
+
+      expect(resolvedAuthSession).toEqual(authSession);
+      expect(userService.findAuthSessionById).toHaveBeenCalledWith(user.id);
+    });
+  });
+
   describe('redeemRefreshToken', () => {
     it('consumes the refresh token until it expires', async () => {
       const user: User = buildUser();
