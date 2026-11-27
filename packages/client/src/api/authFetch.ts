@@ -21,24 +21,6 @@ export type AuthFetchOptions = {
 
 type AuthenticationRefreshResult = { ok: true } | { ok: false; error: unknown };
 
-type ApiFetchResult = { status: number; body: unknown; headers: Headers };
-
-type ApiFetchAttempt = {
-  result: ApiFetchResult;
-  carriedStoredAccessToken: boolean;
-};
-
-type RequestHeaders = {
-  headers: Record<string, string>;
-  carriesBearerToken: boolean;
-};
-
-function hasAuthorizationHeader(headers: Record<string, string>): boolean {
-  return Object.keys(headers).some(
-    (name: string): boolean => name.toLowerCase() === 'authorization',
-  );
-}
-
 function buildClientHeaders(
   client: ClientInfo | undefined,
 ): Record<string, string> {
@@ -76,7 +58,7 @@ export class AuthFetch {
   private async buildHeaders(
     extra: Record<string, string>,
     bearerToken: string | null,
-  ): Promise<RequestHeaders> {
+  ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       ...this.baseHeaders,
       ...extra,
@@ -87,47 +69,42 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    if (!bearerToken || hasAuthorizationHeader(headers)) {
-      return { headers, carriesBearerToken: false };
+    const hasExplicitAuthorization: boolean = Object.keys(headers).some(
+      (name: string): boolean => name.toLowerCase() === 'authorization',
+    );
+    if (bearerToken && !hasExplicitAuthorization) {
+      headers.Authorization = `Bearer ${bearerToken}`;
     }
-    headers.Authorization = `Bearer ${bearerToken}`;
-    return { headers, carriesBearerToken: true };
+
+    return headers;
   }
 
   buildApiFunction() {
     return (args: ApiFetcherArgs) => this.tsRestFetch(args);
   }
 
-  private async tsRestFetch(args: ApiFetcherArgs): Promise<ApiFetchResult> {
-    const attempt: ApiFetchAttempt = await this.fetchOnce(args);
+  private async tsRestFetch(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    const result = await this.fetchOnce(args);
 
-    if (this.requiresAuthenticationRefresh(attempt)) {
+    if (
+      result.status === 401 &&
+      parseApiError(result.status, result.body).code === ErrorCode.TOKEN_EXPIRED
+    ) {
       return this.handle401(args);
     }
 
-    return attempt.result;
+    return result;
   }
 
-  private requiresAuthenticationRefresh({
-    result,
-    carriedStoredAccessToken,
-  }: ApiFetchAttempt): boolean {
-    if (result.status !== 401) {
-      return false;
-    }
-    const errorCode: ErrorCode = parseApiError(result.status, result.body).code;
-    return (
-      errorCode === ErrorCode.TOKEN_EXPIRED ||
-      (errorCode === ErrorCode.USER_INVALID_TOKEN && carriedStoredAccessToken)
+  private async fetchOnce(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    const headers: Record<string, string> = await this.buildHeaders(
+      args.headers ?? {},
+      await this.authTransport.readAccessToken(),
     );
-  }
-
-  private async fetchOnce(args: ApiFetcherArgs): Promise<ApiFetchAttempt> {
-    const { headers, carriesBearerToken }: RequestHeaders =
-      await this.buildHeaders(
-        args.headers ?? {},
-        await this.authTransport.readAccessToken(),
-      );
 
     const response = await this.timeoutFetch(args.path, {
       method: args.method,
@@ -141,13 +118,12 @@ export class AuthFetch {
     }
 
     const body = await this.parseBody(response);
-    return {
-      result: { status: response.status, body, headers: response.headers },
-      carriedStoredAccessToken: carriesBearerToken,
-    };
+    return { status: response.status, body, headers: response.headers };
   }
 
-  private async handle401(args: ApiFetcherArgs): Promise<ApiFetchResult> {
+  private async handle401(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (result) => {
@@ -156,7 +132,7 @@ export class AuthFetch {
             return;
           }
           try {
-            resolve((await this.fetchOnce(args)).result);
+            resolve(await this.fetchOnce(args));
           } catch (err) {
             reject(err);
           }
@@ -168,7 +144,7 @@ export class AuthFetch {
     try {
       await this.authTransport.refreshAuthentication(this.sendAuthRequest);
       this.processQueue({ ok: true });
-      return (await this.fetchOnce(args)).result;
+      return await this.fetchOnce(args);
     } catch (error: unknown) {
       this.processQueue({ ok: false, error });
       if (error instanceof ApiResponseError && error.statusCode === 401) {
@@ -188,12 +164,10 @@ export class AuthFetch {
       `${this.baseURL}${route.path}`,
       {
         method: route.method,
-        headers: (
-          await this.buildHeaders(
-            { 'Content-Type': 'application/json' },
-            bearerToken,
-          )
-        ).headers,
+        headers: await this.buildHeaders(
+          { 'Content-Type': 'application/json' },
+          bearerToken,
+        ),
         body: '{}',
         credentials: 'include',
       },
