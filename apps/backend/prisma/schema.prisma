@@ -143,6 +143,12 @@ model Pack {
   @@index([themeId])
 }
 
+model CatalogSection {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  position Int
+}
+
 ///////////////////////
 // End game sentence //
 ///////////////////////

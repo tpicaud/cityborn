@@ -59,6 +59,7 @@ export function PackCatalog({
     selectedTheme,
     selectTheme,
     packs,
+    allPacksRowTitle,
   }: ThemeFilteredPacks = useThemeFilteredPacks({ isScreenFocused });
 
   if (isLoading) return <LoadingScreen />;
@@ -85,7 +86,7 @@ export function PackCatalog({
         {packs.length === 0 ? (
           <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
-          <CardRow key={selectedTheme?.id ?? 'all'} title="Tous les packs">
+          <CardRow key={selectedTheme?.id ?? 'all'} title={allPacksRowTitle}>
             {packs.map((pack: Pack) => (
               <PackCard key={pack.id} pack={pack} onPlay={onPlay} />
             ))}

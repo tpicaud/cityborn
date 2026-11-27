@@ -1,15 +1,18 @@
 'use client';
 
-import type { Pack, Theme, ThemeId } from '@cityborn/api';
+import type { CatalogSection, Pack, Theme, ThemeId } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { playableCatalogSectionsQueryOptions } from '../../domains/catalog-section/catalogSectionQueries';
 import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
 import { playableThemesQueryOptions } from '../../domains/theme/themeQueries';
+import { findAllPacksRowTitle } from './allPacksRowTitle';
 import { selectThemePacks } from './themePacks';
 
 const noPacks: Pack[] = [];
 const noThemes: Theme[] = [];
+const noCatalogSections: CatalogSection[] = [];
 
 export type ThemeFilteredPacksOptions = {
   isScreenFocused?: boolean;
@@ -21,12 +24,13 @@ export type ThemeFilteredPacks = {
   selectedTheme: Theme | undefined;
   selectTheme: (themeId: ThemeId | undefined) => void;
   packs: Pack[];
+  allPacksRowTitle: string;
 };
 
 export function useThemeFilteredPacks({
   isScreenFocused = true,
 }: ThemeFilteredPacksOptions = {}): ThemeFilteredPacks {
-  const { packApi, themeApi }: DomainApis = useDomainApis();
+  const { catalogSectionApi, packApi, themeApi }: DomainApis = useDomainApis();
   const {
     data: publishedPacks = noPacks,
     isPending: isLoadingPacks,
@@ -39,6 +43,13 @@ export function useThemeFilteredPacks({
     isPending: isLoadingThemes,
   }: UseQueryResult<Theme[]> = useQuery({
     ...playableThemesQueryOptions(themeApi),
+    subscribed: isScreenFocused,
+  });
+  const {
+    data: catalogSections = noCatalogSections,
+    isPending: isLoadingCatalogSections,
+  }: UseQueryResult<CatalogSection[]> = useQuery({
+    ...playableCatalogSectionsQueryOptions(catalogSectionApi),
     subscribed: isScreenFocused,
   });
   const [selectedThemeId, setSelectedThemeId] = useState<ThemeId | undefined>(
@@ -60,10 +71,11 @@ export function useThemeFilteredPacks({
   );
 
   return {
-    isLoading: isLoadingPacks || isLoadingThemes,
+    isLoading: isLoadingPacks || isLoadingThemes || isLoadingCatalogSections,
     themes,
     selectedTheme,
     selectTheme: setSelectedThemeId,
     packs,
+    allPacksRowTitle: findAllPacksRowTitle(catalogSections),
   };
 }
