@@ -30,7 +30,7 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 3. Rédiger chaque issue en français en remplissant chaque section de son template, selon les [règles de contenu](#taille-et-contenu), tout dans la description, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
 4. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
 5. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
-6. Créer chaque issue ; pour un découpage, la parente d'abord, puis chaque sous-issue après ses prérequis, dont les numéros remplacent les titres dans son `Bloquée par #…`, et la rattacher à la parente selon la [procédure](references/integration-branch.md). Ajouter chaque issue au project Cityborn (n° 1) avec :
+6. Créer chaque issue, assignée au compte authentifié (`@me`) ; pour un découpage, la parente d'abord, puis chaque sous-issue après ses prérequis, dont les numéros remplacent les titres dans son `Bloquée par #…`, et la rattacher à la parente selon la [procédure](references/integration-branch.md). Ajouter chaque issue au project Cityborn (n° 1) avec :
    - Type : `DEV` ;
    - Status : `A faire dans l'itération` ;
    - Sprint : celui résolu.
@@ -52,7 +52,7 @@ La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR
 
 ## Garde-fous
 
-- Assigner, fermer ou modifier une issue seulement à la demande de l'utilisateur.
+- Réassigner, fermer ou modifier une issue seulement à la demande de l'utilisateur.
 - Une issue abandonnée est supprimée (`gh issue delete`) après confirmation, jamais fermée : le project range toute issue fermée dans « En pré-production ».
 
 ## Critère de fin
