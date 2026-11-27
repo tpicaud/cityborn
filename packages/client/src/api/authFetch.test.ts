@@ -35,6 +35,11 @@ type SessionEnding = {
   hasSignedOut: boolean;
 };
 
+type StoredTokens = {
+  access: string;
+  refresh: string;
+};
+
 type FailingRefreshScenario = {
   contractClient: ContractClient;
   sessionEnding: SessionEnding;
@@ -85,6 +90,21 @@ function stubFetch({
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
+}
+
+function createInMemoryTokenStorage(tokens: StoredTokens): TokenStorage {
+  return {
+    getAccessToken: async () => tokens.access || null,
+    getRefreshToken: async () => tokens.refresh || null,
+    setTokens: async (accessToken: string, refreshToken: string) => {
+      tokens.access = accessToken;
+      tokens.refresh = refreshToken;
+    },
+    clearTokens: async () => {
+      tokens.access = '';
+      tokens.refresh = '';
+    },
+  };
 }
 
 function isApiResponseErrorWithStatus(
@@ -267,6 +287,31 @@ describe('createCookieContractClient', () => {
     assert.equal(refreshCount, 1);
   });
 
+  it('returns an invalid token error without refreshing when no stored access token was sent', async (context: TestContext) => {
+    const calls: string[] = [];
+    stubFetch({
+      context,
+      respond: async (input: RequestInfo | URL): Promise<Response> => {
+        calls.push(new URL(String(input)).pathname);
+        return jsonResponse({ body: invalidTokenError, status: 401 });
+      },
+    });
+    const contractClient: ContractClient =
+      createCookieContractClient(apiBaseUrl);
+
+    const result: ClientInferResponses<AppContract['auth']['resetPassword']> =
+      await contractClient.auth.resetPassword({
+        body: {
+          token: 'expired-reset-token',
+          password: 'NewPassword1!',
+          confirmPassword: 'NewPassword1!',
+        },
+      });
+
+    assert.equal(result.status, 401);
+    assert.deepEqual(calls, [contract.auth.resetPassword.path]);
+  });
+
   refreshFailureCases.forEach(
     ({
       behavior,
@@ -300,26 +345,11 @@ describe('createBearerContractClient', () => {
   it('refreshes mobile tokens through the legacy route', async (context: TestContext) => {
     const user: User = buildUser();
     const calls: FetchCall[] = [];
-    const tokens: { access: string; refresh: string } = {
+    const tokens: StoredTokens = {
       access: 'expired-access',
       refresh: 'mobile-refresh',
     };
-    const tokenStorage: TokenStorage = {
-      async getAccessToken(): Promise<string> {
-        return tokens.access;
-      },
-      async getRefreshToken(): Promise<string> {
-        return tokens.refresh;
-      },
-      async setTokens(accessToken, refreshToken): Promise<void> {
-        tokens.access = accessToken;
-        tokens.refresh = refreshToken;
-      },
-      async clearTokens(): Promise<void> {
-        tokens.access = '';
-        tokens.refresh = '';
-      },
-    };
+    const tokenStorage: TokenStorage = createInMemoryTokenStorage(tokens);
     stubFetch({
       context,
       respond: async (
@@ -442,19 +472,11 @@ describe('createBearerContractClient', () => {
   );
 
   it('ends the session when an unrecognized access token cannot be refreshed', async (context: TestContext) => {
-    const tokens: { access: string; refresh: string } = {
+    const tokens: StoredTokens = {
       access: 'unrecognized-access',
       refresh: 'unrecognized-refresh',
     };
-    const tokenStorage: TokenStorage = {
-      getAccessToken: async () => tokens.access || null,
-      getRefreshToken: async () => tokens.refresh || null,
-      setTokens: async () => {},
-      clearTokens: async () => {
-        tokens.access = '';
-        tokens.refresh = '';
-      },
-    };
+    const tokenStorage: TokenStorage = createInMemoryTokenStorage(tokens);
     stubFetch({
       context,
       respond: async (): Promise<Response> =>
@@ -476,22 +498,11 @@ describe('createBearerContractClient', () => {
   it('keeps the session when a password reset token is refused', async (context: TestContext) => {
     const user: User = buildUser();
     const calls: string[] = [];
-    const tokens: { access: string; refresh: string } = {
+    const tokens: StoredTokens = {
       access: 'mobile-access',
       refresh: 'mobile-refresh',
     };
-    const tokenStorage: TokenStorage = {
-      getAccessToken: async () => tokens.access || null,
-      getRefreshToken: async () => tokens.refresh || null,
-      setTokens: async (accessToken: string, refreshToken: string) => {
-        tokens.access = accessToken;
-        tokens.refresh = refreshToken;
-      },
-      clearTokens: async () => {
-        tokens.access = '';
-        tokens.refresh = '';
-      },
-    };
+    const tokenStorage: TokenStorage = createInMemoryTokenStorage(tokens);
     stubFetch({
       context,
       respond: async (input: RequestInfo | URL): Promise<Response> => {
