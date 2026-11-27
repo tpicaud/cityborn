@@ -25,6 +25,7 @@ import {
   createCatalogSectionPackMutations,
 } from './catalogSectionPackMutations';
 import {
+  createEmptyPackCandidatesMessage,
   searchCatalogSectionPackCandidates,
   selectCatalogSectionPacks,
 } from './catalogSectionPacks';
@@ -38,6 +39,7 @@ export type CatalogSectionPacks = CatalogSectionPackMutations & {
   packQuery: string;
   searchPacks: (query: string) => void;
   packCandidates: Pack[];
+  emptyPackCandidatesMessage: string | null;
   isSaving: boolean;
   isLoading: boolean;
   loadError: string | null;
@@ -59,15 +61,20 @@ export function useCatalogSectionPacks({
   const [packQuery, setPackQuery] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const packs: Pack[] = query.data ?? noPacks;
+  const packCandidates: Pack[] = searchCatalogSectionPackCandidates({
+    section,
+    packs,
+    query: packQuery,
+  });
   return {
     sectionPacks: selectCatalogSectionPacks({ section, packs }),
     packQuery,
     searchPacks: setPackQuery,
-    packCandidates: searchCatalogSectionPackCandidates({
-      section,
-      packs,
-      query: packQuery,
-    }),
+    packCandidates,
+    emptyPackCandidatesMessage:
+      packCandidates.length === 0
+        ? createEmptyPackCandidatesMessage({ section, packs })
+        : null,
     isSaving,
     isLoading: query.isPending,
     loadError: query.isError ? resolveErrorMessage(query.error) : null,

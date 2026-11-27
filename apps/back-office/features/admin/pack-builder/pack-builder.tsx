@@ -147,6 +147,9 @@ export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-gray-400">
+                  Changer de thème retire le pack des sections de son thème.
+                </p>
               </div>
               <div className="h-full flex flex-col w-[30%] min-w-40">
                 <span>Visibilité</span>

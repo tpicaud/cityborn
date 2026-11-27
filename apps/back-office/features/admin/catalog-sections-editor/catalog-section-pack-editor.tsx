@@ -96,8 +96,10 @@ export function CatalogSectionPackEditor({
         onChange={(event) => sectionPacks.searchPacks(event.target.value)}
         className="min-w-0 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2"
       />
-      {sectionPacks.packCandidates.length === 0 ? (
-        <p className="text-zinc-400">Aucun pack à ajouter.</p>
+      {sectionPacks.emptyPackCandidatesMessage ? (
+        <p className="text-zinc-400">
+          {sectionPacks.emptyPackCandidatesMessage}
+        </p>
       ) : (
         <ul
           aria-label={`Packs à ajouter à ${section.name}`}
