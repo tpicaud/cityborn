@@ -1,8 +1,17 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { buildUser, ErrorCode, type User } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
-import type { JwtService } from '@nestjs/jwt';
-import { JsonWebTokenError } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
+import { ClsService } from 'nestjs-cls';
 import type { AuthSession } from '../../common/types/auth-session';
+import type {
+  HttpWideEventInit,
+  WideEventLogger,
+} from '../../common/wide-event/wide-event';
+import {
+  type WideEventClsStore,
+  WideEventService,
+} from '../../common/wide-event/wide-event.service';
 import type { AuthConfig } from '../../config/config.module';
 import type { RedisService } from '../../redis/redis.service';
 import type { UserService } from '../../user/user.service';
@@ -21,8 +30,75 @@ function buildAuthTokenService() {
     authConfig,
     userService,
     redisService,
+    createMock<WideEventService>(),
   );
   return { authTokenService, jwtService, userService, redisService };
+}
+
+const httpWideEventInit: HttpWideEventInit = {
+  transport: 'http',
+  requestId: 'request-1',
+  domain: 'auth',
+  operation: 'GET /auth/me',
+  method: 'GET',
+  route: '/auth/me',
+  ip: '127.0.0.1',
+  userAgent: undefined,
+  visitorId: undefined,
+  client: undefined,
+  clientVersion: undefined,
+  apiVersion: 1,
+  isAuthenticated: false,
+};
+
+type TokenRejection = {
+  error: unknown;
+  wideEvent: object;
+};
+
+function buildTokenRejectionScenario() {
+  const jwtService: JwtService = new JwtService();
+  const logger: DeepMocked<WideEventLogger> = createMock<WideEventLogger>();
+  const wideEventService: WideEventService = new WideEventService(
+    new ClsService<WideEventClsStore>(new AsyncLocalStorage()),
+    logger,
+  );
+  const authConfig: AuthConfig = createMock<AuthConfig>({
+    jwtAccessSecret: 'access-secret',
+    jwtRefreshSecret: 'refresh-secret',
+  });
+  const authTokenService: AuthTokenService = new AuthTokenService(
+    jwtService,
+    authConfig,
+    createMock<UserService>(),
+    createMock<RedisService>(),
+    wideEventService,
+  );
+
+  async function rejectInsideWideEvent(
+    verification: (service: AuthTokenService) => Promise<unknown>,
+  ): Promise<TokenRejection> {
+    const error: unknown = await wideEventService.run(
+      httpWideEventInit,
+      async () => {
+        const rejection: unknown = await verification(authTokenService).then(
+          () => undefined,
+          (verificationError: unknown) => verificationError,
+        );
+        wideEventService.finish({ statusCode: 401 });
+        return rejection;
+      },
+    );
+    const [[wideEvent]]: Parameters<WideEventLogger['warn']>[] =
+      logger.warn.mock.calls;
+    return { error, wideEvent };
+  }
+
+  return { jwtService, rejectInsideWideEvent };
+}
+
+function nowInSeconds(): number {
+  return Math.floor(Date.now() / 1000);
 }
 
 describe('AuthTokenService', () => {
@@ -41,6 +117,100 @@ describe('AuthTokenService', () => {
       expect(payload).toEqual({ id: user.id, authVersion: 0 });
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('historical-token', {
         secret: 'access-secret',
+      });
+    });
+
+    it('records the rejection reason and the unverified claims of a token signed with another secret', async () => {
+      const user: User = buildUser();
+      const {
+        jwtService,
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      const issuedAt: number = nowInSeconds() - 60;
+      const accessToken: string = await jwtService.signAsync(
+        { id: user.id, authVersion: 3, iat: issuedAt },
+        { secret: 'other-secret', expiresIn: 900 },
+      );
+
+      const { error, wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.verifyAccessToken(accessToken),
+      );
+
+      expect(error).toBeInstanceOf(JsonWebTokenError);
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'invalid signature',
+        tokenDecodable: true,
+        rejectedTokenUserId: user.id,
+        rejectedTokenIat: issuedAt,
+        rejectedTokenExp: issuedAt + 900,
+        rejectedTokenAuthVersion: 3,
+        isAuthenticated: false,
+      });
+      expect(wideEvent).not.toHaveProperty('userId');
+    });
+
+    it('keeps the token and its signature out of the wide event', async () => {
+      const user: User = buildUser();
+      const {
+        jwtService,
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      const accessToken: string = await jwtService.signAsync(
+        { id: user.id },
+        { secret: 'other-secret', expiresIn: 900 },
+      );
+      const [, , signature]: string[] = accessToken.split('.');
+
+      const { wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.verifyAccessToken(accessToken),
+      );
+
+      const serializedWideEvent: string = JSON.stringify(wideEvent);
+      expect(serializedWideEvent).not.toContain(accessToken);
+      expect(serializedWideEvent).not.toContain(signature);
+    });
+
+    it('records a malformed token as not decodable', async () => {
+      const {
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+
+      const { wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.verifyAccessToken('not-a-jwt'),
+      );
+
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'jwt malformed',
+        tokenDecodable: false,
+      });
+      expect(wideEvent).not.toHaveProperty('rejectedTokenUserId');
+    });
+
+    it('records the expiry of an expired token', async () => {
+      const user: User = buildUser();
+      const {
+        jwtService,
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      const issuedAt: number = nowInSeconds() - 3600;
+      const accessToken: string = await jwtService.signAsync(
+        { id: user.id, iat: issuedAt },
+        { secret: 'access-secret', expiresIn: 900 },
+      );
+
+      const { wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.verifyAccessToken(accessToken),
+      );
+
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'jwt expired',
+        tokenDecodable: true,
+        rejectedTokenUserId: user.id,
+        rejectedTokenExp: issuedAt + 900,
       });
     });
   });
@@ -102,6 +272,29 @@ describe('AuthTokenService', () => {
         redisService.setIfAbsent.mock.calls[0];
       expect(ttlSeconds).toBeGreaterThan(595);
       expect(ttlSeconds).toBeLessThanOrEqual(600);
+    });
+
+    it('records the rejection reason of a refresh token signed with another secret', async () => {
+      const user: User = buildUser();
+      const {
+        jwtService,
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      const refreshToken: string = await jwtService.signAsync(
+        { id: user.id },
+        { secret: 'access-secret', expiresIn: 900 },
+      );
+
+      const { wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) => service.redeemRefreshToken(refreshToken),
+      );
+
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'invalid signature',
+        tokenDecodable: true,
+        rejectedTokenUserId: user.id,
+      });
     });
 
     it('rejects a refresh token already used or revoked', async () => {

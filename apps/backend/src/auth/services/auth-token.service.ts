@@ -6,12 +6,14 @@ import {
   UsernameSchema,
 } from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
 import {
   type AuthSession,
   AuthVersionSchema,
 } from '../../common/types/auth-session';
+import type { WideEventTokenRejectionContext } from '../../common/wide-event/wide-event';
+import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { RedisService } from '../../redis/redis.service';
 import { UserService } from '../../user/user.service';
@@ -32,6 +34,15 @@ const RefreshTokenPayloadSchema = AuthTokenPayloadSchema.extend({
 
 type RefreshTokenPayload = z.infer<typeof RefreshTokenPayloadSchema>;
 
+const RejectedTokenClaimsSchema = z.object({
+  id: z.string().max(64).optional().catch(undefined),
+  iat: z.number().int().optional().catch(undefined),
+  exp: z.number().int().optional().catch(undefined),
+  authVersion: z.number().int().optional().catch(undefined),
+});
+
+type RejectedTokenClaims = z.infer<typeof RejectedTokenClaimsSchema>;
+
 const CONSUMED_REFRESH_TOKEN_KEY_PREFIX: string =
   'auth:consumed-refresh-token:';
 
@@ -47,6 +58,7 @@ export class AuthTokenService {
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
     private readonly redisService: RedisService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   async issueTokenPair(authSession: AuthSession): Promise<AuthTokenPair> {
@@ -72,7 +84,8 @@ export class AuthTokenService {
   }
 
   async verifyAccessToken(accessToken: string): Promise<AuthTokenPayload> {
-    const payload: unknown = await this.jwtService.verifyAsync(accessToken, {
+    const payload: unknown = await this.verifyToken({
+      token: accessToken,
       secret: this.authConfig.jwtAccessSecret,
     });
     return AuthTokenPayloadSchema.parse(payload);
@@ -126,10 +139,62 @@ export class AuthTokenService {
   private async verifyRefreshToken(
     refreshToken: string,
   ): Promise<RefreshTokenPayload> {
-    const payload: unknown = await this.jwtService.verifyAsync(refreshToken, {
+    const payload: unknown = await this.verifyToken({
+      token: refreshToken,
       secret: this.authConfig.jwtRefreshSecret,
     });
     return RefreshTokenPayloadSchema.parse(payload);
+  }
+
+  private async verifyToken({
+    token,
+    secret,
+  }: {
+    token: string;
+    secret: string;
+  }): Promise<unknown> {
+    try {
+      return await this.jwtService.verifyAsync(token, { secret });
+    } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        this.wideEventService.enrichTokenRejection(
+          this.describeTokenRejection({ token, reason: error.message }),
+        );
+      }
+      throw error;
+    }
+  }
+
+  private describeTokenRejection({
+    token,
+    reason,
+  }: {
+    token: string;
+    reason: string;
+  }): WideEventTokenRejectionContext {
+    const decodedPayload: unknown = this.decodeUnverified(token);
+    if (typeof decodedPayload !== 'object' || decodedPayload === null) {
+      return { tokenRejectionReason: reason, tokenDecodable: false };
+    }
+
+    const claims: RejectedTokenClaims =
+      RejectedTokenClaimsSchema.parse(decodedPayload);
+    return {
+      tokenRejectionReason: reason,
+      tokenDecodable: true,
+      rejectedTokenUserId: claims.id,
+      rejectedTokenIat: claims.iat,
+      rejectedTokenExp: claims.exp,
+      rejectedTokenAuthVersion: claims.authVersion,
+    };
+  }
+
+  private decodeUnverified(token: string): unknown {
+    try {
+      return this.jwtService.decode(token);
+    } catch {
+      return null;
+    }
   }
 
   private async consumeRefreshToken({
