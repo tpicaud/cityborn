@@ -31,12 +31,7 @@ Terminé quand chaque critère a sa preuve ou sa place dans le rapport.
 1. Créer un commit dès qu'une étape cohérente est complète et vérifiée, en gardant séparées les étapes indépendantes.
 2. Une fois `pnpm verify` vert, pousser le développement initial et les correctifs de review sur la branche liée à la même PR.
 3. Créer la PR draft vers la branche cible si la branche n'en a pas, sinon la mettre à jour, avec pour description le rapport de `.agents/skills/deliver-issue/references/report.md`. L'assigner au compte authentifié (`@me`).
-4. Vérifier que la PR est la seule de `gh issue view <numéro> --json closedByPullRequestsReferences`. Vers une branche d'intégration, `Closes #<numéro>` ne lie pas la PR à l'issue : la lier avec
-
-   ```sh
-   gh api graphql -f issue="$(gh issue view <numéro> --json id -q .id)" -f pr="$(gh pr view <PR> --json id -q .id)" \
-     -f query='mutation($issue:ID!,$pr:ID!){addCloseIssueReferences(input:{issueId:$issue,pullRequestIds:[$pr]}){clientMutationId}}'
-   ```
+4. Lier la PR à l'issue selon le skill `manage-issue`, puis vérifier qu'elle est la seule de `gh issue view <numéro> --json closedByPullRequestsReferences`.
 5. Passer la PR en ready, la merger, modifier l'issue ou changer un statut de projet seulement à la demande explicite de l'utilisateur.
 
 ## Compte rendu final

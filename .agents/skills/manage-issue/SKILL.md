@@ -48,7 +48,16 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 
 ## Branche d'intégration
 
-La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR draft vers `main`, ou vers la branche d'intégration de sa propre parente, où chaque sous-issue livre sa propre PR. Pour la retrouver depuis une sous-issue, l'ouvrir, y rattacher une issue ou fermer une sous-issue livrée, lire la [procédure](references/integration-branch.md).
+La **branche d'intégration** d'une parente est sa branche liée, où chaque sous-issue livre sa propre PR. Sa PR draft, liée à la parente, vise `main`, ou la branche d'intégration de la parente de la parente. Pour la retrouver depuis une sous-issue, l'ouvrir, y rattacher une issue ou fermer une sous-issue livrée, lire la [procédure](references/integration-branch.md).
+
+## Lien d'une PR à son issue
+
+Chaque PR est liée explicitement à l'issue qu'elle livre, quelle que soit sa base : `Closes #<numéro>` dans sa description ne crée ce lien que vers `main`. `<PR>` désigne la PR par son numéro, son URL ou sa branche de tête.
+
+```sh
+gh api graphql -f issue="$(gh issue view <numéro> --json id -q .id)" -f pr="$(gh pr view <PR> --json id -q .id)" \
+  -f query='mutation($issue:ID!,$pr:ID!){addCloseIssueReferences(input:{issueId:$issue,pullRequestIds:[$pr]}){clientMutationId}}'
+```
 
 ## Garde-fous
 
