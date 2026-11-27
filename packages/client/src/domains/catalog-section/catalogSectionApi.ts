@@ -7,11 +7,12 @@ import type {
 import { unwrapApiResponse } from '@cityborn/api';
 import type { ContractClient } from '../../api/contractClient';
 
-type CatalogSectionContractClient = {
+type CatalogSectionContractClient = Pick<ContractClient, 'catalogSection'> & {
   admin: Pick<ContractClient['admin'], 'catalogSection'>;
 };
 
 export interface CatalogSectionApi {
+  getPlayableCatalogSections(): Promise<CatalogSection[]>;
   getCatalogSections(): Promise<CatalogSection[]>;
   createCatalogSection(section: SaveCatalogSection): Promise<CatalogSection>;
   renameCatalogSection(data: {
@@ -29,6 +30,11 @@ export function createCatalogSectionApi(
   contractClient: CatalogSectionContractClient,
 ): CatalogSectionApi {
   return {
+    async getPlayableCatalogSections() {
+      return unwrapApiResponse(
+        await contractClient.catalogSection.getPlayableCatalogSections({}),
+      );
+    },
     async getCatalogSections() {
       return unwrapApiResponse(
         await contractClient.admin.catalogSection.getCatalogSections({}),

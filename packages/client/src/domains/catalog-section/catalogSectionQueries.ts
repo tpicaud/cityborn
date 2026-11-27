@@ -6,7 +6,22 @@ import {
 } from '@tanstack/react-query';
 import type { CatalogSectionApi } from './catalogSectionApi';
 
+const playableCatalogSectionsCacheDurationMs: number = 60 * 60 * 1000;
+
 const catalogSectionsQueryKey: QueryKey = ['admin', 'catalog-sections'];
+
+export function playableCatalogSectionsQueryOptions(
+  catalogSectionApi: CatalogSectionApi,
+) {
+  return queryOptions({
+    queryKey: ['catalog-section', 'playable'],
+    queryFn: () => catalogSectionApi.getPlayableCatalogSections(),
+    staleTime: playableCatalogSectionsCacheDurationMs,
+    gcTime: playableCatalogSectionsCacheDurationMs,
+    retry: false,
+    meta: { reportsError: true },
+  });
+}
 
 export function catalogSectionsQueryOptions(
   catalogSectionApi: CatalogSectionApi,

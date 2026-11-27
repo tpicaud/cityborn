@@ -110,6 +110,7 @@ function createMutationsFixture({
   isLoadingSections?: boolean;
 }): MutationsFixture {
   const catalogSectionApi: CatalogSectionApi = {
+    getPlayableCatalogSections: unexpectedCall,
     getCatalogSections: unexpectedCall,
     createCatalogSection: unexpectedCall,
     renameCatalogSection: unexpectedCall,
@@ -283,6 +284,7 @@ describe('createCatalogSectionMutations', () => {
         renameCatalogSection: async ({ id, section }) => ({
           id,
           name: section.name,
+          isDefault: false,
         }),
       },
     });
