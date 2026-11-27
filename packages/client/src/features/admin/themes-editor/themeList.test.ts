@@ -14,7 +14,11 @@ import {
   UserFacingError,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  QueryClient,
+  type QueryKey,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { createFormControl } from 'react-hook-form';
 import type { ThemeApi } from '../../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../../domains/theme/themeQueries';
@@ -83,11 +87,13 @@ function createManagementFixture({
   themeApi: overrides,
   themes = [divers, sport],
   state = initialOrderedListEditorState,
+  isLoadingThemes = false,
 }: {
   context: TestContext;
   themeApi: Partial<ThemeApi>;
   themes?: AdminTheme[];
   state?: OrderedListEditorState<ThemeId>;
+  isLoadingThemes?: boolean;
 }): ManagementFixture {
   const themeApi: ThemeApi = {
     getPlayableThemes: unexpectedCall,
@@ -101,7 +107,14 @@ function createManagementFixture({
   const queryClient: QueryClient = new QueryClient();
   context.after(() => queryClient.clear());
   const themeKey: QueryKey = themesQueryOptions(themeApi).queryKey;
-  queryClient.setQueryData(themeKey, themes);
+  if (isLoadingThemes) {
+    const observer: QueryObserver<AdminTheme[]> = new QueryObserver(
+      queryClient,
+      themesQueryOptions(themeApi),
+    );
+    context.after(observer.subscribe(() => undefined));
+  }
+  if (!isLoadingThemes) queryClient.setQueryData(themeKey, themes);
   queryClient.setQueryData(packListKey, []);
   queryClient.setQueryData(fullPackKey, {});
   const creationForm: ThemeForm = createFormControl<
@@ -195,6 +208,76 @@ describe('createThemeList', () => {
       fixture.queryClient.getQueryState(fullPackKey)?.isInvalidated,
       true,
     );
+  });
+
+  it('adds a created theme to the themes loaded during its request', async (context: TestContext) => {
+    let finishLoading: (themes: AdminTheme[]) => void = () => {};
+    const loading: Promise<AdminTheme[]> = new Promise((resolve) => {
+      finishLoading = resolve;
+    });
+    let finishCreation: () => void = () => {};
+    const creating: Promise<void> = new Promise((resolve) => {
+      finishCreation = resolve;
+    });
+    const loads: (() => Promise<AdminTheme[]>)[] = [
+      () => loading,
+      async () => {
+        throw new TypeError('Network request failed');
+      },
+    ];
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      isLoadingThemes: true,
+      themeApi: {
+        getThemes: () => (loads.shift() ?? unexpectedCall)(),
+        createTheme: async () => {
+          await creating;
+          return cinema;
+        },
+      },
+    });
+    fixture.creationForm.setValue('name', 'Cinéma');
+    const creation: Promise<void> = fixture.mutations.create();
+    finishLoading([divers, sport]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    finishCreation();
+
+    await creation;
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      divers,
+      sport,
+      cinema,
+    ]);
+  });
+
+  it('ignores themes loaded before a creation that responds after it', async (context: TestContext) => {
+    let finishLoading: (themes: AdminTheme[]) => void = () => {};
+    const loads: Promise<AdminTheme[]>[] = [
+      new Promise((resolve) => {
+        finishLoading = resolve;
+      }),
+      Promise.resolve([divers, sport, cinema]),
+    ];
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      isLoadingThemes: true,
+      themeApi: {
+        getThemes: () => loads.shift() ?? unexpectedCall(),
+        createTheme: async () => cinema,
+      },
+    });
+    fixture.creationForm.setValue('name', 'Cinéma');
+
+    await fixture.mutations.create();
+    finishLoading([divers, sport]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      divers,
+      sport,
+      cinema,
+    ]);
   });
 
   it('reports a rejected creation and keeps the creation input and cache', async (context: TestContext) => {
