@@ -1,186 +1,69 @@
-import {
-  type CatalogSection,
-  CatalogSectionMoveDirection,
-} from '@cityborn/api';
+import type { CatalogSection } from '@cityborn/api';
 import {
   areCatalogSectionPacksEditable,
   type CatalogSectionsManagement,
   isCatalogSectionDeletable,
 } from '@cityborn/client/admin';
-import { Check, Package, Pencil, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Package } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { MoveControls } from '@/components/ui/MoveControls';
+import {
+  type OrderedListPosition,
+  OrderedListRow,
+} from '../ordered-list-editor';
 import { CatalogSectionPackEditor } from './catalog-section-pack-editor';
 
 export function CatalogSectionRow({
   section,
   editor,
-  isBusy,
-  isFirst,
-  isLast,
+  position,
 }: {
   section: CatalogSection;
   editor: CatalogSectionsManagement;
-  isBusy: boolean;
-  isFirst: boolean;
-  isLast: boolean;
+  position: OrderedListPosition;
 }) {
-  const isEditing: boolean = editor.state.editedSectionId === section.id;
-  useEffect(() => {
-    if (isEditing) editor.editForm.setFocus('name');
-  }, [isEditing, editor.editForm]);
-  const isConfirming: boolean = editor.state.deletionSectionId === section.id;
   const [isShowingPacks, setIsShowingPacks] = useState<boolean>(false);
   const packEditorId: string = `catalog-section-packs-${section.id}`;
   const packCount: number = section.packIds.length;
-  const error: string | undefined = isEditing
-    ? editor.editForm.formState.errors.name?.message
-    : undefined;
-  const errorId: string = `catalog-section-error-${section.id}`;
+  const arePacksEditable: boolean = areCatalogSectionPacksEditable(section);
   return (
-    <li className="rounded-lg border border-zinc-700 p-3 flex flex-col gap-2">
-      {isEditing ? (
-        <form
-          onSubmit={editor.renameCatalogSection}
-          noValidate
-          className="flex flex-wrap gap-2 items-center"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape' && !isBusy) {
-              event.preventDefault();
-              editor.cancel();
-            }
-          }}
-        >
-          <label
-            htmlFor={`catalog-section-name-${section.id}`}
-            className="sr-only"
-          >
-            Nom de la section
-          </label>
-          <input
-            id={`catalog-section-name-${section.id}`}
-            {...editor.editForm.register('name')}
-            disabled={isBusy}
-            aria-invalid={!!error}
-            aria-describedby={error ? errorId : undefined}
-            className="min-w-0 flex-1 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2"
-          />
-          <Button
-            type="submit"
-            disabled={isBusy}
-            aria-label="Valider la section"
-          >
-            <Check size={18} />
-          </Button>
+    <OrderedListRow
+      item={section}
+      editor={editor}
+      position={position}
+      idPrefix="catalog-section"
+      nameLabel="Nom de la section"
+      submitLabel="Valider la section"
+      editLabel={`Renommer ${section.name}`}
+      deletionQuestion={`Supprimer « ${section.name} » ?`}
+      isDeletable={isCatalogSectionDeletable(section)}
+      details={
+        arePacksEditable && (
+          <span className="text-zinc-400 text-sm">
+            {packCount} pack{packCount > 1 ? 's' : ''}
+          </span>
+        )
+      }
+      actions={
+        arePacksEditable && (
           <Button
             type="button"
             variant="ghost"
-            disabled={isBusy}
-            onClick={editor.cancel}
-            aria-label="Annuler la modification"
+            onClick={() => setIsShowingPacks(!isShowingPacks)}
+            aria-expanded={isShowingPacks}
+            aria-controls={packEditorId}
+            aria-label={`Packs de ${section.name}`}
           >
-            <X size={18} />
+            <Package size={18} />
           </Button>
-        </form>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium flex-1 break-all">{section.name}</span>
-          {areCatalogSectionPacksEditable(section) && (
-            <span className="text-zinc-400 text-sm">
-              {packCount} pack{packCount > 1 ? 's' : ''}
-            </span>
-          )}
-          {section.isDefault && (
-            <span className="text-zinc-400 text-xs">Par défaut</span>
-          )}
-          {!isConfirming && (
-            <>
-              <MoveControls
-                itemLabel={section.name}
-                isFirst={isFirst}
-                isLast={isLast}
-                disabled={isBusy}
-                onMoveUp={() =>
-                  editor.moveCatalogSection({
-                    section,
-                    direction: CatalogSectionMoveDirection.UP,
-                  })
-                }
-                onMoveDown={() =>
-                  editor.moveCatalogSection({
-                    section,
-                    direction: CatalogSectionMoveDirection.DOWN,
-                  })
-                }
-              />
-              {areCatalogSectionPacksEditable(section) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsShowingPacks(!isShowingPacks)}
-                  aria-expanded={isShowingPacks}
-                  aria-controls={packEditorId}
-                  aria-label={`Packs de ${section.name}`}
-                >
-                  <Package size={18} />
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy}
-                onClick={() => editor.startEditing(section)}
-                aria-label={`Renommer ${section.name}`}
-              >
-                <Pencil size={18} />
-              </Button>
-              {isCatalogSectionDeletable(section) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isBusy}
-                  onClick={() => editor.confirmDeletion(section.id)}
-                  aria-label={`Supprimer ${section.name}`}
-                >
-                  <Trash2 size={18} />
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      )}
-      {isConfirming && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span>Supprimer « {section.name} » ?</span>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isBusy}
-            onClick={() => editor.deleteCatalogSection(section)}
-          >
-            Confirmer
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={isBusy}
-            onClick={editor.cancel}
-          >
-            Annuler
-          </Button>
-        </div>
-      )}
-      {error && (
-        <p id={errorId} role="alert" className="text-red-400">
-          {error}
-        </p>
-      )}
+        )
+      }
+    >
       {isShowingPacks && (
         <div id={packEditorId}>
-          <CatalogSectionPackEditor section={section} isBusy={isBusy} />
+          <CatalogSectionPackEditor section={section} isBusy={editor.isBusy} />
         </div>
       )}
-    </li>
+    </OrderedListRow>
   );
 }

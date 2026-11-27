@@ -1,59 +1,40 @@
-import { type AdminTheme, ThemeMoveDirection } from '@cityborn/api';
+import type { AdminTheme } from '@cityborn/api';
 import type { ThemesManagement } from '@cityborn/client/admin';
-import { Check, Pencil, Trash2, X } from 'lucide-react';
-import { useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
-import { MoveControls } from '@/components/ui/MoveControls';
+import {
+  type OrderedListPosition,
+  OrderedListRow,
+} from '../ordered-list-editor';
 import { IconifyIconPreview, ThemeIconGlyph } from './theme-icon-glyph';
 
 export function ThemeRow({
   theme,
   editor,
-  isBusy,
-  isFirst,
-  isLast,
+  position,
 }: {
   theme: AdminTheme;
   editor: ThemesManagement;
-  isBusy: boolean;
-  isFirst: boolean;
-  isLast: boolean;
+  position: OrderedListPosition;
 }) {
-  const isEditing: boolean = editor.state.editedThemeId === theme.id;
-  useEffect(() => {
-    if (isEditing) editor.editForm.setFocus('name');
-  }, [isEditing, editor.editForm]);
-  const isConfirming: boolean = editor.state.deletionThemeId === theme.id;
-  const error: string | undefined = isEditing
-    ? (editor.editForm.formState.errors.name?.message ??
-      editor.editForm.formState.errors.icon?.message)
-    : undefined;
-  const errorId: string = `theme-error-${theme.id}`;
   return (
-    <li className="rounded-lg border border-zinc-700 p-3 flex flex-col gap-2">
-      {isEditing ? (
-        <form
-          onSubmit={editor.updateTheme}
-          noValidate
-          className="flex flex-wrap gap-2 items-center"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape' && !isBusy) {
-              event.preventDefault();
-              editor.cancel();
-            }
-          }}
-        >
-          <label htmlFor={`theme-name-${theme.id}`} className="sr-only">
-            Nom du thème
-          </label>
-          <input
-            id={`theme-name-${theme.id}`}
-            {...editor.editForm.register('name')}
-            disabled={isBusy}
-            aria-invalid={!!error}
-            aria-describedby={error ? errorId : undefined}
-            className="min-w-0 flex-1 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2"
-          />
+    <OrderedListRow
+      item={theme}
+      editor={editor}
+      position={position}
+      idPrefix="theme"
+      nameLabel="Nom du thème"
+      submitLabel="Valider le thème"
+      editLabel={`Modifier ${theme.name}`}
+      deletionQuestion={`Supprimer « ${theme.name} » et ses sections ?`}
+      isDeletable={!theme.isDefault}
+      leading={<ThemeIconGlyph icon={theme.icon} />}
+      details={
+        <span className="text-zinc-400 text-sm">
+          {theme.packCount} pack{theme.packCount > 1 ? 's' : ''}
+        </span>
+      }
+      editFieldsError={editor.editForm.formState.errors.icon?.message}
+      renderEditFields={(field) => (
+        <>
           <label htmlFor={`theme-icon-${theme.id}`} className="sr-only">
             Icône Iconify du thème
           </label>
@@ -64,10 +45,8 @@ export function ThemeRow({
             <input
               id={`theme-icon-${theme.id}`}
               {...editor.editForm.register('icon')}
-              disabled={isBusy}
+              {...field}
               placeholder="fluent:sport-basketball-24-filled"
-              aria-invalid={!!error}
-              aria-describedby={error ? errorId : undefined}
               className="min-w-0 flex-1 bg-transparent outline-none"
             />
           </div>
@@ -79,96 +58,8 @@ export function ThemeRow({
           >
             Parcourir Iconify
           </a>
-          <Button type="submit" disabled={isBusy} aria-label="Valider le thème">
-            <Check size={18} />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={isBusy}
-            onClick={editor.cancel}
-            aria-label="Annuler la modification"
-          >
-            <X size={18} />
-          </Button>
-        </form>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <ThemeIconGlyph icon={theme.icon} />
-          <span className="font-medium flex-1 break-all">{theme.name}</span>
-          <span className="text-zinc-400 text-sm">
-            {theme.packCount} pack{theme.packCount > 1 ? 's' : ''}
-          </span>
-          {theme.isDefault && (
-            <span className="text-zinc-400 text-xs">Par défaut</span>
-          )}
-          {!isConfirming && (
-            <>
-              <MoveControls
-                itemLabel={theme.name}
-                isFirst={isFirst}
-                isLast={isLast}
-                disabled={isBusy}
-                onMoveUp={() =>
-                  editor.moveTheme({ theme, direction: ThemeMoveDirection.UP })
-                }
-                onMoveDown={() =>
-                  editor.moveTheme({
-                    theme,
-                    direction: ThemeMoveDirection.DOWN,
-                  })
-                }
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isBusy}
-                onClick={() => editor.startEditing(theme)}
-                aria-label={`Modifier ${theme.name}`}
-              >
-                <Pencil size={18} />
-              </Button>
-              {!theme.isDefault && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isBusy}
-                  onClick={() => editor.confirmDeletion(theme.id)}
-                  aria-label={`Supprimer ${theme.name}`}
-                >
-                  <Trash2 size={18} />
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+        </>
       )}
-      {isConfirming && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span>Supprimer « {theme.name} » et ses sections ?</span>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isBusy}
-            onClick={() => editor.deleteTheme(theme)}
-          >
-            Confirmer
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={isBusy}
-            onClick={editor.cancel}
-          >
-            Annuler
-          </Button>
-        </div>
-      )}
-      {error && (
-        <p id={errorId} role="alert" className="text-red-400">
-          {error}
-        </p>
-      )}
-    </li>
+    />
   );
 }
