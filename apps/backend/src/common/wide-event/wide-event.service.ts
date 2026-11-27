@@ -21,6 +21,7 @@ import {
   type WideEventLogger,
   type WideEventOperationContext,
   type WideEventRateLimitContext,
+  type WideEventTokenRejectionContext,
 } from './wide-event';
 
 interface WideEventState {
@@ -59,6 +60,10 @@ export class WideEventService {
 
   enrichRateLimit(fields: WideEventRateLimitContext): void {
     this.merge({ rateLimitRemaining: undefined, ...fields });
+  }
+
+  enrichTokenRejection(fields: WideEventTokenRejectionContext): void {
+    this.merge(fields);
   }
 
   recordError(exception: unknown, source = 'operation'): ApiError {

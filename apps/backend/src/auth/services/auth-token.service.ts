@@ -6,12 +6,14 @@ import {
   UsernameSchema,
 } from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
 import {
   type AuthSession,
   AuthVersionSchema,
 } from '../../common/types/auth-session';
+import type { WideEventTokenRejectionContext } from '../../common/wide-event/wide-event';
+import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { RedisService } from '../../redis/redis.service';
 import { UserService } from '../../user/user.service';
@@ -22,6 +24,8 @@ export const REFRESH_TOKEN_TTL_SECONDS: number = 7 * 24 * 60 * 60;
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
   authVersion: AuthVersionSchema.optional().default(0),
+  iat: z.number().int().optional(),
+  exp: z.number().int().optional(),
 });
 
 export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
@@ -31,6 +35,14 @@ const RefreshTokenPayloadSchema = AuthTokenPayloadSchema.extend({
 });
 
 type RefreshTokenPayload = z.infer<typeof RefreshTokenPayloadSchema>;
+
+const RejectedTokenClaimsSchema = z.object({
+  id: z.string().max(64).optional().catch(undefined),
+  iat: z.number().int().optional().catch(undefined),
+  exp: z.number().int().optional().catch(undefined),
+});
+
+type RejectedTokenClaims = z.infer<typeof RejectedTokenClaimsSchema>;
 
 const CONSUMED_REFRESH_TOKEN_KEY_PREFIX: string =
   'auth:consumed-refresh-token:';
@@ -47,6 +59,7 @@ export class AuthTokenService {
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
     private readonly redisService: RedisService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   async issueTokenPair(authSession: AuthSession): Promise<AuthTokenPair> {
@@ -72,7 +85,8 @@ export class AuthTokenService {
   }
 
   async verifyAccessToken(accessToken: string): Promise<AuthTokenPayload> {
-    const payload: unknown = await this.jwtService.verifyAsync(accessToken, {
+    const payload: unknown = await this.verifyToken({
+      token: accessToken,
       secret: this.authConfig.jwtAccessSecret,
     });
     return AuthTokenPayloadSchema.parse(payload);
@@ -117,6 +131,12 @@ export class AuthTokenService {
       return authSession;
     }
 
+    this.wideEventService.enrichTokenRejection({
+      tokenRejectionReason: 'session revoked',
+      rejectedTokenUserId: payload.id,
+      rejectedTokenIat: payload.iat,
+      rejectedTokenExp: payload.exp,
+    });
     throw new UnauthorizedException({
       code: ErrorCode.USER_INVALID_TOKEN,
       message: 'Session revoked',
@@ -126,10 +146,60 @@ export class AuthTokenService {
   private async verifyRefreshToken(
     refreshToken: string,
   ): Promise<RefreshTokenPayload> {
-    const payload: unknown = await this.jwtService.verifyAsync(refreshToken, {
+    const payload: unknown = await this.verifyToken({
+      token: refreshToken,
       secret: this.authConfig.jwtRefreshSecret,
     });
     return RefreshTokenPayloadSchema.parse(payload);
+  }
+
+  private async verifyToken({
+    token,
+    secret,
+  }: {
+    token: string;
+    secret: string;
+  }): Promise<unknown> {
+    try {
+      return await this.jwtService.verifyAsync(token, { secret });
+    } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        this.wideEventService.enrichTokenRejection(
+          this.describeTokenRejection({ token, reason: error.message }),
+        );
+      }
+      throw error;
+    }
+  }
+
+  private describeTokenRejection({
+    token,
+    reason,
+  }: {
+    token: string;
+    reason: string;
+  }): WideEventTokenRejectionContext {
+    const parsedClaims: z.SafeParseReturnType<unknown, RejectedTokenClaims> =
+      RejectedTokenClaimsSchema.safeParse(this.decodeUnverified(token));
+    if (!parsedClaims.success) {
+      return { tokenRejectionReason: reason };
+    }
+
+    const claims: RejectedTokenClaims = parsedClaims.data;
+    return {
+      tokenRejectionReason: reason,
+      rejectedTokenUserId: claims.id,
+      rejectedTokenIat: claims.iat,
+      rejectedTokenExp: claims.exp,
+    };
+  }
+
+  private decodeUnverified(token: string): unknown {
+    try {
+      return this.jwtService.decode(token);
+    } catch {
+      return null;
+    }
   }
 
   private async consumeRefreshToken({

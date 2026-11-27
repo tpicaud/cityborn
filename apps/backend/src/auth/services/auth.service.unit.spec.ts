@@ -96,6 +96,7 @@ function buildAuthService() {
       authConfig,
       userService,
       createMock<RedisService>(),
+      wideEventService,
     ),
     httpConfig,
     eventService,

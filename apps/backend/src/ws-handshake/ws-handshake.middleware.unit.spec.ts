@@ -88,6 +88,7 @@ function buildMiddleware() {
         authConfig,
         userService,
         createMock<RedisService>(),
+        wideEventService,
       ),
       new AuthCookieService(runtimeConfig),
       new AuthenticatedSocketService(),
@@ -333,6 +334,40 @@ describe('WsHandshakeMiddleware', () => {
           event: 'ws_connection',
           statusCode: 401,
           errorCode: ErrorCode.USER_INVALID_TOKEN,
+          isAuthenticated: false,
+        }),
+        'connection',
+      );
+    });
+
+    it('records the rejection reason and the unverified claims of an invalid auth access token', async () => {
+      const {
+        logger,
+        jwtService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      const user: User = buildUser();
+      jwtService.verifyAsync.mockRejectedValue(
+        new JsonWebTokenError('invalid signature'),
+      );
+      jwtService.decode.mockReturnValue({
+        id: user.id,
+        iat: 1_700_000_000,
+        exp: 1_700_000_900,
+      });
+      const socket: AppSocket = buildSocket({
+        auth: { access_token: 'invalid-token' },
+      });
+
+      await runHandshake(wsHandshakeMiddleware, socket);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'ws_connection',
+          tokenRejectionReason: 'invalid signature',
+          rejectedTokenUserId: user.id,
+          rejectedTokenIat: 1_700_000_000,
+          rejectedTokenExp: 1_700_000_900,
           isAuthenticated: false,
         }),
         'connection',

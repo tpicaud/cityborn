@@ -68,6 +68,10 @@ export interface WideEventEnrichment {
   sessionId: string;
   playerId: string;
   gameId: string;
+  tokenRejectionReason: string;
+  rejectedTokenUserId: string;
+  rejectedTokenIat: number;
+  rejectedTokenExp: number;
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
@@ -101,6 +105,17 @@ export interface OperationErrorWideEvent extends WideEventOperationContext {
 export type WideEventAuthContext =
   | { isAuthenticated: false; userId?: never }
   | { isAuthenticated: true; userId: string };
+
+export type WideEventTokenRejectionContext = Pick<
+  WideEventEnrichment,
+  'tokenRejectionReason'
+> &
+  Partial<
+    Pick<
+      WideEventEnrichment,
+      'rejectedTokenUserId' | 'rejectedTokenIat' | 'rejectedTokenExp'
+    >
+  >;
 
 export type WideEventRateLimitContext =
   | {
