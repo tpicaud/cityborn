@@ -67,10 +67,11 @@ function buildTokenRejectionScenario() {
     jwtAccessSecret: 'access-secret',
     jwtRefreshSecret: 'refresh-secret',
   });
+  const userService: DeepMocked<UserService> = createMock<UserService>();
   const authTokenService: AuthTokenService = new AuthTokenService(
     jwtService,
     authConfig,
-    createMock<UserService>(),
+    userService,
     createMock<RedisService>(),
     wideEventService,
   );
@@ -94,7 +95,7 @@ function buildTokenRejectionScenario() {
     return { error, wideEvent };
   }
 
-  return { jwtService, rejectInsideWideEvent };
+  return { jwtService, userService, rejectInsideWideEvent };
 }
 
 function nowInSeconds(): number {
@@ -254,6 +255,39 @@ describe('AuthTokenService', () => {
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_TOKEN },
       });
+    });
+
+    it('records a revoked session as a token rejection with its claims', async () => {
+      const user: User = buildUser();
+      const {
+        userService,
+        rejectInsideWideEvent,
+      }: ReturnType<typeof buildTokenRejectionScenario> =
+        buildTokenRejectionScenario();
+      userService.findAuthSessionById.mockResolvedValue({
+        user,
+        authVersion: 2,
+      });
+      const issuedAt: number = nowInSeconds() - 60;
+
+      const { wideEvent }: TokenRejection = await rejectInsideWideEvent(
+        (service: AuthTokenService) =>
+          service.resolveAuthSession({
+            id: user.id,
+            authVersion: 1,
+            iat: issuedAt,
+            exp: issuedAt + 900,
+          }),
+      );
+
+      expect(wideEvent).toMatchObject({
+        tokenRejectionReason: 'session revoked',
+        rejectedTokenUserId: user.id,
+        rejectedTokenIat: issuedAt,
+        rejectedTokenExp: issuedAt + 900,
+        isAuthenticated: false,
+      });
+      expect(wideEvent).not.toHaveProperty('userId');
     });
   });
 

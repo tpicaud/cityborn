@@ -24,6 +24,8 @@ export const REFRESH_TOKEN_TTL_SECONDS: number = 7 * 24 * 60 * 60;
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
   authVersion: AuthVersionSchema.optional().default(0),
+  iat: z.number().int().optional(),
+  exp: z.number().int().optional(),
 });
 
 export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
@@ -129,6 +131,12 @@ export class AuthTokenService {
       return authSession;
     }
 
+    this.wideEventService.enrichTokenRejection({
+      tokenRejectionReason: 'session revoked',
+      rejectedTokenUserId: payload.id,
+      rejectedTokenIat: payload.iat,
+      rejectedTokenExp: payload.exp,
+    });
     throw new UnauthorizedException({
       code: ErrorCode.USER_INVALID_TOKEN,
       message: 'Session revoked',
