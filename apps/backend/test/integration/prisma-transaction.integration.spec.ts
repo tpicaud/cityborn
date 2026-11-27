@@ -47,7 +47,7 @@ import {
   type PrismaTransactionHost,
 } from '../../src/prisma/prisma-cls.module';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
-import { RedisService } from '../../src/redis/redis.service';
+import { REDIS_CLIENT } from '../../src/redis/redis.module';
 import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
 import { THEME_REPOSITORY } from '../../src/theme/repositories/theme.repository';
 import { ThemeService } from '../../src/theme/theme.service';
@@ -90,13 +90,7 @@ describe('Prisma transactions', () => {
         { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
         PasswordResetService,
         RateLimitService,
-        {
-          provide: RedisService,
-          useValue: new RedisService(
-            infrastructure.redis,
-            createMock<WideEventService>(),
-          ),
-        },
+        { provide: REDIS_CLIENT, useValue: infrastructure.redis },
         { provide: WideEventService, useValue: createMock<WideEventService>() },
         { provide: MailService, useValue: createMock<MailService>() },
         { provide: IconService, useValue: createMock<IconService>() },

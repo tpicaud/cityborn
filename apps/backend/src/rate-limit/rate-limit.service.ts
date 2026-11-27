@@ -1,7 +1,8 @@
 import { ErrorCode, type UserId } from '@cityborn/api';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import type Redis from 'ioredis';
 import { RateLimiterRedis, type RateLimiterRes } from 'rate-limiter-flexible';
-import { RedisService } from '../redis/redis.service';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 @Injectable()
 export class RateLimitService {
@@ -12,39 +13,39 @@ export class RateLimitService {
   private readonly failedSignInLimiter: RateLimiterRedis;
   private readonly emailChangeLimiter: RateLimiterRedis;
 
-  constructor(private readonly redisService: RedisService) {
+  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {
     this.passwordResetLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:password-reset:ip',
       points: 5,
       duration: 15 * 60,
     });
     this.httpLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:http',
       points: 100,
       duration: 60,
     });
     this.wsConnectionLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:ws:conn',
       points: 20,
       duration: 60,
     });
     this.wsMessageLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:ws:msg',
       points: 50,
       duration: 10,
     });
     this.failedSignInLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:auth:failed-sign-in',
       points: 10,
       duration: 15 * 60,
     });
     this.emailChangeLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
+      storeClient: this.redisClient,
       keyPrefix: 'rl:auth:email-change',
       points: 5,
       duration: 60 * 60,
@@ -56,11 +57,14 @@ export class RateLimitService {
   }
 
   async reservePasswordResetEmail(emailHash: string): Promise<boolean> {
-    return this.redisService.setIfAbsent({
-      key: `rl:password-reset:email:${emailHash}`,
-      value: '1',
-      ttlSeconds: 180,
-    });
+    const reply: 'OK' | null = await this.redisClient.set(
+      `rl:password-reset:email:${emailHash}`,
+      '1',
+      'EX',
+      180,
+      'NX',
+    );
+    return reply === 'OK';
   }
 
   async consumeHttp(key: string): Promise<RateLimiterRes> {
