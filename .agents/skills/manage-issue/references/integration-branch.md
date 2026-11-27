@@ -17,8 +17,7 @@ Chaque sous-issue livre dans la branche d'intégration sa propre PR, seule liée
      ```sh
      git fetch origin <branche> && git push origin "$(git commit-tree 'origin/<branche>^{tree}' -p origin/<branche> -m 'chore: open integration branch')":refs/heads/<branche>
      ```
-   - ouvrir la PR draft vers sa base au titre de la parente, avec `Closes #<parente>` ;
-   - vers une autre base que `main`, `Closes #<parente>` ne lie pas la PR à la parente : la lier avec
+   - ouvrir la PR draft vers sa base au titre de la parente, puis la lier à la parente :
 
      ```sh
      gh api graphql -f issue="$(gh issue view <parente> --json id -q .id)" -f pr="$(gh pr view <PR> --json id -q .id)" \

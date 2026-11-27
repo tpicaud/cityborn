@@ -57,4 +57,4 @@ La **branche d'intégration** d'une parente est sa branche liée, tête de sa PR
 
 ## Critère de fin
 
-Chaque issue publiée porte ses labels, suit son template et les règles de [taille et contenu](#taille-et-contenu) ; son item de project porte son Type, son Status et son Sprint. Chaque sous-issue est rattachée à sa parente ; une branche d'intégration ouverte a sa PR draft.
+Chaque issue publiée porte ses labels, suit son template et les règles de [taille et contenu](#taille-et-contenu) ; son item de project porte son Type, son Status et son Sprint. Chaque sous-issue est rattachée à sa parente ; une branche d'intégration ouverte a sa PR draft, liée à la parente.
