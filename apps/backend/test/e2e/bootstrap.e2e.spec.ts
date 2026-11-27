@@ -21,7 +21,10 @@ import { PinoLogger } from 'nestjs-pino';
 import { RateLimiterRes } from 'rate-limiter-flexible';
 import request from 'supertest';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
-import { RedisService } from '../../src/redis/redis.service';
+import {
+  SESSION_REPOSITORY,
+  type SessionRepository,
+} from '../../src/session/repositories/session.repository';
 import {
   USER_REPOSITORY,
   type UserRepository,
@@ -60,7 +63,11 @@ describe('Production bootstrap', () => {
 
   it('reads a session from Redis through the real controller and service', async () => {
     const session = buildSession();
-    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    await app.get<SessionRepository>(SESSION_REPOSITORY).save({
+      session,
+      reconnectTokenHashes: {},
+      roundDeadline: null,
+    });
     const response = await request(app.getHttpServer())
       .get(contract.session.getSession.path.replace(':id', session.id))
       .expect(200);

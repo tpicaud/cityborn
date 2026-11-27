@@ -13,14 +13,15 @@ import {
   WideEventService,
 } from '../../common/wide-event/wide-event.service';
 import type { AuthConfig } from '../../config/config.module';
-import type { RedisService } from '../../redis/redis.service';
 import type { UserService } from '../../user/user.service';
+import type { ConsumedRefreshTokenRepository } from '../repositories/consumed-refresh-token.repository';
 import { type AuthTokenPayload, AuthTokenService } from './auth-token.service';
 
 function buildAuthTokenService() {
   const jwtService: DeepMocked<JwtService> = createMock<JwtService>();
   const userService: DeepMocked<UserService> = createMock<UserService>();
-  const redisService: DeepMocked<RedisService> = createMock<RedisService>();
+  const consumedRefreshTokenRepository: DeepMocked<ConsumedRefreshTokenRepository> =
+    createMock<ConsumedRefreshTokenRepository>();
   const authConfig: AuthConfig = createMock<AuthConfig>({
     jwtAccessSecret: 'access-secret',
     jwtRefreshSecret: 'refresh-secret',
@@ -29,10 +30,15 @@ function buildAuthTokenService() {
     jwtService,
     authConfig,
     userService,
-    redisService,
     createMock<WideEventService>(),
+    consumedRefreshTokenRepository,
   );
-  return { authTokenService, jwtService, userService, redisService };
+  return {
+    authTokenService,
+    jwtService,
+    userService,
+    consumedRefreshTokenRepository,
+  };
 }
 
 const httpWideEventInit: HttpWideEventInit = {
@@ -72,8 +78,8 @@ function buildTokenRejectionScenario() {
     jwtService,
     authConfig,
     userService,
-    createMock<RedisService>(),
     wideEventService,
+    createMock<ConsumedRefreshTokenRepository>(),
   );
 
   async function rejectInsideWideEvent(
@@ -318,7 +324,7 @@ describe('AuthTokenService', () => {
         authTokenService,
         jwtService,
         userService,
-        redisService,
+        consumedRefreshTokenRepository,
       }: ReturnType<typeof buildAuthTokenService> = buildAuthTokenService();
       const expiresAt: number = Math.floor(Date.now() / 1000) + 600;
       jwtService.verifyAsync.mockResolvedValue({
@@ -330,7 +336,7 @@ describe('AuthTokenService', () => {
         user,
         authVersion: 0,
       });
-      redisService.setIfAbsent.mockResolvedValue(true);
+      consumedRefreshTokenRepository.consume.mockResolvedValue(true);
 
       const authSession: AuthSession | null =
         await authTokenService.redeemRefreshToken('refresh-token');
@@ -339,15 +345,11 @@ describe('AuthTokenService', () => {
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('refresh-token', {
         secret: 'refresh-secret',
       });
-      expect(redisService.setIfAbsent).toHaveBeenCalledWith({
-        key: 'auth:consumed-refresh-token:0eb17643d4e9261163783a420859c92c7d212fa9624106a12b510afbec266120',
-        value: '1',
-        ttlSeconds: expect.any(Number),
+      expect(consumedRefreshTokenRepository.consume).toHaveBeenCalledWith({
+        refreshTokenHash:
+          '0eb17643d4e9261163783a420859c92c7d212fa9624106a12b510afbec266120',
+        expiresAt: new Date(expiresAt * 1000),
       });
-      const [{ ttlSeconds }]: Parameters<RedisService['setIfAbsent']> =
-        redisService.setIfAbsent.mock.calls[0];
-      expect(ttlSeconds).toBeGreaterThan(595);
-      expect(ttlSeconds).toBeLessThanOrEqual(600);
     });
 
     it('records the rejection reason of a refresh token signed with another secret', async () => {
@@ -378,7 +380,7 @@ describe('AuthTokenService', () => {
         authTokenService,
         jwtService,
         userService,
-        redisService,
+        consumedRefreshTokenRepository,
       }: ReturnType<typeof buildAuthTokenService> = buildAuthTokenService();
       jwtService.verifyAsync.mockResolvedValue({
         id: user.id,
@@ -389,7 +391,7 @@ describe('AuthTokenService', () => {
         user,
         authVersion: 0,
       });
-      redisService.setIfAbsent.mockResolvedValue(false);
+      consumedRefreshTokenRepository.consume.mockResolvedValue(false);
 
       await expect(
         authTokenService.redeemRefreshToken('refresh-token'),
@@ -404,7 +406,7 @@ describe('AuthTokenService', () => {
       const {
         authTokenService,
         jwtService,
-        redisService,
+        consumedRefreshTokenRepository,
       }: ReturnType<typeof buildAuthTokenService> = buildAuthTokenService();
       jwtService.verifyAsync.mockRejectedValue(
         new JsonWebTokenError('invalid signature'),
@@ -412,7 +414,7 @@ describe('AuthTokenService', () => {
 
       await authTokenService.revokeRefreshToken('forged-token');
 
-      expect(redisService.setIfAbsent).not.toHaveBeenCalled();
+      expect(consumedRefreshTokenRepository.consume).not.toHaveBeenCalled();
     });
   });
 });

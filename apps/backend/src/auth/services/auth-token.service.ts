@@ -15,8 +15,11 @@ import {
 import type { WideEventTokenRejectionContext } from '../../common/wide-event/wide-event';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
-import { RedisService } from '../../redis/redis.service';
 import { UserService } from '../../user/user.service';
+import {
+  CONSUMED_REFRESH_TOKEN_REPOSITORY,
+  type ConsumedRefreshTokenRepository,
+} from '../repositories/consumed-refresh-token.repository';
 
 const ACCESS_TOKEN_TTL_SECONDS: number = 15 * 60;
 export const REFRESH_TOKEN_TTL_SECONDS: number = 7 * 24 * 60 * 60;
@@ -44,9 +47,6 @@ const RejectedTokenClaimsSchema = z.object({
 
 type RejectedTokenClaims = z.infer<typeof RejectedTokenClaimsSchema>;
 
-const CONSUMED_REFRESH_TOKEN_KEY_PREFIX: string =
-  'auth:consumed-refresh-token:';
-
 export type AuthTokenPair = Pick<
   AuthResponse,
   'access_token' | 'refresh_token'
@@ -58,8 +58,9 @@ export class AuthTokenService {
     private readonly jwtService: JwtService,
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
-    private readonly redisService: RedisService,
     private readonly wideEventService: WideEventService,
+    @Inject(CONSUMED_REFRESH_TOKEN_REPOSITORY)
+    private readonly consumedRefreshTokenRepository: ConsumedRefreshTokenRepository,
   ) {}
 
   async issueTokenPair(authSession: AuthSession): Promise<AuthTokenPair> {
@@ -219,14 +220,9 @@ export class AuthTokenService {
     const refreshTokenHash: string = createHash('sha256')
       .update(refreshToken)
       .digest('hex');
-    const remainingLifetimeSeconds: number = Math.max(
-      payload.exp - Math.floor(Date.now() / 1000),
-      1,
-    );
-    return await this.redisService.setIfAbsent({
-      key: `${CONSUMED_REFRESH_TOKEN_KEY_PREFIX}${refreshTokenHash}`,
-      value: '1',
-      ttlSeconds: remainingLifetimeSeconds,
+    return await this.consumedRefreshTokenRepository.consume({
+      refreshTokenHash,
+      expiresAt: new Date(payload.exp * 1000),
     });
   }
 }

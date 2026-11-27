@@ -14,9 +14,19 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou 
 
 ## Accès aux données — Repository
 
-- Référence : le module `world-location`. Chaque domaine expose `repositories/<domaine>.repository.ts` (interface + token `Symbol`) et `repositories/prisma-<domaine>.repository.ts` (implémentation `@Injectable()`). Les interfaces utilisent les types API ou des types métier internes, jamais des types Prisma.
-- Les modules importent `PrismaClsModule` et associent le token à l'implémentation avec `useClass`. Les repositories utilisent `TransactionHost` (`PrismaTransactionHost`) et `txHost.tx` ; les mappers convertissent les lignes Prisma en types API avant leur retour.
-- Les services conservent les règles métier et les accès Redis. Ils ne connaissent ni Prisma ni ses types. Lors d'une extraction, préserver les requêtes, les conversions et les noms existants (paramètres, variables, propriétés) sans ajouter de nouvelles validations métier ou JSON. Limiter les nouveaux noms à ce que la séparation en repositories nécessite.
+- Un repository possède la persistance de son domaine : requêtes, clés, TTL et formats de stockage. Le service du domaine garde les règles métier, hachage d'un secret et verrou d'une opération compris, sans connaître Prisma, Redis ni leurs types.
+- Chaque domaine expose `repositories/<notion>.repository.ts` (interface + token `Symbol`) et une implémentation `@Injectable()` nommée d'après son stockage : `prisma-<notion>.repository.ts` ou `redis-<notion>.repository.ts`. Le module associe le token à l'implémentation avec `useClass`.
+- L'interface utilise des types API ou des types métier internes. Un enregistrement qui ajoute des données serveur à un contrat a son propre type, distinct de celui envoyé aux clients.
+- Prisma, référence `world-location` :
+  - le module importe `PrismaClsModule` ;
+  - le repository accède à Prisma par `txHost.tx` pour participer à la transaction du service ;
+  - les mappers convertissent les lignes Prisma en types API avant leur retour.
+- Redis, référence `session` :
+  - le repository garde privés ses préfixes de clés et ses TTL ;
+  - il valide chaque valeur lue par un schéma zod avant de la retourner ;
+  - les écritures qui doivent rester cohérentes entre elles partent dans un même `MULTI`, dont il vérifie chaque réponse.
+- `RedisModule` est l'unique propriétaire du client Redis partagé ; seuls les repositories et le socle technique l'injectent, par le token `REDIS_CLIENT`. Seul l'adapter WebSocket ouvre ses propres connexions pub/sub.
+- Lors d'une extraction, préserver les requêtes, les conversions et les noms existants (paramètres, variables, propriétés), sans ajouter de validation métier. Limiter les nouveaux noms à ce que la séparation en repositories nécessite.
 - Placer `@Transactional()` sur les opérations de service dont plusieurs écritures DB doivent réussir ou échouer ensemble. Les appels imbriqués partagent la transaction. Ne pas englober Redis, les emails ou les appels externes ; conserver le nettoyage d'un token expiré hors de la transaction qui peut échouer.
 
 ## Gestion des erreurs
@@ -38,7 +48,7 @@ Pour chaque fichier backend touché, vérifier que :
 
 - sa capacité propriétaire et sa frontière sont explicites ;
 - les controllers restent fins ;
-- les services ne dépendent pas de Prisma ;
+- les services d'un domaine métier ne dépendent ni de Prisma ni du client Redis ;
 - les transactions excluent Redis et les appels externes ;
 - chaque erreur suit le chemin typé prévu ;
 - toute modification liée à l'observabilité respecte la référence ci-dessus.

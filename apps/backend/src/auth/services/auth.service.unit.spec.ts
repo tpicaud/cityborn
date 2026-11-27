@@ -19,7 +19,6 @@ import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
 import type { MailService } from '../../mail/mail.service';
 import type { RateLimitService } from '../../rate-limit/rate-limit.service';
-import type { RedisService } from '../../redis/redis.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
 import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
@@ -29,6 +28,7 @@ import type {
   GoogleIdTokenPayload,
 } from '../identity-providers/google-client.provider';
 import { IdentityTokenService } from '../identity-providers/identity-token.service';
+import type { ConsumedRefreshTokenRepository } from '../repositories/consumed-refresh-token.repository';
 import { AuthService } from './auth.service';
 import { AuthTokenService } from './auth-token.service';
 
@@ -95,8 +95,8 @@ function buildAuthService() {
       jwtService,
       authConfig,
       userService,
-      createMock<RedisService>(),
       wideEventService,
+      createMock<ConsumedRefreshTokenRepository>(),
     ),
     httpConfig,
     eventService,

@@ -2,13 +2,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import Redlock from 'redlock';
 import { WideEventService } from '../common/wide-event/wide-event.service';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 @Injectable()
 export class LockService {
   private redlock: Redlock;
 
   constructor(
-    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
     private readonly wideEventService: WideEventService,
   ) {
     this.redlock = new Redlock([this.redisClient], {
