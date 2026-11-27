@@ -471,6 +471,38 @@ describe('createBearerContractClient', () => {
     },
   );
 
+  it('returns an invalid token error without refreshing when an explicit authorization header was sent', async (context: TestContext) => {
+    const calls: string[] = [];
+    const tokens: StoredTokens = {
+      access: 'mobile-access',
+      refresh: 'mobile-refresh',
+    };
+    stubFetch({
+      context,
+      respond: async (input: RequestInfo | URL): Promise<Response> => {
+        calls.push(new URL(String(input)).pathname);
+        return jsonResponse({ body: invalidTokenError, status: 401 });
+      },
+    });
+    const contractClient: ContractClient = createBearerContractClient(
+      apiBaseUrl,
+      createInMemoryTokenStorage(tokens),
+    );
+
+    const result: ClientInferResponses<AppContract['auth']['signOut']> =
+      await contractClient.auth.signOut({
+        body: {},
+        extraHeaders: { authorization: 'Bearer revoked-refresh' },
+      });
+
+    assert.equal(result.status, 401);
+    assert.deepEqual(calls, [contract.auth.signOut.path]);
+    assert.deepEqual(tokens, {
+      access: 'mobile-access',
+      refresh: 'mobile-refresh',
+    });
+  });
+
   it('ends the session when an unrecognized access token cannot be refreshed', async (context: TestContext) => {
     const tokens: StoredTokens = {
       access: 'unrecognized-access',
