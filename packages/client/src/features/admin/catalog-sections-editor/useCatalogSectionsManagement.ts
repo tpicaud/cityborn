@@ -2,7 +2,6 @@
 import {
   type AdminTheme,
   type CatalogSection,
-  type CatalogSectionId,
   type CreateCatalogSection,
   resolveErrorMessage,
   type SaveCatalogSection,
@@ -15,20 +14,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useReducer, useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
 import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
 import { themesQueryOptions } from '../../../domains/theme/themeQueries';
 import {
-  type ErrorReporter,
-  useErrorReporter,
-} from '../../../shared/errorReporter';
-import {
-  type CatalogSectionEditorState,
-  catalogSectionEditorReducer,
-  initialCatalogSectionEditorState,
-} from './catalogSectionEditorState';
+  type OrderedListEditor,
+  useOrderedListEditor,
+} from '../ordered-list-editor/useOrderedListEditor';
 import {
   allPacksFilterValue,
   type CatalogSectionGroup,
@@ -38,9 +31,9 @@ import {
   type CatalogSectionCreationFormInput,
   CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,
-  type CatalogSectionMutations,
-  createCatalogSectionMutations,
-} from './catalogSectionMutations';
+  createCatalogSectionList,
+  createNextCatalogSectionCreationValues,
+} from './catalogSectionList';
 
 type CatalogSectionForm = UseFormReturn<
   CatalogSectionFormInput,
@@ -54,16 +47,12 @@ type CatalogSectionCreationForm = UseFormReturn<
   CreateCatalogSection
 >;
 
-export type CatalogSectionsManagement = CatalogSectionMutations & {
+export type CatalogSectionsManagement = OrderedListEditor<
+  CatalogSection,
+  CatalogSectionCreationForm,
+  CatalogSectionForm
+> & {
   sectionGroups: CatalogSectionGroup[];
-  state: CatalogSectionEditorState;
-  creationForm: CatalogSectionCreationForm;
-  editForm: CatalogSectionForm;
-  startEditing: (section: CatalogSection) => void;
-  confirmDeletion: (id: CatalogSectionId) => void;
-  cancel: () => void;
-  isMoving: boolean;
-  isDeleting: boolean;
   isLoading: boolean;
   loadError: string | null;
   reload: () => void;
@@ -75,7 +64,6 @@ const noThemes: AdminTheme[] = [];
 export function useCatalogSectionsManagement(): CatalogSectionsManagement {
   const { catalogSectionApi, themeApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { reportError }: ErrorReporter = useErrorReporter();
   const query: UseQueryResult<CatalogSection[]> = useQuery({
     ...catalogSectionsQueryOptions(catalogSectionApi),
     meta: { reportsError: false },
@@ -84,12 +72,6 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
     ...themesQueryOptions(themeApi),
     meta: { reportsError: false },
   });
-  const [state, dispatch] = useReducer(
-    catalogSectionEditorReducer,
-    initialCatalogSectionEditorState,
-  );
-  const [isMoving, setIsMoving] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const creationForm: CatalogSectionCreationForm = useForm<
     CatalogSectionCreationFormInput,
     undefined,
@@ -106,39 +88,29 @@ export function useCatalogSectionsManagement(): CatalogSectionsManagement {
     resolver: zodResolver(SaveCatalogSectionSchema),
     defaultValues: { name: '' },
   });
+  const editor: OrderedListEditor<
+    CatalogSection,
+    CatalogSectionCreationForm,
+    CatalogSectionForm
+  > = useOrderedListEditor({
+    list: createCatalogSectionList({ catalogSectionApi, queryClient }),
+    creationForm,
+    editForm,
+    toEditValues: (section) => ({ name: section.name }),
+    nextCreationValues: createNextCatalogSectionCreationValues,
+  });
   const loadError: Error | null = query.error ?? themesQuery.error;
   return {
+    ...editor,
     sectionGroups: createCatalogSectionGroups({
       sections: query.data ?? noSections,
       themes: themesQuery.data ?? noThemes,
     }),
-    state,
-    creationForm,
-    editForm,
-    isMoving,
-    isDeleting,
     isLoading: query.isPending || themesQuery.isPending,
     loadError: loadError ? resolveErrorMessage(loadError) : null,
     reload: () => {
       if (query.isError) query.refetch();
       if (themesQuery.isError) themesQuery.refetch();
     },
-    startEditing: (section) => {
-      editForm.reset({ name: section.name });
-      dispatch({ type: 'edit', id: section.id });
-    },
-    confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),
-    cancel: () => dispatch({ type: 'cancel' }),
-    ...createCatalogSectionMutations({
-      catalogSectionApi,
-      queryClient,
-      editedSectionId: state.editedSectionId,
-      creationForm,
-      editForm,
-      dispatch,
-      reportError,
-      setIsMoving,
-      setIsDeleting,
-    }),
   };
 }

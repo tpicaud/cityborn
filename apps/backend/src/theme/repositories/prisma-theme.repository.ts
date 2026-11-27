@@ -2,14 +2,11 @@ import type { AdminTheme, Theme, ThemeIcon, ThemeId } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma, type Theme as PrismaTheme } from '@prisma/client';
+import { PrismaOrderedNamedList } from '../../ordered-list/prisma-ordered-named-list';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { defaultThemeId } from '../default-theme';
 import { ThemeMapper } from '../mappers/theme.mapper';
-import {
-  ThemeHasPacksError,
-  ThemeNameAlreadyExistsError,
-  type ThemeRepository,
-} from './theme.repository';
+import { ThemeHasPacksError, type ThemeRepository } from './theme.repository';
 
 const themeOrder: Prisma.ThemeOrderByWithRelationInput[] = [
   { position: 'asc' },
@@ -18,12 +15,18 @@ const themeOrder: Prisma.ThemeOrderByWithRelationInput[] = [
 
 @Injectable()
 export class PrismaThemeRepository implements ThemeRepository {
+  private readonly orderedThemes: PrismaOrderedNamedList<Prisma.ThemeWhereInput>;
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
-  ) {}
+  ) {
+    this.orderedThemes = new PrismaOrderedNamedList({
+      txHost,
+      table: Prisma.ModelName.Theme,
+      model: (tx) => tx.theme,
+    });
+  }
   async lockOrder(): Promise<void> {
-    await this.txHost.tx
-      .$executeRaw`LOCK TABLE "Theme" IN SHARE ROW EXCLUSIVE MODE`;
+    await this.orderedThemes.lockOrder();
   }
   async findAll(): Promise<AdminTheme[]> {
     const themes: (PrismaTheme & { _count: { packs: number } })[] =
@@ -51,14 +54,12 @@ export class PrismaThemeRepository implements ThemeRepository {
     return theme ? ThemeMapper.toTheme(theme) : null;
   }
   async create(data: { name: string; icon: ThemeIcon }): Promise<Theme> {
-    return this.save(async () => {
-      const lastPosition: number | null = (
-        await this.txHost.tx.theme.aggregate({ _max: { position: true } })
-      )._max.position;
-      return this.txHost.tx.theme.create({
-        data: { ...data, position: (lastPosition ?? -1) + 1 },
-      });
+    const theme: PrismaTheme = await this.orderedThemes.append({
+      where: {},
+      create: (position) =>
+        this.txHost.tx.theme.create({ data: { ...data, position } }),
     });
+    return ThemeMapper.toTheme(theme);
   }
   async update({
     id,
@@ -67,16 +68,13 @@ export class PrismaThemeRepository implements ThemeRepository {
     id: ThemeId;
     theme: { name: string; icon?: ThemeIcon };
   }): Promise<Theme> {
-    return this.save(() =>
+    const updatedTheme: PrismaTheme = await this.orderedThemes.save(() =>
       this.txHost.tx.theme.update({ where: { id }, data: theme }),
     );
+    return ThemeMapper.toTheme(updatedTheme);
   }
   async reorder(ids: ThemeId[]): Promise<void> {
-    await Promise.all(
-      ids.map((id, position) =>
-        this.txHost.tx.theme.update({ where: { id }, data: { position } }),
-      ),
-    );
+    await this.orderedThemes.reorder(ids);
   }
   async countPacks(id: ThemeId): Promise<number> {
     return this.txHost.tx.pack.count({ where: { themeId: id } });
@@ -90,18 +88,6 @@ export class PrismaThemeRepository implements ThemeRepository {
         error.code === 'P2003'
       )
         throw new ThemeHasPacksError();
-      throw error;
-    }
-  }
-  private async save(write: () => Promise<PrismaTheme>): Promise<Theme> {
-    try {
-      return ThemeMapper.toTheme(await write());
-    } catch (error: unknown) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      )
-        throw new ThemeNameAlreadyExistsError();
       throw error;
     }
   }

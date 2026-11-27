@@ -7,16 +7,14 @@ import type {
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma } from '@prisma/client';
+import { PrismaOrderedNamedList } from '../../ordered-list/prisma-ordered-named-list';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { defaultCatalogSectionId } from '../default-catalog-section';
 import {
   CatalogSectionMapper,
   type PrismaCatalogSectionWithPacks,
 } from '../mappers/catalog-section.mapper';
-import {
-  CatalogSectionNameAlreadyExistsError,
-  type CatalogSectionRepository,
-} from './catalog-section.repository';
+import type { CatalogSectionRepository } from './catalog-section.repository';
 
 const catalogSectionOrder: Prisma.CatalogSectionOrderByWithRelationInput[] = [
   { position: 'asc' },
@@ -35,13 +33,20 @@ const publishedPack: Prisma.CatalogSectionPackWhereInput = {
 export class PrismaCatalogSectionRepository
   implements CatalogSectionRepository
 {
+  private readonly orderedSections: PrismaOrderedNamedList<Prisma.CatalogSectionWhereInput>;
+
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
-  ) {}
+  ) {
+    this.orderedSections = new PrismaOrderedNamedList({
+      txHost,
+      table: Prisma.ModelName.CatalogSection,
+      model: (tx) => tx.catalogSection,
+    });
+  }
 
   async lockOrder(): Promise<void> {
-    await this.txHost.tx
-      .$executeRaw`LOCK TABLE "CatalogSection" IN SHARE ROW EXCLUSIVE MODE`;
+    await this.orderedSections.lockOrder();
   }
 
   async findAll(): Promise<CatalogSection[]> {
@@ -76,18 +81,16 @@ export class PrismaCatalogSectionRepository
     name,
     themeId,
   }: CreateCatalogSection): Promise<CatalogSection> {
-    return this.save(async () => {
-      const lastPosition: number | null = (
-        await this.txHost.tx.catalogSection.aggregate({
-          where: { themeId },
-          _max: { position: true },
-        })
-      )._max.position;
-      return this.txHost.tx.catalogSection.create({
-        data: { name, themeId, position: (lastPosition ?? -1) + 1 },
-        include: sectionPacks,
+    const section: PrismaCatalogSectionWithPacks =
+      await this.orderedSections.append({
+        where: { themeId },
+        create: (position) =>
+          this.txHost.tx.catalogSection.create({
+            data: { name, themeId, position },
+            include: sectionPacks,
+          }),
       });
-    });
+    return CatalogSectionMapper.toCatalogSection(section);
   }
 
   async rename({
@@ -98,13 +101,15 @@ export class PrismaCatalogSectionRepository
     name: string;
   }): Promise<CatalogSection | null> {
     try {
-      return await this.save(() =>
-        this.txHost.tx.catalogSection.update({
-          where: { id },
-          data: { name },
-          include: sectionPacks,
-        }),
-      );
+      const section: PrismaCatalogSectionWithPacks =
+        await this.orderedSections.save(() =>
+          this.txHost.tx.catalogSection.update({
+            where: { id },
+            data: { name },
+            include: sectionPacks,
+          }),
+        );
+      return CatalogSectionMapper.toCatalogSection(section);
     } catch (error: unknown) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -116,14 +121,7 @@ export class PrismaCatalogSectionRepository
   }
 
   async reorder(ids: CatalogSectionId[]): Promise<void> {
-    await Promise.all(
-      ids.map((id, position) =>
-        this.txHost.tx.catalogSection.update({
-          where: { id },
-          data: { position },
-        }),
-      ),
-    );
+    await this.orderedSections.reorder(ids);
   }
 
   async delete(id: CatalogSectionId): Promise<boolean> {
@@ -207,20 +205,5 @@ export class PrismaCatalogSectionRepository
         include: sectionPacks,
       });
     return section && CatalogSectionMapper.toCatalogSection(section);
-  }
-
-  private async save(
-    write: () => Promise<PrismaCatalogSectionWithPacks>,
-  ): Promise<CatalogSection> {
-    try {
-      return CatalogSectionMapper.toCatalogSection(await write());
-    } catch (error: unknown) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      )
-        throw new CatalogSectionNameAlreadyExistsError();
-      throw error;
-    }
   }
 }

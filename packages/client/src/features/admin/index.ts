@@ -9,6 +9,8 @@ export {
   type CatalogSectionsManagement,
   useCatalogSectionsManagement,
 } from './catalog-sections-editor/useCatalogSectionsManagement';
+export type { OrderedListItem } from './ordered-list-editor/orderedListMutations';
+export type { OrderedListEditor } from './ordered-list-editor/useOrderedListEditor';
 export {
   type PackCatalog,
   type PackCreation,

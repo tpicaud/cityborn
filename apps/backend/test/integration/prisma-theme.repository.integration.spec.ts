@@ -1,12 +1,10 @@
 import type { AdminTheme, Theme, ThemeIcon } from '@cityborn/api';
 import { buildTheme, ThemeIconSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { NameAlreadyExistsError } from '../../src/ordered-list/ordered-named-list';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
-import {
-  ThemeHasPacksError,
-  ThemeNameAlreadyExistsError,
-} from '../../src/theme/repositories/theme.repository';
+import { ThemeHasPacksError } from '../../src/theme/repositories/theme.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 const { icon }: Theme = buildTheme();
@@ -137,7 +135,7 @@ describe('PrismaThemeRepository', () => {
 
       await expect(
         themeRepository.create({ name: 'sport', icon }),
-      ).rejects.toBeInstanceOf(ThemeNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
     });
   });
   describe('update', () => {
@@ -163,7 +161,7 @@ describe('PrismaThemeRepository', () => {
 
       await expect(
         themeRepository.update({ id: theme.id, theme: { name: 'SPORT' } }),
-      ).rejects.toBeInstanceOf(ThemeNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
       await expect(themeRepository.findById(theme.id)).resolves.toEqual(theme);
     });
     it('allows changing only the case of its own name', async () => {

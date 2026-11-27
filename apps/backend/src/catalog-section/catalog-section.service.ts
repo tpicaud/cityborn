@@ -10,30 +10,44 @@ import {
 } from '@cityborn/api';
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { swapWithNeighbour } from '../ordered-list';
+import {
+  OrderedNamedList,
+  swapWithNeighbour,
+} from '../ordered-list/ordered-named-list';
 import { PackService } from '../pack/pack.service';
 import { ThemeService } from '../theme/theme.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
   CATALOG_SECTION_REPOSITORY,
-  CatalogSectionNameAlreadyExistsError,
   type CatalogSectionRepository,
 } from './repositories/catalog-section.repository';
 
 @Injectable()
 export class CatalogSectionService {
+  private readonly orderedSections: OrderedNamedList<CatalogSection>;
+
   constructor(
     @Inject(CATALOG_SECTION_REPOSITORY)
     private readonly catalogSectionRepository: CatalogSectionRepository,
     private readonly packService: PackService,
     private readonly themeService: ThemeService,
-  ) {}
+  ) {
+    this.orderedSections = new OrderedNamedList({
+      repository: catalogSectionRepository,
+      notFound: () => this.sectionNotFound(),
+      nameConflict: {
+        code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS,
+        message: 'Catalog section name already exists',
+      },
+      belongsToSameList: ({ item: section, movedItem: movedSection }) =>
+        section.themeId === movedSection.themeId,
+    });
+  }
 
   async findAll(): Promise<CatalogSection[]> {
     return this.catalogSectionRepository.findAll();
@@ -47,8 +61,9 @@ export class CatalogSectionService {
   async create(section: CreateCatalogSection): Promise<CatalogSection> {
     if (section.themeId !== null)
       await this.themeService.findById(section.themeId);
-    await this.catalogSectionRepository.lockOrder();
-    return this.save(() => this.catalogSectionRepository.create(section));
+    return this.orderedSections.append(() =>
+      this.catalogSectionRepository.create(section),
+    );
   }
 
   async rename({
@@ -58,9 +73,10 @@ export class CatalogSectionService {
     id: CatalogSectionId;
     section: SaveCatalogSection;
   }): Promise<CatalogSection> {
-    const renamedSection: CatalogSection | null = await this.save(() =>
-      this.catalogSectionRepository.rename({ id, name: section.name }),
-    );
+    const renamedSection: CatalogSection | null =
+      await this.orderedSections.save(() =>
+        this.catalogSectionRepository.rename({ id, name: section.name }),
+      );
     if (!renamedSection) throw this.sectionNotFound();
     return renamedSection;
   }
@@ -73,26 +89,7 @@ export class CatalogSectionService {
     id: CatalogSectionId;
     direction: CatalogSectionMoveDirection;
   }): Promise<CatalogSection[]> {
-    await this.catalogSectionRepository.lockOrder();
-    const sections: CatalogSection[] =
-      await this.catalogSectionRepository.findAll();
-    const movedSection: CatalogSection | undefined = sections.find(
-      (section) => section.id === id,
-    );
-    if (!movedSection) throw this.sectionNotFound();
-    const filterSections: CatalogSection[] = sections.filter(
-      (section) => section.themeId === movedSection.themeId,
-    );
-    const reorderedFilterSections: CatalogSection[] | null = swapWithNeighbour({
-      items: filterSections,
-      index: filterSections.indexOf(movedSection),
-      direction,
-    });
-    if (!reorderedFilterSections) return sections;
-    await this.catalogSectionRepository.reorder(
-      reorderedFilterSections.map((section) => section.id),
-    );
-    return this.catalogSectionRepository.findAll();
+    return this.orderedSections.move({ id, direction });
   }
 
   async delete(id: CatalogSectionId): Promise<void> {
@@ -190,20 +187,5 @@ export class CatalogSectionService {
       code: ErrorCode.CATALOG_SECTION_NOT_FOUND,
       message: 'Catalog section not found',
     });
-  }
-
-  private async save<Section extends CatalogSection | null>(
-    write: () => Promise<Section>,
-  ): Promise<Section> {
-    try {
-      return await write();
-    } catch (error: unknown) {
-      if (error instanceof CatalogSectionNameAlreadyExistsError)
-        throw new ConflictException({
-          code: ErrorCode.CATALOG_SECTION_NAME_ALREADY_EXISTS,
-          message: 'Catalog section name already exists',
-        });
-      throw error;
-    }
   }
 }

@@ -30,14 +30,19 @@ export function themesQueryOptions(themeApi: ThemeApi) {
     meta: { reportsError: true },
   });
 }
-export function updateThemesCache({
+export async function updateThemesCache({
   queryClient,
-  themes,
+  update,
 }: {
   queryClient: QueryClient;
-  themes: AdminTheme[];
-}): void {
-  queryClient.setQueryData(themesQueryKey, themes);
+  update: (themes: AdminTheme[]) => AdminTheme[];
+}): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: themesQueryKey });
+  queryClient.setQueryData<AdminTheme[]>(
+    themesQueryKey,
+    (themes) => themes && update(themes),
+  );
+  await invalidateThemes(queryClient);
 }
 export function invalidateThemes(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: themesQueryKey });

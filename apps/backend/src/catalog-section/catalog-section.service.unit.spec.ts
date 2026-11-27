@@ -10,14 +10,12 @@ import {
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
+import { NameAlreadyExistsError } from '../ordered-list/ordered-named-list';
 import type { PackService } from '../pack/pack.service';
 import type { ThemeService } from '../theme/theme.service';
 import { CatalogSectionService } from './catalog-section.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
-import {
-  CatalogSectionNameAlreadyExistsError,
-  type CatalogSectionRepository,
-} from './repositories/catalog-section.repository';
+import type { CatalogSectionRepository } from './repositories/catalog-section.repository';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -120,7 +118,7 @@ describe('CatalogSectionService.create', () => {
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
     catalogSectionRepository.create.mockRejectedValue(
-      new CatalogSectionNameAlreadyExistsError(),
+      new NameAlreadyExistsError(),
     );
 
     await expect(
@@ -186,7 +184,7 @@ describe('CatalogSectionService.rename', () => {
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
     catalogSectionRepository.rename.mockRejectedValue(
-      new CatalogSectionNameAlreadyExistsError(),
+      new NameAlreadyExistsError(),
     );
 
     await expect(
@@ -248,7 +246,7 @@ describe('CatalogSectionService.move', () => {
     ]);
   });
 
-  it('reorders only the sections of the moved section filter', async () => {
+  it('reorders only the sections of the moved section filter and returns the stored order', async () => {
     const {
       catalogSectionRepository,
       catalogSectionService,
@@ -264,18 +262,16 @@ describe('CatalogSectionService.move', () => {
       name: 'Foot',
       themeId: sportThemeId,
     });
-    catalogSectionRepository.findAll.mockResolvedValue([
-      tennis,
-      news,
-      football,
-      events,
-    ]);
+    catalogSectionRepository.findAll
+      .mockResolvedValueOnce([tennis, news, football, events])
+      .mockResolvedValueOnce([football, news, events, tennis]);
 
-    await catalogSectionService.move({
+    const sections: CatalogSection[] = await catalogSectionService.move({
       id: football.id,
       direction: CatalogSectionMoveDirection.UP,
     });
 
+    expect(sections).toEqual([football, news, events, tennis]);
     expect(catalogSectionRepository.reorder).toHaveBeenCalledWith([
       football.id,
       tennis.id,

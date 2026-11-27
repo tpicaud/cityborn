@@ -4,21 +4,18 @@ import type {
   CreateCatalogSection,
   PackId,
 } from '@cityborn/api';
+import type { OrderedNamedListRepository } from '../../ordered-list/ordered-named-list';
 
 export const CATALOG_SECTION_REPOSITORY = Symbol('CATALOG_SECTION_REPOSITORY');
 
-export class CatalogSectionNameAlreadyExistsError extends Error {}
-
-export interface CatalogSectionRepository {
-  lockOrder(): Promise<void>;
-  findAll(): Promise<CatalogSection[]>;
+export interface CatalogSectionRepository
+  extends OrderedNamedListRepository<CatalogSection> {
   findPlayable(): Promise<CatalogSection[]>;
   create(section: CreateCatalogSection): Promise<CatalogSection>;
   rename(data: {
     id: CatalogSectionId;
     name: string;
   }): Promise<CatalogSection | null>;
-  reorder(ids: CatalogSectionId[]): Promise<void>;
   delete(id: CatalogSectionId): Promise<boolean>;
   addPack(data: {
     id: CatalogSectionId;

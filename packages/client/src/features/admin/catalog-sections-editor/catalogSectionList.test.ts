@@ -5,6 +5,7 @@ import {
   buildCatalogSection,
   buildTheme,
   type CatalogSection,
+  type CatalogSectionId,
   CatalogSectionMoveDirection,
   type CreateCatalogSection,
   ErrorCode,
@@ -22,18 +23,22 @@ import { createFormControl } from 'react-hook-form';
 import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
 import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
 import {
-  type CatalogSectionEditorState,
-  catalogSectionEditorReducer,
-  initialCatalogSectionEditorState,
-} from './catalogSectionEditorState';
+  initialOrderedListEditorState,
+  type OrderedListEditorState,
+  orderedListEditorReducer,
+} from '../ordered-list-editor/orderedListEditorState';
+import {
+  createOrderedListMutations,
+  type OrderedListMutations,
+} from '../ordered-list-editor/orderedListMutations';
 import { allPacksFilterValue } from './catalogSectionGroups';
 import {
   type CatalogSectionCreationFormInput,
   CatalogSectionCreationFormSchema,
   type CatalogSectionFormInput,
-  type CatalogSectionMutations,
-  createCatalogSectionMutations,
-} from './catalogSectionMutations';
+  createCatalogSectionList,
+  createNextCatalogSectionCreationValues,
+} from './catalogSectionList';
 
 type CatalogSectionForm = ReturnType<
   typeof createFormControl<
@@ -56,8 +61,8 @@ type MutationsFixture = {
   sectionsKey: QueryKey;
   creationForm: CatalogSectionCreationForm;
   editForm: CatalogSectionForm;
-  mutations: CatalogSectionMutations;
-  state: CatalogSectionEditorState;
+  mutations: OrderedListMutations<CatalogSection>;
+  state: OrderedListEditorState<CatalogSectionId>;
   reportedErrors: unknown[];
 };
 
@@ -132,12 +137,12 @@ function observeSections({
 function createMutationsFixture({
   context,
   catalogSectionApi: overrides,
-  state = initialCatalogSectionEditorState,
+  state = initialOrderedListEditorState,
   isLoadingSections = false,
 }: {
   context: TestContext;
   catalogSectionApi: Partial<CatalogSectionApi>;
-  state?: CatalogSectionEditorState;
+  state?: OrderedListEditorState<CatalogSectionId>;
   isLoadingSections?: boolean;
 }): MutationsFixture {
   const catalogSectionApi: CatalogSectionApi = {
@@ -162,23 +167,24 @@ function createMutationsFixture({
   const creationForm: CatalogSectionCreationForm =
     createCatalogSectionCreationForm(context);
   const editForm: CatalogSectionForm = createCatalogSectionForm(context);
-  let currentState: CatalogSectionEditorState = state;
+  let currentState: OrderedListEditorState<CatalogSectionId> = state;
   const reportedErrors: unknown[] = [];
-  const mutations: CatalogSectionMutations = createCatalogSectionMutations({
-    catalogSectionApi,
-    queryClient,
-    editedSectionId: state.editedSectionId,
-    creationForm,
-    editForm,
-    dispatch: (action) => {
-      currentState = catalogSectionEditorReducer(currentState, action);
-    },
-    reportError: (error) => {
-      reportedErrors.push(error);
-    },
-    setIsMoving: () => undefined,
-    setIsDeleting: () => undefined,
-  });
+  const mutations: OrderedListMutations<CatalogSection> =
+    createOrderedListMutations({
+      list: createCatalogSectionList({ catalogSectionApi, queryClient }),
+      creationForm,
+      editForm,
+      nextCreationValues: createNextCatalogSectionCreationValues,
+      editedId: state.editedId,
+      dispatch: (action) => {
+        currentState = orderedListEditorReducer(currentState, action);
+      },
+      reportError: (error) => {
+        reportedErrors.push(error);
+      },
+      setIsMoving: () => undefined,
+      setIsDeleting: () => undefined,
+    });
   return {
     queryClient,
     sectionsKey,
@@ -192,7 +198,7 @@ function createMutationsFixture({
   };
 }
 
-describe('createCatalogSectionMutations', () => {
+describe('createCatalogSectionList', () => {
   it('appends a created section at the end of the list and clears the input', async (context: TestContext) => {
     const classics: CatalogSection = buildCatalogSection({
       id: '00000000-0000-4000-8000-000000000062',
@@ -210,7 +216,7 @@ describe('createCatalogSectionMutations', () => {
     });
     fixture.creationForm.setValue('name', '  Classiques  ');
 
-    await fixture.mutations.createCatalogSection();
+    await fixture.mutations.create();
 
     assert.deepEqual(submitted, { name: 'Classiques', themeId: null });
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
@@ -243,7 +249,7 @@ describe('createCatalogSectionMutations', () => {
     fixture.creationForm.setValue('name', 'Tennis');
     fixture.creationForm.setValue('themeId', sportThemeId);
 
-    await fixture.mutations.createCatalogSection();
+    await fixture.mutations.create();
 
     assert.deepEqual(submitted, { name: 'Tennis', themeId: sportThemeId });
     assert.equal(fixture.creationForm.getValues('name'), '');
@@ -275,7 +281,7 @@ describe('createCatalogSectionMutations', () => {
       },
     });
     fixture.creationForm.setValue('name', 'Événements');
-    const creation: Promise<void> = fixture.mutations.createCatalogSection();
+    const creation: Promise<void> = fixture.mutations.create();
     finishLoading([news]);
     await new Promise<void>((resolve) => setImmediate(resolve));
     finishCreation();
@@ -306,7 +312,7 @@ describe('createCatalogSectionMutations', () => {
     });
     fixture.creationForm.setValue('name', 'Événements');
 
-    await fixture.mutations.createCatalogSection();
+    await fixture.mutations.create();
     finishLoading([news]);
     await new Promise<void>((resolve) => setImmediate(resolve));
 
@@ -327,7 +333,7 @@ describe('createCatalogSectionMutations', () => {
     });
     fixture.creationForm.setValue('name', 'nouveautés');
 
-    await fixture.mutations.createCatalogSection();
+    await fixture.mutations.create();
 
     assert.equal(fixture.creationForm.getValues('name'), 'nouveautés');
     assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
@@ -341,8 +347,8 @@ describe('createCatalogSectionMutations', () => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       state: {
-        ...initialCatalogSectionEditorState,
-        editedSectionId: events.id,
+        ...initialOrderedListEditorState,
+        editedId: events.id,
       },
       catalogSectionApi: {
         renameCatalogSection: async ({ id, section }) => ({
@@ -356,21 +362,21 @@ describe('createCatalogSectionMutations', () => {
     });
     fixture.editForm.setValue('name', 'Évènements');
 
-    await fixture.mutations.renameCatalogSection();
+    await fixture.mutations.update();
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
       { ...events, name: 'Évènements' },
     ]);
-    assert.equal(fixture.state.editedSectionId, null);
+    assert.equal(fixture.state.editedId, null);
   });
 
   it('keeps the edit open and the name unchanged after a rejected rename', async (context: TestContext) => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       state: {
-        ...initialCatalogSectionEditorState,
-        editedSectionId: events.id,
+        ...initialOrderedListEditorState,
+        editedId: events.id,
       },
       catalogSectionApi: {
         renameCatalogSection: async () => {
@@ -380,9 +386,9 @@ describe('createCatalogSectionMutations', () => {
     });
     fixture.editForm.setValue('name', 'NOUVEAUTÉS');
 
-    await fixture.mutations.renameCatalogSection();
+    await fixture.mutations.update();
 
-    assert.equal(fixture.state.editedSectionId, events.id);
+    assert.equal(fixture.state.editedId, events.id);
     assert.deepEqual(fixture.reportedErrors, [duplicateNameError]);
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
@@ -402,10 +408,7 @@ describe('createCatalogSectionMutations', () => {
       },
     });
 
-    await fixture.mutations.moveCatalogSection({
-      section: events,
-      direction: CatalogSectionMoveDirection.UP,
-    });
+    await fixture.mutations.move({ item: events, direction: 'UP' });
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       events,
@@ -423,10 +426,7 @@ describe('createCatalogSectionMutations', () => {
       },
     });
 
-    await fixture.mutations.moveCatalogSection({
-      section: events,
-      direction: CatalogSectionMoveDirection.UP,
-    });
+    await fixture.mutations.move({ item: events, direction: 'UP' });
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
@@ -439,8 +439,8 @@ describe('createCatalogSectionMutations', () => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       state: {
-        ...initialCatalogSectionEditorState,
-        deletionSectionId: events.id,
+        ...initialOrderedListEditorState,
+        deletionId: events.id,
       },
       catalogSectionApi: {
         deleteCatalogSection: async (id) => {
@@ -449,20 +449,20 @@ describe('createCatalogSectionMutations', () => {
       },
     });
 
-    await fixture.mutations.deleteCatalogSection(events);
+    await fixture.mutations.delete(events);
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,
     ]);
-    assert.equal(fixture.state.deletionSectionId, null);
+    assert.equal(fixture.state.deletionId, null);
   });
 
   it('keeps the section and reports the error of a rejected deletion', async (context: TestContext) => {
     const fixture: MutationsFixture = createMutationsFixture({
       context,
       state: {
-        ...initialCatalogSectionEditorState,
-        deletionSectionId: events.id,
+        ...initialOrderedListEditorState,
+        deletionId: events.id,
       },
       catalogSectionApi: {
         deleteCatalogSection: async () => {
@@ -471,7 +471,7 @@ describe('createCatalogSectionMutations', () => {
       },
     });
 
-    await fixture.mutations.deleteCatalogSection(events);
+    await fixture.mutations.delete(events);
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.sectionsKey), [
       news,

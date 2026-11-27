@@ -5,16 +5,12 @@ import {
 } from '@cityborn/client/admin';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
+import { OrderedList } from '../ordered-list-editor';
 import { CatalogSectionRow } from './catalog-section-row';
 
 export function CatalogSectionsEditor() {
   const editor: CatalogSectionsManagement = useCatalogSectionsManagement();
-  const { creationForm }: CatalogSectionsManagement = editor;
-  const isBusy: boolean =
-    creationForm.formState.isSubmitting ||
-    editor.editForm.formState.isSubmitting ||
-    editor.isMoving ||
-    editor.isDeleting;
+  const { creationForm, isBusy }: CatalogSectionsManagement = editor;
   const creationError: string | undefined =
     creationForm.formState.errors.name?.message;
   return (
@@ -29,7 +25,7 @@ export function CatalogSectionsEditor() {
         Sections
       </h2>
       <form
-        onSubmit={editor.createCatalogSection}
+        onSubmit={editor.create}
         noValidate
         className="flex flex-col gap-2 max-w-xl"
       >
@@ -98,21 +94,17 @@ export function CatalogSectionsEditor() {
               {group.sections.length === 0 ? (
                 <p className="text-zinc-400">Aucune section.</p>
               ) : (
-                <ul
-                  aria-label={`Sections de ${group.title}`}
-                  className="flex flex-col gap-3"
-                >
-                  {group.sections.map((section, index) => (
+                <OrderedList
+                  label={`Sections de ${group.title}`}
+                  items={group.sections}
+                  renderItem={({ item: section, position }) => (
                     <CatalogSectionRow
-                      key={section.id}
                       section={section}
                       editor={editor}
-                      isBusy={isBusy}
-                      isFirst={index === 0}
-                      isLast={index === group.sections.length - 1}
+                      position={position}
                     />
-                  ))}
-                </ul>
+                  )}
+                />
               )}
             </section>
           ))}
