@@ -8,7 +8,6 @@ Usage: scripts/setup-worktree.sh [chemin_du_worktree] [--skip-install]
 Sans argument, prépare le worktree courant.
   - conserve les .env présents et copie seulement les manquants depuis le principal
   - vérifie les .env requis des apps
-  - supprime les env de dev des worktrees disparus
   - au premier setup, attribue au worktree le premier slot libre de 1 à 9
   - lance son env de dev, le projet Docker Compose cityborn-<dossier du worktree>
   - écrit le nom du projet et les ports du slot dans les .env des apps
@@ -122,22 +121,10 @@ if [ "$project" = "cityborn-main" ]; then
   exit 1
 fi
 
-docker ps --all --filter label=com.docker.compose.project \
-  --format '{{.Label "com.docker.compose.project"}}	{{.Label "com.docker.compose.project.config_files"}}' |
-  sort -u |
-  while IFS=$'\t' read -r env_project env_compose_file; do
-    case "$env_project" in cityborn-*) ;; *) continue ;; esac
-    env_checkout="${env_compose_file%%/apps/backend/*}"
-    [ ! -e "${env_compose_file%%,*}" ] && [ -d "$(dirname "$env_checkout")" ] || continue
-    echo "  env supprimé $env_project ($env_checkout)"
-    docker compose -p "$env_project" down --volumes --remove-orphans >/dev/null 2>&1 ||
-      echo "  suppression impossible : $env_project" >&2
-  done
-
 project_compose_file="$(docker ps --all --filter "label=com.docker.compose.project=$project" \
   --format '{{.Label "com.docker.compose.project.config_files"}}' | sort -u | head -n 1)"
 if [ -n "$project_compose_file" ] && [ "${project_compose_file%%,*}" != "$compose_file" ]; then
-  echo "L'env $project appartient déjà à ${project_compose_file%%/apps/backend/*} : renommer le dossier de l'un des deux worktrees." >&2
+  echo "L'env $project appartient déjà à ${project_compose_file%%/apps/backend/*} : s'il a disparu, lancer scripts/teardown-worktree.sh --orphans ; sinon renommer le dossier de l'un des deux worktrees." >&2
   exit 1
 fi
 
