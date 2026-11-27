@@ -11,6 +11,7 @@ export function buildCatalogSection(
     id: '6f1c2d4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f',
     name: 'Nouveautés',
     isDefault: false,
+    packIds: [],
     ...overrides,
   });
 }

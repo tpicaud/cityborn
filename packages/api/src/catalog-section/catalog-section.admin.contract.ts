@@ -5,6 +5,7 @@ import {
 } from '../protocol/payload.schema';
 import {
   CatalogSectionIdParamSchema,
+  CatalogSectionPackParamSchema,
   CatalogSectionSchema,
   CatalogSectionsSchema,
   MoveCatalogSectionSchema,
@@ -46,6 +47,20 @@ export const catalogSectionAdminContract = c.router(
       pathParams: CatalogSectionIdParamSchema,
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema },
+    },
+    addPackToCatalogSection: {
+      method: 'PUT',
+      path: '/:id/packs/:packId',
+      pathParams: CatalogSectionPackParamSchema,
+      body: emptyRequestBodySchema,
+      responses: { 200: CatalogSectionSchema },
+    },
+    removePackFromCatalogSection: {
+      method: 'DELETE',
+      path: '/:id/packs/:packId',
+      pathParams: CatalogSectionPackParamSchema,
+      body: emptyRequestBodySchema,
+      responses: { 200: CatalogSectionSchema },
     },
   },
   { pathPrefix: '/catalog-section' },

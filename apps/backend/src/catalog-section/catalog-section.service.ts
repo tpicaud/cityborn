@@ -3,6 +3,7 @@ import {
   type CatalogSectionId,
   CatalogSectionMoveDirection,
   ErrorCode,
+  type PackId,
   type SaveCatalogSection,
 } from '@cityborn/api';
 import {
@@ -13,6 +14,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { PackService } from '../pack/pack.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
   CATALOG_SECTION_REPOSITORY,
@@ -25,6 +27,7 @@ export class CatalogSectionService {
   constructor(
     @Inject(CATALOG_SECTION_REPOSITORY)
     private readonly catalogSectionRepository: CatalogSectionRepository,
+    private readonly packService: PackService,
   ) {}
 
   async findAll(): Promise<CatalogSection[]> {
@@ -90,6 +93,44 @@ export class CatalogSectionService {
       });
     if (!(await this.catalogSectionRepository.delete(id)))
       throw this.sectionNotFound();
+  }
+
+  @Transactional()
+  async addPack({
+    id,
+    packId,
+  }: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection> {
+    this.ensurePacksEditable(id);
+    await this.packService.findById(packId);
+    const section: CatalogSection | null =
+      await this.catalogSectionRepository.addPack({ id, packId });
+    if (!section) throw this.sectionNotFound();
+    return section;
+  }
+
+  async removePack({
+    id,
+    packId,
+  }: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection> {
+    this.ensurePacksEditable(id);
+    const section: CatalogSection | null =
+      await this.catalogSectionRepository.removePack({ id, packId });
+    if (!section) throw this.sectionNotFound();
+    return section;
+  }
+
+  private ensurePacksEditable(id: CatalogSectionId): void {
+    if (id === defaultCatalogSectionId)
+      throw new BadRequestException({
+        code: ErrorCode.CATALOG_SECTION_DEFAULT_PACKS_NOT_EDITABLE,
+        message: 'Default catalog section packs cannot be edited',
+      });
   }
 
   private sectionNotFound(): NotFoundException {

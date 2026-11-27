@@ -1,13 +1,13 @@
-import type { CatalogSection, CatalogSectionId } from '@cityborn/api';
+import type { CatalogSection, CatalogSectionId, PackId } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import {
-  Prisma,
-  type CatalogSection as PrismaCatalogSection,
-} from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { defaultCatalogSectionId } from '../default-catalog-section';
-import { CatalogSectionMapper } from '../mappers/catalog-section.mapper';
+import {
+  CatalogSectionMapper,
+  type PrismaCatalogSectionWithPacks,
+} from '../mappers/catalog-section.mapper';
 import {
   CatalogSectionNameAlreadyExistsError,
   type CatalogSectionRepository,
@@ -17,6 +17,14 @@ const catalogSectionOrder: Prisma.CatalogSectionOrderByWithRelationInput[] = [
   { position: 'asc' },
   { name: 'asc' },
 ];
+
+const sectionPacks = {
+  packs: { select: { packId: true }, orderBy: { position: 'asc' } },
+} satisfies Prisma.CatalogSectionInclude;
+
+const publishedPack: Prisma.CatalogSectionPackWhereInput = {
+  pack: { isPublished: true },
+};
 
 @Injectable()
 export class PrismaCatalogSectionRepository
@@ -32,8 +40,9 @@ export class PrismaCatalogSectionRepository
   }
 
   async findAll(): Promise<CatalogSection[]> {
-    const sections: PrismaCatalogSection[] =
+    const sections: PrismaCatalogSectionWithPacks[] =
       await this.txHost.tx.catalogSection.findMany({
+        include: sectionPacks,
         orderBy: catalogSectionOrder,
       });
     return sections.map((section) =>
@@ -42,9 +51,15 @@ export class PrismaCatalogSectionRepository
   }
 
   async findPlayable(): Promise<CatalogSection[]> {
-    const sections: PrismaCatalogSection[] =
+    const sections: PrismaCatalogSectionWithPacks[] =
       await this.txHost.tx.catalogSection.findMany({
-        where: { id: defaultCatalogSectionId },
+        where: {
+          OR: [
+            { id: defaultCatalogSectionId },
+            { packs: { some: publishedPack } },
+          ],
+        },
+        include: { packs: { ...sectionPacks.packs, where: publishedPack } },
         orderBy: catalogSectionOrder,
       });
     return sections.map((section) =>
@@ -61,6 +76,7 @@ export class PrismaCatalogSectionRepository
       )._max.position;
       return this.txHost.tx.catalogSection.create({
         data: { name, position: (lastPosition ?? -1) + 1 },
+        include: sectionPacks,
       });
     });
   }
@@ -74,7 +90,11 @@ export class PrismaCatalogSectionRepository
   }): Promise<CatalogSection | null> {
     try {
       return await this.save(() =>
-        this.txHost.tx.catalogSection.update({ where: { id }, data: { name } }),
+        this.txHost.tx.catalogSection.update({
+          where: { id },
+          data: { name },
+          include: sectionPacks,
+        }),
       );
     } catch (error: unknown) {
       if (
@@ -103,8 +123,54 @@ export class PrismaCatalogSectionRepository
     return count > 0;
   }
 
+  async addPack({
+    id,
+    packId,
+  }: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection | null> {
+    const lockedSections: { id: string }[] = await this.txHost.tx.$queryRaw`
+      SELECT "id" FROM "CatalogSection" WHERE "id" = ${id}::uuid FOR UPDATE`;
+    if (lockedSections.length === 0) return null;
+    const lastPosition: number | null = (
+      await this.txHost.tx.catalogSectionPack.aggregate({
+        where: { sectionId: id },
+        _max: { position: true },
+      })
+    )._max.position;
+    await this.txHost.tx.catalogSectionPack.upsert({
+      where: { sectionId_packId: { sectionId: id, packId } },
+      create: { sectionId: id, packId, position: (lastPosition ?? -1) + 1 },
+      update: {},
+    });
+    return this.findById(id);
+  }
+
+  async removePack({
+    id,
+    packId,
+  }: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection | null> {
+    await this.txHost.tx.catalogSectionPack.deleteMany({
+      where: { sectionId: id, packId },
+    });
+    return this.findById(id);
+  }
+
+  private async findById(id: CatalogSectionId): Promise<CatalogSection | null> {
+    const section: PrismaCatalogSectionWithPacks | null =
+      await this.txHost.tx.catalogSection.findUnique({
+        where: { id },
+        include: sectionPacks,
+      });
+    return section && CatalogSectionMapper.toCatalogSection(section);
+  }
+
   private async save(
-    write: () => Promise<PrismaCatalogSection>,
+    write: () => Promise<PrismaCatalogSectionWithPacks>,
   ): Promise<CatalogSection> {
     try {
       return CatalogSectionMapper.toCatalogSection(await write());

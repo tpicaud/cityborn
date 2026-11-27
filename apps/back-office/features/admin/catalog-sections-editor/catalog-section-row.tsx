@@ -3,12 +3,22 @@ import {
   CatalogSectionMoveDirection,
 } from '@cityborn/api';
 import {
+  areCatalogSectionPacksEditable,
   type CatalogSectionsManagement,
   isCatalogSectionDeletable,
 } from '@cityborn/client/admin';
-import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from 'lucide-react';
-import { useEffect } from 'react';
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  Pencil,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { CatalogSectionPackEditor } from './catalog-section-pack-editor';
 
 export function CatalogSectionRow({
   section,
@@ -28,6 +38,8 @@ export function CatalogSectionRow({
     if (isEditing) editor.editForm.setFocus('name');
   }, [isEditing, editor.editForm]);
   const isConfirming: boolean = editor.state.deletionSectionId === section.id;
+  const [isShowingPacks, setIsShowingPacks] = useState<boolean>(false);
+  const packEditorId: string = `catalog-section-packs-${section.id}`;
   const error: string | undefined = isEditing
     ? editor.editForm.formState.errors.name?.message
     : undefined;
@@ -113,6 +125,18 @@ export function CatalogSectionRow({
               >
                 <ChevronDown size={18} />
               </Button>
+              {areCatalogSectionPacksEditable(section) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsShowingPacks(!isShowingPacks)}
+                  aria-expanded={isShowingPacks}
+                  aria-controls={packEditorId}
+                  aria-label={`Packs de ${section.name}`}
+                >
+                  <Package size={18} />
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -162,6 +186,11 @@ export function CatalogSectionRow({
         <p id={errorId} role="alert" className="text-red-400">
           {error}
         </p>
+      )}
+      {isShowingPacks && (
+        <div id={packEditorId}>
+          <CatalogSectionPackEditor section={section} isBusy={isBusy} />
+        </div>
       )}
     </li>
   );

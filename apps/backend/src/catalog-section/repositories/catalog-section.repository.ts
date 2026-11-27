@@ -1,4 +1,4 @@
-import type { CatalogSection, CatalogSectionId } from '@cityborn/api';
+import type { CatalogSection, CatalogSectionId, PackId } from '@cityborn/api';
 
 export const CATALOG_SECTION_REPOSITORY = Symbol('CATALOG_SECTION_REPOSITORY');
 
@@ -15,4 +15,12 @@ export interface CatalogSectionRepository {
   }): Promise<CatalogSection | null>;
   reorder(ids: CatalogSectionId[]): Promise<void>;
   delete(id: CatalogSectionId): Promise<boolean>;
+  addPack(data: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection | null>;
+  removePack(data: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection | null>;
 }

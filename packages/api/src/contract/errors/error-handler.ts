@@ -97,6 +97,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Aucune section trouvée pour cet identifiant.',
   [ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE]:
     'La section par défaut ne peut pas être supprimée.',
+  [ErrorCode.CATALOG_SECTION_DEFAULT_PACKS_NOT_EDITABLE]:
+    'La section par défaut contient déjà tous les packs publiés.',
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

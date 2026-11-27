@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PackModule } from '../pack/pack.module';
 import { PrismaClsModule } from '../prisma/prisma-cls.module';
 import { CatalogSectionService } from './catalog-section.service';
 import { AdminCatalogSectionController } from './controllers/catalog-section.admin.controller';
@@ -7,7 +8,7 @@ import { CATALOG_SECTION_REPOSITORY } from './repositories/catalog-section.repos
 import { PrismaCatalogSectionRepository } from './repositories/prisma-catalog-section.repository';
 
 @Module({
-  imports: [PrismaClsModule],
+  imports: [PrismaClsModule, PackModule],
   controllers: [PublicCatalogSectionController, AdminCatalogSectionController],
   providers: [
     CatalogSectionService,

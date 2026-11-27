@@ -1,3 +1,4 @@
+export type { CatalogRow } from './catalogRows';
 export {
   type PackImageFallback,
   type PackImageFallbackOptions,

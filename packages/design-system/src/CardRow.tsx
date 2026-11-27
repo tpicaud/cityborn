@@ -90,7 +90,6 @@ export function CardRow({ title, children }: CardRowProps) {
     viewport: 0,
     content: 0,
   });
-  const [overflows, setOverflows] = useState<boolean>(false);
   const [canScrollBack, setCanScrollBack] = useState<boolean>(false);
   const [canScrollForward, setCanScrollForward] = useState<boolean>(false);
 
@@ -100,7 +99,6 @@ export function CardRow({ title, children }: CardRowProps) {
   const updateExtent = (change: Partial<RowExtent>): void => {
     extentRef.current = { ...extentRef.current, ...change };
     const max: number = maxOffset();
-    setOverflows(max > 1);
     setCanScrollBack(extentRef.current.offset > 1);
     setCanScrollForward(extentRef.current.offset < max - 1);
   };
@@ -144,26 +142,24 @@ export function CardRow({ title, children }: CardRowProps) {
     <View gap="2 md:5">
       <RowHeader>
         <RowTitle>{title}</RowTitle>
-        {overflows && (
-          <View display="none hoverable:flex" flexDirection="row" gap="2">
-            <ArrowButton
-              aria-label={`Précédent dans ${title}`}
-              aria-disabled={!canScrollBack}
-              dimmed={!canScrollBack}
-              onPress={() => scrollByPage(-1)}
-            >
-              <Chevron rotate="-135deg" mr="0" ml="0.5 md:1" />
-            </ArrowButton>
-            <ArrowButton
-              aria-label={`Suivant dans ${title}`}
-              aria-disabled={!canScrollForward}
-              dimmed={!canScrollForward}
-              onPress={() => scrollByPage(1)}
-            >
-              <Chevron />
-            </ArrowButton>
-          </View>
-        )}
+        <View display="none hoverable:flex" flexDirection="row" gap="2">
+          <ArrowButton
+            aria-label={`Précédent dans ${title}`}
+            aria-disabled={!canScrollBack}
+            dimmed={!canScrollBack}
+            onPress={() => scrollByPage(-1)}
+          >
+            <Chevron rotate="-135deg" mr="0" ml="0.5 md:1" />
+          </ArrowButton>
+          <ArrowButton
+            aria-label={`Suivant dans ${title}`}
+            aria-disabled={!canScrollForward}
+            dimmed={!canScrollForward}
+            onPress={() => scrollByPage(1)}
+          >
+            <Chevron />
+          </ArrowButton>
+        </View>
       </RowHeader>
       <ScrollView
         ref={scrollViewRef}

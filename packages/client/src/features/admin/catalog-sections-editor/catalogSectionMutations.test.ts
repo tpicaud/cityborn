@@ -116,6 +116,8 @@ function createMutationsFixture({
     renameCatalogSection: unexpectedCall,
     moveCatalogSection: unexpectedCall,
     deleteCatalogSection: unexpectedCall,
+    addPackToCatalogSection: unexpectedCall,
+    removePackFromCatalogSection: unexpectedCall,
     ...overrides,
   };
   const queryClient: QueryClient = new QueryClient();
@@ -285,6 +287,7 @@ describe('createCatalogSectionMutations', () => {
           id,
           name: section.name,
           isDefault: false,
+          packIds: [],
         }),
       },
     });

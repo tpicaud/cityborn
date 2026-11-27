@@ -1,10 +1,14 @@
 import {
   buildCatalogSection,
+  buildPack,
   type CatalogSection,
   CatalogSectionMoveDirection,
   ErrorCode,
+  type Pack,
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
+import { NotFoundException } from '@nestjs/common';
+import type { PackService } from '../pack/pack.service';
 import { CatalogSectionService } from './catalog-section.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
@@ -26,10 +30,11 @@ jest.mock('@nestjs-cls/transactional', () => ({
 function buildCatalogSectionService() {
   const catalogSectionRepository: DeepMocked<CatalogSectionRepository> =
     createMock<CatalogSectionRepository>();
+  const packService: DeepMocked<PackService> = createMock<PackService>();
   const catalogSectionService: CatalogSectionService =
-    new CatalogSectionService(catalogSectionRepository);
+    new CatalogSectionService(catalogSectionRepository, packService);
 
-  return { catalogSectionRepository, catalogSectionService };
+  return { catalogSectionRepository, packService, catalogSectionService };
 }
 
 const news: CatalogSection = buildCatalogSection({
@@ -85,6 +90,7 @@ describe('CatalogSectionService.rename', () => {
       id: events.id,
       name: 'Événements',
       isDefault: false,
+      packIds: [],
     });
     expect(catalogSectionRepository.rename).toHaveBeenCalledWith({
       id: events.id,
@@ -260,5 +266,137 @@ describe('CatalogSectionService.delete', () => {
       response: { code: ErrorCode.CATALOG_SECTION_DEFAULT_NOT_DELETABLE },
     });
     expect(catalogSectionRepository.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe('CatalogSectionService.addPack', () => {
+  const pack: Pack = buildPack();
+
+  it('returns the section with the added pack', async () => {
+    const {
+      catalogSectionRepository,
+      packService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    packService.findById.mockResolvedValue(pack);
+    catalogSectionRepository.addPack.mockResolvedValue({
+      ...events,
+      packIds: [pack.id],
+    });
+
+    const section: CatalogSection = await catalogSectionService.addPack({
+      id: events.id,
+      packId: pack.id,
+    });
+
+    expect(section).toEqual({ ...events, packIds: [pack.id] });
+  });
+
+  it('rejects an unknown pack', async () => {
+    const {
+      catalogSectionRepository,
+      packService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    packService.findById.mockRejectedValue(
+      new NotFoundException({ code: ErrorCode.PACK_NOT_FOUND }),
+    );
+
+    await expect(
+      catalogSectionService.addPack({ id: events.id, packId: pack.id }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.PACK_NOT_FOUND },
+    });
+    expect(catalogSectionRepository.addPack).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      packService,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    packService.findById.mockResolvedValue(pack);
+    catalogSectionRepository.addPack.mockResolvedValue(null);
+
+    await expect(
+      catalogSectionService.addPack({ id: events.id, packId: pack.id }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+    });
+  });
+
+  it('rejects the default section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+
+    await expect(
+      catalogSectionService.addPack({
+        id: defaultCatalogSectionId,
+        packId: pack.id,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_DEFAULT_PACKS_NOT_EDITABLE },
+    });
+    expect(catalogSectionRepository.addPack).not.toHaveBeenCalled();
+  });
+});
+
+describe('CatalogSectionService.removePack', () => {
+  const pack: Pack = buildPack();
+
+  it('returns the section without the removed pack', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.removePack.mockResolvedValue(events);
+
+    const section: CatalogSection = await catalogSectionService.removePack({
+      id: events.id,
+      packId: pack.id,
+    });
+
+    expect(section).toEqual(events);
+  });
+
+  it('rejects an unknown section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+    catalogSectionRepository.removePack.mockResolvedValue(null);
+
+    await expect(
+      catalogSectionService.removePack({ id: events.id, packId: pack.id }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_NOT_FOUND },
+    });
+  });
+
+  it('rejects the default section', async () => {
+    const {
+      catalogSectionRepository,
+      catalogSectionService,
+    }: ReturnType<typeof buildCatalogSectionService> =
+      buildCatalogSectionService();
+
+    await expect(
+      catalogSectionService.removePack({
+        id: defaultCatalogSectionId,
+        packId: pack.id,
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.CATALOG_SECTION_DEFAULT_PACKS_NOT_EDITABLE },
+    });
+    expect(catalogSectionRepository.removePack).not.toHaveBeenCalled();
   });
 });

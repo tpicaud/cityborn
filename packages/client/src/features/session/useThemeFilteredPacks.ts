@@ -7,7 +7,7 @@ import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { playableCatalogSectionsQueryOptions } from '../../domains/catalog-section/catalogSectionQueries';
 import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
 import { playableThemesQueryOptions } from '../../domains/theme/themeQueries';
-import { findAllPacksRowTitle } from './allPacksRowTitle';
+import { type CatalogRow, createCatalogRows } from './catalogRows';
 import { selectThemePacks } from './themePacks';
 
 const noPacks: Pack[] = [];
@@ -24,7 +24,9 @@ export type ThemeFilteredPacks = {
   selectedTheme: Theme | undefined;
   selectTheme: (themeId: ThemeId | undefined) => void;
   packs: Pack[];
-  allPacksRowTitle: string;
+  catalogRows: CatalogRow[];
+  catalogSectionsLoadFailed: boolean;
+  reloadCatalogSections: () => Promise<void>;
 };
 
 export function useThemeFilteredPacks({
@@ -48,8 +50,11 @@ export function useThemeFilteredPacks({
   const {
     data: catalogSections = noCatalogSections,
     isPending: isLoadingCatalogSections,
+    isLoadingError: isCatalogSectionsLoadError,
+    refetch: refetchCatalogSections,
   }: UseQueryResult<CatalogSection[]> = useQuery({
     ...playableCatalogSectionsQueryOptions(catalogSectionApi),
+    meta: { reportsError: false },
     subscribed: isScreenFocused,
   });
   const [selectedThemeId, setSelectedThemeId] = useState<ThemeId | undefined>(
@@ -70,12 +75,27 @@ export function useThemeFilteredPacks({
     [publishedPacks, selectedTheme],
   );
 
+  const catalogRows: CatalogRow[] = useMemo(
+    () =>
+      createCatalogRows({
+        sections: catalogSections,
+        publishedPacks,
+        themeId: selectedTheme?.id,
+      }),
+    [catalogSections, publishedPacks, selectedTheme],
+  );
+
   return {
     isLoading: isLoadingPacks || isLoadingThemes || isLoadingCatalogSections,
     themes,
     selectedTheme,
     selectTheme: setSelectedThemeId,
     packs,
-    allPacksRowTitle: findAllPacksRowTitle(catalogSections),
+    catalogRows,
+    catalogSectionsLoadFailed:
+      isCatalogSectionsLoadError && selectedTheme === undefined,
+    reloadCatalogSections: async () => {
+      await refetchCatalogSections();
+    },
   };
 }

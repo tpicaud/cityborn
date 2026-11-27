@@ -38,6 +38,14 @@ export class AdminCatalogSectionController {
         await this.catalogSectionService.delete(params.id);
         return { status: 200, body: {} };
       },
+      addPackToCatalogSection: async ({ params }) => ({
+        status: 200,
+        body: await this.catalogSectionService.addPack(params),
+      }),
+      removePackFromCatalogSection: async ({ params }) => ({
+        status: 200,
+        body: await this.catalogSectionService.removePack(params),
+      }),
     });
   }
 }
