@@ -19,13 +19,13 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou 
 - L'interface utilise des types API ou des types métier internes. Un enregistrement qui ajoute des données serveur à un contrat a son propre type, distinct de celui envoyé aux clients.
 - Prisma, référence `world-location` :
   - le module importe `PrismaClsModule` ;
-  - le repository passe par `TransactionHost` (`PrismaTransactionHost`) et `txHost.tx` ;
+  - le repository accède à Prisma par `txHost.tx` pour participer à la transaction du service ;
   - les mappers convertissent les lignes Prisma en types API avant leur retour.
 - Redis, référence `session` :
   - le repository garde privés ses préfixes de clés et ses TTL ;
   - il valide chaque valeur lue par un schéma zod avant de la retourner ;
   - les écritures qui doivent rester cohérentes entre elles partent dans un même `MULTI`, dont il vérifie chaque réponse.
-- `RedisModule` est l'unique propriétaire du client Redis partagé ; seuls les repositories et le socle technique (verrou, rate limit) l'injectent, par le token `REDIS_CLIENT`. Seul l'adapter WebSocket ouvre ses propres connexions pub/sub.
+- `RedisModule` est l'unique propriétaire du client Redis partagé ; seuls les repositories et le socle technique l'injectent, par le token `REDIS_CLIENT`. Seul l'adapter WebSocket ouvre ses propres connexions pub/sub.
 - Lors d'une extraction, préserver les requêtes, les conversions et les noms existants (paramètres, variables, propriétés), sans ajouter de validation métier. Limiter les nouveaux noms à ce que la séparation en repositories nécessite.
 - Placer `@Transactional()` sur les opérations de service dont plusieurs écritures DB doivent réussir ou échouer ensemble. Les appels imbriqués partagent la transaction. Ne pas englober Redis, les emails ou les appels externes ; conserver le nettoyage d'un token expiré hors de la transaction qui peut échouer.
 
