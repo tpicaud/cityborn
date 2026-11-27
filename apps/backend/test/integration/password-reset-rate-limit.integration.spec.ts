@@ -1,18 +1,13 @@
-import { createMock } from '@golevelup/ts-jest';
 import { RateLimiterRes } from 'rate-limiter-flexible';
-import type { WideEventService } from '../../src/common/wide-event/wide-event.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
-import { RedisService } from '../../src/redis/redis.service';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('RateLimitService', () => {
   const infrastructure: ReturnType<typeof createTestInfrastructure> =
     createTestInfrastructure();
-  const redisService: RedisService = new RedisService(
+  const rateLimitService: RateLimitService = new RateLimitService(
     infrastructure.redis,
-    createMock<WideEventService>(),
   );
-  const rateLimitService: RateLimitService = new RateLimitService(redisService);
   afterAll(async () => {
     await infrastructure.close();
   });
