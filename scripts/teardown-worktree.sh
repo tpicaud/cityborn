@@ -7,14 +7,16 @@ Usage: scripts/teardown-worktree.sh [chemin_du_worktree] [--force]
        scripts/teardown-worktree.sh --orphans
 
 Sans argument, supprime le worktree courant et son env de dev :
-  - refuse le checkout principal et un worktree qui a des changements non commités
+  - refuse un worktree d'un autre dépôt, le checkout principal, un worktree verrouillé
+    ou qui a des changements non commités
   - refuse un worktree où des processus tournent encore après 60 s d'attente ;
     avec --force, les arrête
-  - supprime son projet Docker Compose : conteneurs, volumes, réseau
+  - revérifie ces critères, puis supprime son projet Docker Compose : conteneurs, volumes, réseau
   - supprime son dossier avec `git worktree remove` ; la branche locale est conservée
 
-Avec --orphans, supprime l'env de dev de chaque worktree dont le dossier a disparu :
-processus restés dans le dossier supprimé, puis projet Docker Compose.
+Avec --orphans, supprime l'env de dev de chaque worktree disparu : processus restés
+dans son dossier supprimé, puis projet Docker Compose. Un env n'est orphelin que si
+aucun checkout du dépôt ne le déclare et que son dossier n'existe plus.
 USAGE
 }
 
@@ -43,13 +45,46 @@ if [ "$orphans" = true ] && { [ -n "$target" ] || [ "$force" = true ]; }; then
   exit 1
 fi
 
+main_project="cityborn-main"
 compose_relative_path="apps/backend/docker-compose.resources.yml"
+script_repo="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --path-format=absolute --git-common-dir)"
+
+env_value() {
+  { grep -m 1 "^$2=" "$1" 2>/dev/null || true; } | cut -d= -f2- | tr -d '\r'
+}
+
+checkouts() {
+  git --git-dir="$script_repo" worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}'
+}
+
+declared_projects() {
+  echo "$main_project"
+  checkouts | while IFS= read -r checkout; do
+    env_value "$checkout/apps/backend/.env" COMPOSE_PROJECT_NAME
+  done
+}
 
 ancestors_of() {
   local pid="$1"
   while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
     echo "$pid"
     pid="$(awk '/^PPid:/ {print $2}' "/proc/$pid/status" 2>/dev/null || true)"
+  done
+}
+
+processes_in() {
+  local root="$1" deleted_only="${2:-false}" ancestors link cwd pid
+  ancestors="$(ancestors_of "$BASHPID")"
+  for proc in /proc/[0-9]*; do
+    pid="${proc#/proc/}"
+    link="$(readlink "$proc/cwd" 2>/dev/null || true)"
+    cwd="${link% (deleted)}"
+    [ "$deleted_only" = false ] || [ "$cwd" != "$link" ] || continue
+    case "$cwd" in
+      "$root"|"$root"/*) ;;
+      *) continue ;;
+    esac
+    grep -qx "$pid" <<< "$ancestors" || echo "$pid"
   done
 }
 
@@ -63,26 +98,10 @@ wait_for_processes_to_exit() {
   echo "$pids"
 }
 
-processes_in() {
-  local root="$1" ancestors cwd pid
-  ancestors="$(ancestors_of "$BASHPID")"
-  for proc in /proc/[0-9]*; do
-    pid="${proc#/proc/}"
-    cwd="$(readlink "$proc/cwd" 2>/dev/null || true)"
-    cwd="${cwd% (deleted)}"
-    case "$cwd" in
-      "$root"|"$root"/*) ;;
-      *) continue ;;
-    esac
-    grep -qx "$pid" <<< "$ancestors" || echo "$pid"
-  done
-}
-
 stop_processes() {
-  local root="$1" pids remaining
-  pids="$(processes_in "$root")"
+  local pids="$1" remaining
   [ -n "$pids" ] || return 0
-  echo "  processus arrêtés : $(tr '\n' ' ' <<< "$pids")"
+  echo "  processus arrêtés : $(paste -sd' ' <<< "$pids")"
   xargs -r kill -TERM <<< "$pids" 2>/dev/null || true
   for _ in 1 2 3 4 5 6 7 8 9 10; do
     remaining="$(while read -r pid; do kill -0 "$pid" 2>/dev/null && echo "$pid"; done <<< "$pids" || true)"
@@ -92,33 +111,57 @@ stop_processes() {
   xargs -r kill -KILL <<< "$remaining" 2>/dev/null || true
 }
 
-compose_projects() {
+project_checkouts() {
+  docker ps --all --filter "label=com.docker.compose.project=$1" \
+    --format '{{.Label "com.docker.compose.project.config_files"}}' |
+    sort -u |
+    while IFS= read -r config_files; do
+      echo "${config_files%%,*}"
+    done |
+    awk -v suffix="/$compose_relative_path" 'length($0) > length(suffix) && substr($0, length($0) - length(suffix) + 1) == suffix {print substr($0, 1, length($0) - length(suffix))}'
+}
+
+project_of_checkout() {
   docker ps --all --filter label=com.docker.compose.project \
     --format '{{.Label "com.docker.compose.project"}}	{{.Label "com.docker.compose.project.config_files"}}' |
-    sort -u |
-    while IFS=$'\t' read -r project config_files; do
-      case "$project" in cityborn-*) ;; *) continue ;; esac
-      echo "$project	${config_files%%,*}"
-    done
+    awk -F '\t' -v compose="$1/$compose_relative_path" '$1 ~ /^cityborn-/ && split($2, files, ",") && files[1] == compose {print $1; exit}'
 }
 
 remove_env() {
   local project="$1"
-  docker compose -p "$project" down --volumes --remove-orphans >/dev/null 2>&1 || {
+  docker compose -p "$project" down --volumes --remove-orphans </dev/null >/dev/null 2>&1 || {
     echo "  suppression impossible : env $project" >&2
     return 1
   }
   echo "  env supprimé $project"
 }
 
+orphan_blocker() {
+  local project="$1" checkout
+  if grep -qxF "$project" <<< "$(declared_projects)"; then
+    echo "déclaré par un checkout"
+    return
+  fi
+  while IFS= read -r checkout; do
+    [ -n "$checkout" ] || continue
+    [ ! -e "$checkout" ] || { echo "dossier présent : $checkout"; return; }
+    [ -d "$(dirname "$checkout")" ] || { echo "dossier parent absent : $(dirname "$checkout")"; return; }
+  done <<< "$(project_checkouts "$project")"
+}
+
 if [ "$orphans" = true ]; then
-  compose_projects | while IFS=$'\t' read -r project compose_file; do
-    checkout="${compose_file%/"$compose_relative_path"}"
-    [ "$checkout" != "$compose_file" ] || continue
-    [ ! -e "$compose_file" ] && [ -d "$(dirname "$checkout")" ] || continue
-    echo "Worktree disparu : $checkout"
-    stop_processes "$checkout"
-    [ ! -e "$compose_file" ] || { echo "  recréé entre-temps, conservé" >&2; continue; }
+  {
+    docker ps --all --filter label=com.docker.compose.project --format '{{.Label "com.docker.compose.project"}}'
+    docker volume ls --filter label=com.docker.compose.project --format '{{.Label "com.docker.compose.project"}}'
+  } | grep '^cityborn-' | sort -u | while IFS= read -r project; do
+    [ -z "$(orphan_blocker "$project")" ] || continue
+    echo "Env orphelin : $project"
+    while IFS= read -r checkout; do
+      [ -n "$checkout" ] || continue
+      stop_processes "$(processes_in "$checkout" true)"
+    done <<< "$(project_checkouts "$project")"
+    blocker="$(orphan_blocker "$project")"
+    [ -z "$blocker" ] || { echo "  conservé, $blocker entre-temps" >&2; continue; }
     remove_env "$project" || true
   done
   exit 0
@@ -132,24 +175,53 @@ if [ ! -d "$target" ]; then
 fi
 
 target_root="$(git -C "$target" rev-parse --show-toplevel)"
-main_root="$(git -C "$target_root" worktree list --porcelain | awk '/^worktree / && !found {print substr($0, 10); found=1}')"
+if [ "$(git -C "$target_root" rev-parse --path-format=absolute --git-common-dir)" != "$script_repo" ]; then
+  echo "Refusé : $target_root n'est pas un worktree du dépôt de ce script." >&2
+  exit 1
+fi
 
+main_root="$(checkouts | head -n 1)"
 if [ "$target_root" = "$main_root" ]; then
   echo "Refusé : $target_root est le checkout principal." >&2
   exit 1
 fi
 
-changes="$(git -C "$target_root" status --porcelain)"
-if [ -n "$changes" ]; then
-  echo "Refusé : $target_root a des changements non commités." >&2
-  echo "$changes" >&2
-  exit 1
+worktree_blocker() {
+  local changes
+  if git --git-dir="$script_repo" worktree list --porcelain |
+    awk -v root="$target_root" '/^worktree / {current = substr($0, 10)} current == root && /^locked/ {found = 1} END {exit !found}'; then
+    echo "le worktree est verrouillé"
+    return
+  fi
+  changes="$(git -C "$target_root" status --porcelain)"
+  [ -z "$changes" ] || printf 'changements non commités :\n%s\n' "$changes"
+}
+
+refuse_if_blocked() {
+  local blocker
+  blocker="$(worktree_blocker)"
+  [ -z "$blocker" ] || { echo "Refusé : $target_root, $blocker" >&2; exit 1; }
+}
+
+refuse_if_blocked
+
+project="$(env_value "$target_root/apps/backend/.env" COMPOSE_PROJECT_NAME)"
+if [ "$project" = "$main_project" ]; then
+  project=""
+fi
+project="${project:-$(project_of_checkout "$target_root")}"
+if [ -n "$project" ]; then
+  owners="$(project_checkouts "$project")"
+  if [ -n "$owners" ] && ! grep -qxF "$target_root" <<< "$owners"; then
+    echo "  env $project ignoré : il appartient à $(paste -sd' ' <<< "$owners")" >&2
+    project=""
+  fi
 fi
 
 echo "Worktree : $target_root ($(git -C "$target_root" branch --show-current))"
 cd "$main_root"
 if [ "$force" = true ]; then
-  stop_processes "$target_root"
+  stop_processes "$(processes_in "$target_root")"
 else
   busy="$(wait_for_processes_to_exit "$target_root")"
   if [ -n "$busy" ]; then
@@ -158,9 +230,15 @@ else
     exit 1
   fi
 fi
-compose_projects | while IFS=$'\t' read -r project compose_file; do
-  [ "$compose_file" = "$target_root/$compose_relative_path" ] || continue
-  remove_env "$project"
-done
+
+refuse_if_blocked
+busy="$(processes_in "$target_root")"
+if [ -n "$busy" ]; then
+  echo "Refusé : un processus a démarré dans $target_root pendant le teardown." >&2
+  ps -o pid=,args= -p "$(paste -sd, <<< "$busy")" >&2 || true
+  exit 1
+fi
+
+[ -z "$project" ] || remove_env "$project"
 git -C "$main_root" worktree remove "$target_root"
 echo "  dossier supprimé"
