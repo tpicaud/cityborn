@@ -10,8 +10,8 @@ import type {
 import { buildCatalogSection, buildPack, buildTheme } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { defaultCatalogSectionId } from '../../src/catalog-section/default-catalog-section';
-import { CatalogSectionNameAlreadyExistsError } from '../../src/catalog-section/repositories/catalog-section.repository';
 import { PrismaCatalogSectionRepository } from '../../src/catalog-section/repositories/prisma-catalog-section.repository';
+import { NameAlreadyExistsError } from '../../src/ordered-list/ordered-named-list';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
 
@@ -383,7 +383,7 @@ describe('PrismaCatalogSectionRepository', () => {
 
       await expect(
         catalogSectionRepository.create({ name: 'TENNIS', themeId: sport.id }),
-      ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
     });
 
     it('rejects a name differing only by case', async () => {
@@ -394,7 +394,7 @@ describe('PrismaCatalogSectionRepository', () => {
 
       await expect(
         catalogSectionRepository.create({ name: 'évènements', themeId: null }),
-      ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
     });
 
     it('rejects the name of the default section differing only by case', async () => {
@@ -405,7 +405,7 @@ describe('PrismaCatalogSectionRepository', () => {
           name: 'tous les packs',
           themeId: null,
         }),
-      ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
     });
 
     it('accepts a name differing by its accents', async () => {
@@ -457,7 +457,7 @@ describe('PrismaCatalogSectionRepository', () => {
 
       await expect(
         catalogSectionRepository.rename({ id: section.id, name: 'NOUVEAUTÉS' }),
-      ).rejects.toBeInstanceOf(CatalogSectionNameAlreadyExistsError);
+      ).rejects.toBeInstanceOf(NameAlreadyExistsError);
       await expect(catalogSectionRepository.findAll()).resolves.toContainEqual(
         section,
       );

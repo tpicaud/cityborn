@@ -1,10 +1,9 @@
 import type { AdminTheme, Theme, ThemeIcon, ThemeId } from '@cityborn/api';
+import type { OrderedNamedListRepository } from '../../ordered-list/ordered-named-list';
 export const THEME_REPOSITORY = Symbol('THEME_REPOSITORY');
-export class ThemeNameAlreadyExistsError extends Error {}
 export class ThemeHasPacksError extends Error {}
-export interface ThemeRepository {
-  lockOrder(): Promise<void>;
-  findAll(): Promise<AdminTheme[]>;
+export interface ThemeRepository
+  extends OrderedNamedListRepository<AdminTheme> {
   findPlayable(): Promise<Theme[]>;
   findById(id: ThemeId): Promise<Theme | null>;
   create(data: { name: string; icon: ThemeIcon }): Promise<Theme>;
@@ -12,7 +11,6 @@ export interface ThemeRepository {
     id: ThemeId;
     theme: { name: string; icon?: ThemeIcon };
   }): Promise<Theme>;
-  reorder(ids: ThemeId[]): Promise<void>;
   countPacks(id: ThemeId): Promise<number>;
   delete(id: ThemeId): Promise<void>;
 }

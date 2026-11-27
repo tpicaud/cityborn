@@ -10,14 +10,12 @@ import {
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
+import { NameAlreadyExistsError } from '../ordered-list/ordered-named-list';
 import type { PackService } from '../pack/pack.service';
 import type { ThemeService } from '../theme/theme.service';
 import { CatalogSectionService } from './catalog-section.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
-import {
-  CatalogSectionNameAlreadyExistsError,
-  type CatalogSectionRepository,
-} from './repositories/catalog-section.repository';
+import type { CatalogSectionRepository } from './repositories/catalog-section.repository';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -120,7 +118,7 @@ describe('CatalogSectionService.create', () => {
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
     catalogSectionRepository.create.mockRejectedValue(
-      new CatalogSectionNameAlreadyExistsError(),
+      new NameAlreadyExistsError(),
     );
 
     await expect(
@@ -186,7 +184,7 @@ describe('CatalogSectionService.rename', () => {
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
     catalogSectionRepository.rename.mockRejectedValue(
-      new CatalogSectionNameAlreadyExistsError(),
+      new NameAlreadyExistsError(),
     );
 
     await expect(
@@ -207,9 +205,11 @@ describe('CatalogSectionService.move', () => {
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
-    catalogSectionRepository.findAll
-      .mockResolvedValueOnce([news, events, classics])
-      .mockResolvedValueOnce([events, news, classics]);
+    catalogSectionRepository.findAll.mockResolvedValue([
+      news,
+      events,
+      classics,
+    ]);
 
     const sections: CatalogSection[] = await catalogSectionService.move({
       id: events.id,

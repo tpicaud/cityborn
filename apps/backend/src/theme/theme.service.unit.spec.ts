@@ -10,10 +10,10 @@ import {
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import type { IconService } from '../icon/icon.service';
+import { NameAlreadyExistsError } from '../ordered-list/ordered-named-list';
 import { defaultThemeIcon } from './default-theme';
 import {
   ThemeHasPacksError,
-  ThemeNameAlreadyExistsError,
   type ThemeRepository,
 } from './repositories/theme.repository';
 import { ThemeService } from './theme.service';
@@ -137,7 +137,7 @@ describe('ThemeService.create', () => {
       themeRepository,
       themeService,
     }: ReturnType<typeof buildThemeService> = buildThemeService();
-    themeRepository.create.mockRejectedValue(new ThemeNameAlreadyExistsError());
+    themeRepository.create.mockRejectedValue(new NameAlreadyExistsError());
 
     await expect(themeService.create({ name: 'sport' })).rejects.toMatchObject({
       response: { code: ErrorCode.THEME_NAME_ALREADY_EXISTS },
@@ -219,7 +219,7 @@ describe('ThemeService.update', () => {
     }: ReturnType<typeof buildThemeService> = buildThemeService();
     const theme: Theme = buildTheme();
     themeRepository.findById.mockResolvedValue(theme);
-    themeRepository.update.mockRejectedValue(new ThemeNameAlreadyExistsError());
+    themeRepository.update.mockRejectedValue(new NameAlreadyExistsError());
 
     await expect(
       themeService.update({ id: theme.id, theme: { name: 'sport' } }),
