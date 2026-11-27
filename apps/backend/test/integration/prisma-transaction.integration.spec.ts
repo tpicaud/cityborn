@@ -39,6 +39,7 @@ import {
   type CatalogSectionRepository,
 } from '../../src/catalog-section/repositories/catalog-section.repository';
 import { PrismaCatalogSectionRepository } from '../../src/catalog-section/repositories/prisma-catalog-section.repository';
+import type { AuthVersion } from '../../src/common/types/auth-session';
 import { WideEventService } from '../../src/common/wide-event/wide-event.service';
 import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
@@ -160,53 +161,80 @@ describe('Prisma transactions', () => {
     await infrastructure.close();
   });
 
+  type LockWaiters = { queryPattern: string; count: bigint };
+
+  async function waitForLockWaiters({
+    queryPattern,
+    count,
+    remainingAttempts,
+  }: LockWaiters & { remainingAttempts: number }): Promise<void> {
+    const waiting: { count: bigint }[] = await prisma.$queryRaw`
+      SELECT count(*) AS count FROM pg_stat_activity
+      WHERE datname = current_database() AND usename = current_user
+        AND wait_event_type = 'Lock' AND query LIKE ${queryPattern}
+    `;
+    if (waiting[0]?.count === count) return;
+    if (remainingAttempts === 0)
+      throw new Error(`No ${count} queries like ${queryPattern} waited`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await waitForLockWaiters({
+      queryPattern,
+      count,
+      remainingAttempts: remainingAttempts - 1,
+    });
+  }
+
+  type HeldTransaction<Result> = {
+    committed: Promise<Result>;
+    releaseOnceWaited: (lockWaiters: LockWaiters) => Promise<void>;
+  };
+
+  async function holdTransaction<Result>(
+    work: () => Promise<Result>,
+  ): Promise<HeldTransaction<Result>> {
+    const txHost: PrismaTransactionHost = module.get(TransactionHost);
+    let release: () => void = () => {};
+    const released: Promise<void> = new Promise((resolve) => {
+      release = resolve;
+    });
+    let confirmWork: () => void = () => {};
+    const worked: Promise<void> = new Promise((resolve) => {
+      confirmWork = resolve;
+    });
+    const committed: Promise<Result> = txHost.withTransaction(async () => {
+      const result: Result = await work();
+      confirmWork();
+      await released;
+      return result;
+    });
+    await worked;
+    return {
+      committed,
+      releaseOnceWaited: async (lockWaiters: LockWaiters): Promise<void> => {
+        try {
+          await waitForLockWaiters({ ...lockWaiters, remainingAttempts: 100 });
+        } finally {
+          release();
+        }
+      },
+    };
+  }
+
   describe('ThemeService', () => {
     describe('create', () => {
       it('places a creation racing another one after it', async () => {
-        const txHost: PrismaTransactionHost = module.get(TransactionHost);
-        let releaseFirstCreation: () => void = () => {};
-        const released: Promise<void> = new Promise((resolve) => {
-          releaseFirstCreation = resolve;
-        });
-        let confirmFirstCreation: () => void = () => {};
-        const created: Promise<void> = new Promise((resolve) => {
-          confirmFirstCreation = resolve;
-        });
-        const firstCreation: Promise<Theme> = txHost.withTransaction(
-          async () => {
-            const theme: Theme = await themeService.create({
-              name: 'Zoologie',
-            });
-            confirmFirstCreation();
-            await released;
-            return theme;
-          },
+        const firstCreation: HeldTransaction<Theme> = await holdTransaction(
+          () => themeService.create({ name: 'Zoologie' }),
         );
-        await created;
         const secondCreation: Promise<Theme> = themeService.create({
           name: 'Architecture',
         });
-        async function waitForBlockedCreation(
-          remainingAttempts: number,
-        ): Promise<void> {
-          const waiting: { count: bigint }[] = await prisma.$queryRaw`
-            SELECT count(*) AS count FROM pg_stat_activity
-            WHERE datname = current_database() AND usename = current_user
-              AND wait_event_type = 'Lock' AND query LIKE 'LOCK TABLE "Theme"%'
-          `;
-          if (waiting[0]?.count === 1n) return;
-          if (remainingAttempts === 0)
-            throw new Error('Creation did not wait for the racing one');
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
-          await waitForBlockedCreation(remainingAttempts - 1);
-        }
 
-        try {
-          await waitForBlockedCreation(100);
-        } finally {
-          releaseFirstCreation();
-        }
-        await Promise.all([firstCreation, secondCreation]);
+        await firstCreation.releaseOnceWaited({
+          queryPattern: 'LOCK TABLE "Theme"%',
+          count: 1n,
+        });
+        await Promise.all([firstCreation.committed, secondCreation]);
 
         expect(
           await prisma.theme.findMany({
@@ -224,53 +252,21 @@ describe('Prisma transactions', () => {
   describe('CatalogSectionService', () => {
     describe('create', () => {
       it('places a creation racing another one after it', async () => {
-        const txHost: PrismaTransactionHost = module.get(TransactionHost);
         const repository: CatalogSectionRepository = module.get(
           CATALOG_SECTION_REPOSITORY,
         );
-        let releaseFirstCreation: () => void = () => {};
-        const released: Promise<void> = new Promise((resolve) => {
-          releaseFirstCreation = resolve;
-        });
-        let confirmFirstCreation: () => void = () => {};
-        const created: Promise<void> = new Promise((resolve) => {
-          confirmFirstCreation = resolve;
-        });
-        const firstCreation: Promise<CatalogSection> = txHost.withTransaction(
-          async () => {
-            const section: CatalogSection = await catalogSectionService.create({
-              name: 'Z',
-              themeId: null,
-            });
-            confirmFirstCreation();
-            await released;
-            return section;
-          },
-        );
-        await created;
+        const firstCreation: HeldTransaction<CatalogSection> =
+          await holdTransaction(() =>
+            catalogSectionService.create({ name: 'Z', themeId: null }),
+          );
         const secondCreation: Promise<CatalogSection> =
           catalogSectionService.create({ name: 'A', themeId: null });
-        async function waitForBlockedCreation(
-          remainingAttempts: number,
-        ): Promise<void> {
-          const waiting: { count: bigint }[] = await prisma.$queryRaw`
-            SELECT count(*) AS count FROM pg_stat_activity
-            WHERE datname = current_database() AND usename = current_user
-              AND wait_event_type = 'Lock' AND query LIKE 'LOCK TABLE "CatalogSection"%'
-          `;
-          if (waiting[0]?.count === 1n) return;
-          if (remainingAttempts === 0)
-            throw new Error('Creation did not wait for the racing one');
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
-          await waitForBlockedCreation(remainingAttempts - 1);
-        }
 
-        try {
-          await waitForBlockedCreation(100);
-        } finally {
-          releaseFirstCreation();
-        }
-        const firstSection: CatalogSection = await firstCreation;
+        await firstCreation.releaseOnceWaited({
+          queryPattern: 'LOCK TABLE "CatalogSection"%',
+          count: 1n,
+        });
+        const firstSection: CatalogSection = await firstCreation.committed;
         const secondSection: CatalogSection = await secondCreation;
 
         expect(await repository.findAll()).toEqual([
@@ -282,7 +278,6 @@ describe('Prisma transactions', () => {
 
     describe('addPack', () => {
       it('rejects a pack whose theme changes while it is being added', async () => {
-        const txHost: PrismaTransactionHost = module.get(TransactionHost);
         const repository: CatalogSectionRepository = module.get(
           CATALOG_SECTION_REPOSITORY,
         );
@@ -298,47 +293,21 @@ describe('Prisma transactions', () => {
           name: 'Tennis',
           themeId: sport.id,
         });
-        let releaseThemeChange: () => void = () => {};
-        const released: Promise<void> = new Promise((resolve) => {
-          releaseThemeChange = resolve;
-        });
-        let confirmThemeChange: () => void = () => {};
-        const themeChanged: Promise<void> = new Promise((resolve) => {
-          confirmThemeChange = resolve;
-        });
-        const themeChange: Promise<void> = txHost.withTransaction(async () => {
-          await packService.update(
+        const themeChange: HeldTransaction<Pack> = await holdTransaction(() =>
+          packService.update(
             pack.id,
             buildUpdatePack({ id: pack.id, themeId: music.id }),
-          );
-          confirmThemeChange();
-          await released;
-        });
-        await themeChanged;
+          ),
+        );
         const addition: Promise<CatalogSection> = catalogSectionService.addPack(
           { id: tennis.id, packId: pack.id },
         );
-        async function waitForBlockedAddition(
-          remainingAttempts: number,
-        ): Promise<void> {
-          const waiting: { count: bigint }[] = await prisma.$queryRaw`
-            SELECT count(*) AS count FROM pg_stat_activity
-            WHERE datname = current_database() AND usename = current_user
-              AND wait_event_type = 'Lock' AND query LIKE '%FROM "Pack"%FOR SHARE%'
-          `;
-          if (waiting[0]?.count === 1n) return;
-          if (remainingAttempts === 0)
-            throw new Error('Addition did not wait for the theme change');
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
-          await waitForBlockedAddition(remainingAttempts - 1);
-        }
 
-        try {
-          await waitForBlockedAddition(100);
-        } finally {
-          releaseThemeChange();
-        }
-        await themeChange;
+        await themeChange.releaseOnceWaited({
+          queryPattern: '%FROM "Pack"%FOR SHARE%',
+          count: 1n,
+        });
+        await themeChange.committed;
 
         await expect(addition).rejects.toMatchObject({
           response: { code: ErrorCode.CATALOG_SECTION_PACK_OUTSIDE_THEME },
@@ -469,24 +438,12 @@ describe('Prisma transactions', () => {
             expiresAt: new Date('2099-01-01'),
           },
         });
-        const txHost: PrismaTransactionHost = module.get(TransactionHost);
         const repository: PasswordResetRepository = module.get(
           PASSWORD_RESET_REPOSITORY,
         );
-        let releaseUpdate: () => void = () => {};
-        const released: Promise<void> = new Promise((resolve) => {
-          releaseUpdate = resolve;
-        });
-        let confirmUpdate: () => void = () => {};
-        const updated: Promise<void> = new Promise((resolve) => {
-          confirmUpdate = resolve;
-        });
-        const update: Promise<void> = txHost.withTransaction(async () => {
-          await userService.updatePassword(user.id, 'new-hash');
-          confirmUpdate();
-          await released;
-        });
-        await updated;
+        const update: HeldTransaction<AuthVersion> = await holdTransaction(() =>
+          userService.updatePassword(user.id, 'new-hash'),
+        );
         const issuance: Promise<boolean> = repository.replaceToken({
           userId: user.id,
           email: user.email,
@@ -500,29 +457,12 @@ describe('Prisma transactions', () => {
             now: new Date(),
           },
         );
-        async function waitForBlockedOperations(
-          remainingAttempts: number,
-        ): Promise<void> {
-          const waiting: { count: bigint }[] = await prisma.$queryRaw`
-            SELECT count(*) AS count FROM pg_stat_activity
-            WHERE datname = current_database() AND usename = current_user
-              AND wait_event_type = 'Lock' AND query LIKE '%WITH locked_user AS (%'
-          `;
-          if (waiting[0]?.count === 2n) return;
-          if (remainingAttempts === 0)
-            throw new Error(
-              'Reset operations did not wait for the password update',
-            );
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
-          await waitForBlockedOperations(remainingAttempts - 1);
-        }
 
-        try {
-          await waitForBlockedOperations(100);
-        } finally {
-          releaseUpdate();
-        }
-        await update;
+        await update.releaseOnceWaited({
+          queryPattern: '%WITH locked_user AS (%',
+          count: 2n,
+        });
+        await update.committed;
 
         expect(await issuance).toBe(false);
         expect(await consumption).toBeNull();
