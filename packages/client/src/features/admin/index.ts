@@ -1,5 +1,10 @@
 export { isCatalogSectionDeletable } from './catalog-sections-editor/catalogSectionDeletable';
 export {
+  type CatalogSectionPacks,
+  type CatalogSectionPacksOptions,
+  useCatalogSectionPacks,
+} from './catalog-sections-editor/useCatalogSectionPacks';
+export {
   type CatalogSectionsManagement,
   useCatalogSectionsManagement,
 } from './catalog-sections-editor/useCatalogSectionsManagement';

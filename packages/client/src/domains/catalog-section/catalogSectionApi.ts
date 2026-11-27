@@ -2,6 +2,7 @@ import type {
   CatalogSection,
   CatalogSectionId,
   MoveCatalogSection,
+  PackId,
   SaveCatalogSection,
 } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
@@ -24,6 +25,14 @@ export interface CatalogSectionApi {
     move: MoveCatalogSection;
   }): Promise<CatalogSection[]>;
   deleteCatalogSection(id: CatalogSectionId): Promise<void>;
+  addPackToCatalogSection(data: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection>;
+  removePackFromCatalogSection(data: {
+    id: CatalogSectionId;
+    packId: PackId;
+  }): Promise<CatalogSection>;
 }
 
 export function createCatalogSectionApi(
@@ -67,6 +76,22 @@ export function createCatalogSectionApi(
       unwrapApiResponse(
         await contractClient.admin.catalogSection.deleteCatalogSection({
           params: { id },
+          body: {},
+        }),
+      );
+    },
+    async addPackToCatalogSection({ id, packId }) {
+      return unwrapApiResponse(
+        await contractClient.admin.catalogSection.addPackToCatalogSection({
+          params: { id, packId },
+          body: {},
+        }),
+      );
+    },
+    async removePackFromCatalogSection({ id, packId }) {
+      return unwrapApiResponse(
+        await contractClient.admin.catalogSection.removePackFromCatalogSection({
+          params: { id, packId },
           body: {},
         }),
       );
