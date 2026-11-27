@@ -6,7 +6,7 @@ import {
   type ThemeIcon,
   type ThemeIconName,
   type ThemeId,
-  ThemeMoveDirection,
+  type ThemeMoveDirection,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IconService } from '../icon/icon.service';
+import { swapWithNeighbour } from '../ordered-list';
 import { defaultThemeIcon, defaultThemeId } from './default-theme';
 import {
   THEME_REPOSITORY,
@@ -82,15 +83,13 @@ export class ThemeService {
     await this.themeRepository.lockOrder();
     const themes: AdminTheme[] = await this.themeRepository.findAll();
     const index: number = themes.findIndex((theme) => theme.id === id);
-    const movedTheme: AdminTheme | undefined = themes[index];
-    if (!movedTheme) throw this.themeNotFound();
-    const targetIndex: number =
-      direction === ThemeMoveDirection.UP ? index - 1 : index + 1;
-    const targetTheme: AdminTheme | undefined = themes[targetIndex];
-    if (!targetTheme) return themes;
-    const reorderedThemes: AdminTheme[] = themes
-      .with(index, targetTheme)
-      .with(targetIndex, movedTheme);
+    if (index === -1) throw this.themeNotFound();
+    const reorderedThemes: AdminTheme[] | null = swapWithNeighbour({
+      items: themes,
+      index,
+      direction,
+    });
+    if (!reorderedThemes) return themes;
     await this.themeRepository.reorder(
       reorderedThemes.map((theme) => theme.id),
     );

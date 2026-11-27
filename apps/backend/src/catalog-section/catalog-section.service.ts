@@ -1,7 +1,7 @@
 import {
   type CatalogSection,
   type CatalogSectionId,
-  CatalogSectionMoveDirection,
+  type CatalogSectionMoveDirection,
   ErrorCode,
   type PackId,
   type SaveCatalogSection,
@@ -14,6 +14,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { swapWithNeighbour } from '../ordered-list';
 import { PackService } from '../pack/pack.service';
 import { defaultCatalogSectionId } from './default-catalog-section';
 import {
@@ -21,23 +22,6 @@ import {
   CatalogSectionNameAlreadyExistsError,
   type CatalogSectionRepository,
 } from './repositories/catalog-section.repository';
-
-function swapWithNeighbour<Item>({
-  items,
-  index,
-  direction,
-}: {
-  items: Item[];
-  index: number;
-  direction: CatalogSectionMoveDirection;
-}): Item[] | null {
-  const neighbourIndex: number =
-    direction === CatalogSectionMoveDirection.UP ? index - 1 : index + 1;
-  const item: Item | undefined = items[index];
-  const neighbour: Item | undefined = items[neighbourIndex];
-  if (item === undefined || neighbour === undefined) return null;
-  return items.with(index, neighbour).with(neighbourIndex, item);
-}
 
 @Injectable()
 export class CatalogSectionService {
