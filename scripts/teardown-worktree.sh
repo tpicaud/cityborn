@@ -3,12 +3,13 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/teardown-worktree.sh [chemin_du_worktree]
+Usage: scripts/teardown-worktree.sh [chemin_du_worktree] [--force]
        scripts/teardown-worktree.sh --orphans
 
 Sans argument, supprime le worktree courant et son env de dev :
   - refuse le checkout principal et un worktree qui a des changements non commités
-  - arrête les processus lancés dans son dossier
+  - refuse un worktree où des processus tournent encore après 60 s d'attente ;
+    avec --force, les arrête
   - supprime son projet Docker Compose : conteneurs, volumes, réseau
   - supprime son dossier avec `git worktree remove` ; la branche locale est conservée
 
@@ -19,10 +20,12 @@ USAGE
 
 target=""
 orphans=false
+force=false
 
 for arg in "$@"; do
   case "$arg" in
     --orphans) orphans=true ;;
+    --force) force=true ;;
     -h|--help) usage; exit 0 ;;
     -*) echo "Option inconnue : $arg" >&2; usage >&2; exit 1 ;;
     *)
@@ -35,8 +38,8 @@ for arg in "$@"; do
   esac
 done
 
-if [ "$orphans" = true ] && [ -n "$target" ]; then
-  echo "--orphans ne prend pas de chemin de worktree." >&2
+if [ "$orphans" = true ] && { [ -n "$target" ] || [ "$force" = true ]; }; then
+  echo "--orphans ne prend ni chemin de worktree ni --force." >&2
   exit 1
 fi
 
@@ -48,6 +51,16 @@ ancestors_of() {
     echo "$pid"
     pid="$(awk '/^PPid:/ {print $2}' "/proc/$pid/status" 2>/dev/null || true)"
   done
+}
+
+wait_for_processes_to_exit() {
+  local root="$1" pids
+  for _ in $(seq 30); do
+    pids="$(processes_in "$root")"
+    [ -n "$pids" ] || return 0
+    sleep 2
+  done
+  echo "$pids"
 }
 
 processes_in() {
@@ -135,7 +148,16 @@ fi
 
 echo "Worktree : $target_root ($(git -C "$target_root" branch --show-current))"
 cd "$main_root"
-stop_processes "$target_root"
+if [ "$force" = true ]; then
+  stop_processes "$target_root"
+else
+  busy="$(wait_for_processes_to_exit "$target_root")"
+  if [ -n "$busy" ]; then
+    echo "Refusé : des processus tournent encore dans $target_root ; relancer avec --force pour les arrêter." >&2
+    ps -o pid=,args= -p "$(paste -sd, <<< "$busy")" >&2 || true
+    exit 1
+  fi
+fi
 compose_projects | while IFS=$'\t' read -r project compose_file; do
   [ "$compose_file" = "$target_root/$compose_relative_path" ] || continue
   remove_env "$project"

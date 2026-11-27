@@ -52,7 +52,7 @@ Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable
 
 Dans un worktree non préparé, `pnpm env:start` échoue et renvoie à ce script.
 
-`./scripts/teardown-worktree.sh [chemin]` supprime un worktree et son env : processus lancés dans son dossier, projet Docker Compose avec ses volumes, puis dossier ; la branche locale est conservée. Il refuse le checkout principal et un worktree qui a des changements non commités. `./scripts/teardown-worktree.sh --orphans` supprime l'env des worktrees dont le dossier a disparu. Chacun déclenche ce nettoyage à la main ou depuis la configuration locale de son harness.
+`./scripts/teardown-worktree.sh [chemin] [--force]` supprime un worktree et son env : projet Docker Compose avec ses volumes, puis dossier ; la branche locale est conservée. Il refuse le checkout principal, un worktree qui a des changements non commités, et un worktree où des processus tournent encore après 60 s d'attente, sauf avec `--force` qui les arrête. `./scripts/teardown-worktree.sh --orphans` supprime l'env des worktrees dont le dossier a disparu. Chacun déclenche ce nettoyage à la main ou depuis la configuration locale de son harness.
 
 ### Passer au nouveau modèle
 
