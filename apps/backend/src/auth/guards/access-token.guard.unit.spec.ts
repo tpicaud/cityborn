@@ -2,33 +2,46 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { buildUser, ErrorCode, type User } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import type { CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  type CanActivate,
+  type ExecutionContext,
+  type Type,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 import type { AuthSession } from '../../common/types/auth-session';
 import type { WideEventService } from '../../common/wide-event/wide-event.service';
 import type { HttpConfig } from '../../config/config.module';
 import type { AuthRequest } from '../auth-request';
 import type { AuthCookieService } from '../services/auth-cookie.service';
 import type { AuthTokenService } from '../services/auth-token.service';
-import { AdminGuard } from './access-token.guard';
+import {
+  AdminGuard,
+  BearerAuthGuard,
+  OptionalAuthGuard,
+} from './access-token.guard';
 
 const backOfficeOrigin: string = 'https://admin.cityborn.test';
 const frontendOrigin: string = 'https://cityborn.test';
 
-type AdminGuardScenarioInput = {
+type AccessTokenGuardScenarioInput = {
+  guardType: Type<CanActivate>;
   user: User;
   headers: IncomingHttpHeaders;
 };
 
-type AdminGuardScenario = {
+type AccessTokenGuardScenario = {
   guard: CanActivate;
   context: DeepMocked<ExecutionContext>;
   request: AuthRequest;
+  authTokenService: DeepMocked<AuthTokenService>;
 };
 
-function buildAdminGuardScenario({
+function buildAccessTokenGuardScenario({
+  guardType,
   user,
   headers,
-}: AdminGuardScenarioInput): AdminGuardScenario {
+}: AccessTokenGuardScenarioInput): AccessTokenGuardScenario {
   const authSession: AuthSession = { user, authVersion: 0 };
   const authTokenService: DeepMocked<AuthTokenService> =
     createMock<AuthTokenService>();
@@ -54,20 +67,21 @@ function buildAdminGuardScenario({
   });
   const context: DeepMocked<ExecutionContext> = createMock<ExecutionContext>();
   context.switchToHttp().getRequest.mockReturnValue(request);
-  const guard: CanActivate = new AdminGuard(
+  const guard: CanActivate = new guardType(
     authTokenService,
     authCookieService,
     createMock<WideEventService>(),
     httpConfig,
   );
-  return { guard, context, request };
+  return { guard, context, request, authTokenService };
 }
 
 describe('AdminGuard.canActivate', () => {
   it('lets an admin through with its auth session', async () => {
     const admin: User = buildUser({ role: 'admin' });
-    const { guard, context, request }: AdminGuardScenario =
-      buildAdminGuardScenario({
+    const { guard, context, request }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
         user: admin,
         headers: { authorization: 'Bearer access-token' },
       });
@@ -79,10 +93,12 @@ describe('AdminGuard.canActivate', () => {
 
   it('rejects a player with a forbidden admin role error', async () => {
     const player: User = buildUser({ role: 'player' });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: player,
-      headers: { authorization: 'Bearer access-token' },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: player,
+        headers: { authorization: 'Bearer access-token' },
+      });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       expect.objectContaining({
@@ -97,10 +113,12 @@ describe('AdminGuard.canActivate', () => {
       role: 'admin',
       isVerified: false,
     });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: unverifiedAdmin,
-      headers: { authorization: 'Bearer access-token' },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: unverifiedAdmin,
+        headers: { authorization: 'Bearer access-token' },
+      });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       expect.objectContaining({
@@ -112,10 +130,12 @@ describe('AdminGuard.canActivate', () => {
 
   it('rejects an anonymous request as unauthenticated', async () => {
     const admin: User = buildUser({ role: 'admin' });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: admin,
-      headers: { origin: backOfficeOrigin },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: admin,
+        headers: { origin: backOfficeOrigin },
+      });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       expect.objectContaining({
@@ -129,20 +149,24 @@ describe('AdminGuard.canActivate', () => {
 
   it('lets an admin cookie session through from the back-office origin', async () => {
     const admin: User = buildUser({ role: 'admin' });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: admin,
-      headers: { cookie: 'session', origin: backOfficeOrigin },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: admin,
+        headers: { cookie: 'session', origin: backOfficeOrigin },
+      });
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 
   it('rejects an admin cookie session from another allowed origin', async () => {
     const admin: User = buildUser({ role: 'admin' });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: admin,
-      headers: { cookie: 'session', origin: frontendOrigin },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: admin,
+        headers: { cookie: 'session', origin: frontendOrigin },
+      });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       expect.objectContaining({
@@ -156,10 +180,12 @@ describe('AdminGuard.canActivate', () => {
 
   it('rejects an admin cookie session without origin', async () => {
     const admin: User = buildUser({ role: 'admin' });
-    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
-      user: admin,
-      headers: { cookie: 'session' },
-    });
+    const { guard, context }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: AdminGuard,
+        user: admin,
+        headers: { cookie: 'session' },
+      });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       expect.objectContaining({
@@ -168,6 +194,85 @@ describe('AdminGuard.canActivate', () => {
           code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
         }),
       }),
+    );
+  });
+});
+
+describe('OptionalAuthGuard.canActivate', () => {
+  it('lets a request with an invalid token through as anonymous', async () => {
+    const {
+      guard,
+      context,
+      request,
+      authTokenService,
+    }: AccessTokenGuardScenario = buildAccessTokenGuardScenario({
+      guardType: OptionalAuthGuard,
+      user: buildUser(),
+      headers: { authorization: 'Bearer unrecognized-token' },
+    });
+    authTokenService.verifyAccessToken.mockRejectedValue(
+      new JsonWebTokenError('invalid signature'),
+    );
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+
+    expect(request.authSession).toBeUndefined();
+  });
+
+  it('lets a request with a revoked session through as anonymous', async () => {
+    const {
+      guard,
+      context,
+      request,
+      authTokenService,
+    }: AccessTokenGuardScenario = buildAccessTokenGuardScenario({
+      guardType: OptionalAuthGuard,
+      user: buildUser(),
+      headers: { authorization: 'Bearer revoked-token' },
+    });
+    authTokenService.resolveAuthSession.mockRejectedValue(
+      new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_TOKEN,
+        message: 'Session revoked',
+      }),
+    );
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+
+    expect(request.authSession).toBeUndefined();
+  });
+
+  it('rejects an expired token so that the client refreshes its session', async () => {
+    const { guard, context, authTokenService }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: OptionalAuthGuard,
+        user: buildUser(),
+        headers: { authorization: 'Bearer expired-token' },
+      });
+    authTokenService.verifyAccessToken.mockRejectedValue(
+      new TokenExpiredError('jwt expired', new Date()),
+    );
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      TokenExpiredError,
+    );
+  });
+});
+
+describe('BearerAuthGuard.canActivate', () => {
+  it('rejects an invalid token', async () => {
+    const { guard, context, authTokenService }: AccessTokenGuardScenario =
+      buildAccessTokenGuardScenario({
+        guardType: BearerAuthGuard,
+        user: buildUser(),
+        headers: { authorization: 'Bearer unrecognized-token' },
+      });
+    authTokenService.verifyAccessToken.mockRejectedValue(
+      new JsonWebTokenError('invalid signature'),
+    );
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      JsonWebTokenError,
     );
   });
 });

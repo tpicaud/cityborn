@@ -21,6 +21,14 @@ export type AuthFetchOptions = {
 
 type AuthenticationRefreshResult = { ok: true } | { ok: false; error: unknown };
 
+type ApiFetchResult = { status: number; body: unknown; headers: Headers };
+
+function hasAuthorizationHeader(headers: Record<string, string>): boolean {
+  return Object.keys(headers).some(
+    (name: string): boolean => name.toLowerCase() === 'authorization',
+  );
+}
+
 function buildClientHeaders(
   client: ClientInfo | undefined,
 ): Record<string, string> {
@@ -69,10 +77,7 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    const hasExplicitAuthorization: boolean = Object.keys(headers).some(
-      (name: string): boolean => name.toLowerCase() === 'authorization',
-    );
-    if (bearerToken && !hasExplicitAuthorization) {
+    if (bearerToken && !hasAuthorizationHeader(headers)) {
       headers.Authorization = `Bearer ${bearerToken}`;
     }
 
@@ -83,14 +88,17 @@ export class AuthFetch {
     return (args: ApiFetcherArgs) => this.tsRestFetch(args);
   }
 
-  private async tsRestFetch(
-    args: ApiFetcherArgs,
-  ): Promise<{ status: number; body: unknown; headers: Headers }> {
-    const result = await this.fetchOnce(args);
+  private async tsRestFetch(args: ApiFetcherArgs): Promise<ApiFetchResult> {
+    const accessToken: string | null =
+      await this.authTransport.readAccessToken();
+    const result: ApiFetchResult = await this.fetchOnce({ args, accessToken });
 
     if (
-      result.status === 401 &&
-      parseApiError(result.status, result.body).code === ErrorCode.TOKEN_EXPIRED
+      this.requiresAuthenticationRefresh({
+        result,
+        sentStoredAccessToken:
+          accessToken !== null && !hasAuthorizationHeader(args.headers ?? {}),
+      })
     ) {
       return this.handle401(args);
     }
@@ -98,12 +106,42 @@ export class AuthFetch {
     return result;
   }
 
-  private async fetchOnce(
+  private requiresAuthenticationRefresh({
+    result,
+    sentStoredAccessToken,
+  }: {
+    result: ApiFetchResult;
+    sentStoredAccessToken: boolean;
+  }): boolean {
+    if (result.status !== 401) {
+      return false;
+    }
+    const errorCode: ErrorCode = parseApiError(result.status, result.body).code;
+    return (
+      errorCode === ErrorCode.TOKEN_EXPIRED ||
+      (errorCode === ErrorCode.USER_INVALID_TOKEN && sentStoredAccessToken)
+    );
+  }
+
+  private async fetchWithStoredAccessToken(
     args: ApiFetcherArgs,
-  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+  ): Promise<ApiFetchResult> {
+    return this.fetchOnce({
+      args,
+      accessToken: await this.authTransport.readAccessToken(),
+    });
+  }
+
+  private async fetchOnce({
+    args,
+    accessToken,
+  }: {
+    args: ApiFetcherArgs;
+    accessToken: string | null;
+  }): Promise<ApiFetchResult> {
     const headers: Record<string, string> = await this.buildHeaders(
       args.headers ?? {},
-      await this.authTransport.readAccessToken(),
+      accessToken,
     );
 
     const response = await this.timeoutFetch(args.path, {
@@ -121,9 +159,7 @@ export class AuthFetch {
     return { status: response.status, body, headers: response.headers };
   }
 
-  private async handle401(
-    args: ApiFetcherArgs,
-  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+  private async handle401(args: ApiFetcherArgs): Promise<ApiFetchResult> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (result) => {
@@ -132,7 +168,7 @@ export class AuthFetch {
             return;
           }
           try {
-            resolve(await this.fetchOnce(args));
+            resolve(await this.fetchWithStoredAccessToken(args));
           } catch (err) {
             reject(err);
           }
@@ -144,7 +180,7 @@ export class AuthFetch {
     try {
       await this.authTransport.refreshAuthentication(this.sendAuthRequest);
       this.processQueue({ ok: true });
-      return await this.fetchOnce(args);
+      return await this.fetchWithStoredAccessToken(args);
     } catch (error: unknown) {
       this.processQueue({ ok: false, error });
       if (error instanceof ApiResponseError && error.statusCode === 401) {

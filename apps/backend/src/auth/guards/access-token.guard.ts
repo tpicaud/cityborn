@@ -9,6 +9,7 @@ import {
   type Type,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 import type { AuthSession } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
@@ -38,10 +39,17 @@ type AdminAccessRequest = {
   origin: string | undefined;
 };
 
-type UnauthenticatedReason = {
-  code: ErrorCode;
-  message: string;
-};
+type AuthenticationRejection = JsonWebTokenError | UnauthorizedException;
+
+function isUnrecognizedSessionError(
+  error: unknown,
+): error is AuthenticationRejection {
+  return (
+    (error instanceof JsonWebTokenError &&
+      !(error instanceof TokenExpiredError)) ||
+    error instanceof UnauthorizedException
+  );
+}
 
 function createAccessTokenGuard(
   policy: AccessTokenGuardPolicy,
@@ -62,23 +70,30 @@ function createAccessTokenGuard(
       const accessTokenSource: AccessTokenSource | undefined =
         this.readAccessToken(request);
       if (!accessTokenSource) {
-        return this.continueUnauthenticated({
-          code: ErrorCode.USER_TOKEN_MISSING,
-          message: 'Token missing',
-        });
+        return this.continueUnauthenticated(
+          new UnauthorizedException({
+            code: ErrorCode.USER_TOKEN_MISSING,
+            message: 'Token missing',
+          }),
+        );
       }
 
-      const payload: AuthTokenPayload =
-        await this.authTokenService.verifyAccessToken(
+      let authSession: AuthSession | null;
+      try {
+        authSession = await this.resolveAuthSession(
           accessTokenSource.accessToken,
         );
-      const authSession: AuthSession | null =
-        await this.authTokenService.resolveAuthSession(payload);
+      } catch (error: unknown) {
+        if (!isUnrecognizedSessionError(error)) throw error;
+        return this.continueUnauthenticated(error);
+      }
       if (!authSession) {
-        return this.continueUnauthenticated({
-          code: ErrorCode.USER_NOT_FOUND,
-          message: 'User not found',
-        });
+        return this.continueUnauthenticated(
+          new UnauthorizedException({
+            code: ErrorCode.USER_NOT_FOUND,
+            message: 'User not found',
+          }),
+        );
       }
 
       request.authSession = authSession;
@@ -94,6 +109,14 @@ function createAccessTokenGuard(
         });
       }
       return true;
+    }
+
+    private async resolveAuthSession(
+      accessToken: string,
+    ): Promise<AuthSession | null> {
+      const payload: AuthTokenPayload =
+        await this.authTokenService.verifyAccessToken(accessToken);
+      return await this.authTokenService.resolveAuthSession(payload);
     }
 
     private assertAdminAccess({
@@ -137,9 +160,9 @@ function createAccessTokenGuard(
         : { accessToken: cookieToken, transport: 'cookie' };
     }
 
-    private continueUnauthenticated(reason: UnauthenticatedReason): true {
+    private continueUnauthenticated(rejection: AuthenticationRejection): true {
       if (policy.requiredAccess !== 'none') {
-        throw new UnauthorizedException(reason);
+        throw rejection;
       }
       this.wideEventService.enrichAuth({ isAuthenticated: false });
       return true;
