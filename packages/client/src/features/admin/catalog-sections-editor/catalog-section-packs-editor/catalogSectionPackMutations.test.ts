@@ -9,8 +9,8 @@ import {
   type PackId,
 } from '@cityborn/api';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
-import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
-import { catalogSectionsQueryOptions } from '../../../domains/catalog-section/catalogSectionQueries';
+import type { CatalogSectionApi } from '../../../../domains/catalog-section/catalogSectionApi';
+import { catalogSectionsQueryOptions } from '../../../../domains/catalog-section/catalogSectionQueries';
 import {
   type CatalogSectionPackMutations,
   createCatalogSectionPackMutations,

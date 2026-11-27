@@ -1,8 +1,8 @@
 import type { CatalogSection, Pack } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
-import type { CatalogSectionApi } from '../../../domains/catalog-section/catalogSectionApi';
-import { updateCatalogSectionsCache } from '../../../domains/catalog-section/catalogSectionQueries';
-import type { ReportError } from '../../../shared/errorReporter';
+import type { CatalogSectionApi } from '../../../../domains/catalog-section/catalogSectionApi';
+import { updateCatalogSectionsCache } from '../../../../domains/catalog-section/catalogSectionQueries';
+import type { ReportError } from '../../../../shared/errorReporter';
 
 export type CatalogSectionPackMutations = {
   addPack: (pack: Pack) => Promise<void>;

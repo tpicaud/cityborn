@@ -1,10 +1,10 @@
-export { isCatalogSectionDeletable } from './catalog-sections-editor/catalogSectionDeletable';
-export { areCatalogSectionPacksEditable } from './catalog-sections-editor/catalogSectionPacks';
+export { areCatalogSectionPacksEditable } from './catalog-sections-editor/catalog-section-packs-editor/catalogSectionPacks';
 export {
   type CatalogSectionPacks,
   type CatalogSectionPacksOptions,
   useCatalogSectionPacks,
-} from './catalog-sections-editor/useCatalogSectionPacks';
+} from './catalog-sections-editor/catalog-section-packs-editor/useCatalogSectionPacks';
+export { isCatalogSectionDeletable } from './catalog-sections-editor/catalogSectionDeletable';
 export {
   type CatalogSectionsManagement,
   useCatalogSectionsManagement,

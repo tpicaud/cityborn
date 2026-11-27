@@ -11,12 +11,15 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
-import { packsQueryOptions } from '../../../domains/pack/packQueries';
+import {
+  type DomainApis,
+  useDomainApis,
+} from '../../../../domains/apiProvider';
+import { packsQueryOptions } from '../../../../domains/pack/packQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
-} from '../../../shared/errorReporter';
+} from '../../../../shared/errorReporter';
 import {
   type CatalogSectionPackMutations,
   createCatalogSectionPackMutations,
