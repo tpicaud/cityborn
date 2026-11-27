@@ -3,16 +3,17 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/teardown-worktree.sh [chemin_du_worktree] [--force]
+Usage: scripts/teardown-worktree.sh [chemin_du_worktree]
        scripts/teardown-worktree.sh --orphans
 
 Sans argument, supprime le worktree courant et son env de dev :
   - refuse un worktree d'un autre dépôt, le checkout principal, un worktree verrouillé
     ou qui a des changements non commités
-  - refuse un worktree où des processus tournent encore après 60 s d'attente ;
-    avec --force, les arrête
+  - arrête les processus lancés dans son dossier
   - revérifie ces critères, puis supprime son projet Docker Compose : conteneurs, volumes, réseau
   - supprime son dossier avec `git worktree remove` ; la branche locale est conservée
+
+Décider si le worktree est encore utilisé revient à l'appelant.
 
 Avec --orphans, supprime l'env de dev de chaque worktree disparu : processus restés
 dans son dossier supprimé, puis projet Docker Compose. Un env n'est orphelin que si
@@ -22,12 +23,10 @@ USAGE
 
 target=""
 orphans=false
-force=false
 
 for arg in "$@"; do
   case "$arg" in
     --orphans) orphans=true ;;
-    --force) force=true ;;
     -h|--help) usage; exit 0 ;;
     -*) echo "Option inconnue : $arg" >&2; usage >&2; exit 1 ;;
     *)
@@ -40,8 +39,8 @@ for arg in "$@"; do
   esac
 done
 
-if [ "$orphans" = true ] && { [ -n "$target" ] || [ "$force" = true ]; }; then
-  echo "--orphans ne prend ni chemin de worktree ni --force." >&2
+if [ "$orphans" = true ] && [ -n "$target" ]; then
+  echo "--orphans ne prend pas de chemin de worktree." >&2
   exit 1
 fi
 
@@ -86,16 +85,6 @@ processes_in() {
     esac
     grep -qx "$pid" <<< "$ancestors" || echo "$pid"
   done
-}
-
-wait_for_processes_to_exit() {
-  local root="$1" pids
-  for _ in $(seq 30); do
-    pids="$(processes_in "$root")"
-    [ -n "$pids" ] || return 0
-    sleep 2
-  done
-  echo "$pids"
 }
 
 stop_processes() {
@@ -220,24 +209,8 @@ fi
 
 echo "Worktree : $target_root ($(git -C "$target_root" branch --show-current))"
 cd "$main_root"
-if [ "$force" = true ]; then
-  stop_processes "$(processes_in "$target_root")"
-else
-  busy="$(wait_for_processes_to_exit "$target_root")"
-  if [ -n "$busy" ]; then
-    echo "Refusé : des processus tournent encore dans $target_root ; relancer avec --force pour les arrêter." >&2
-    ps -o pid=,args= -p "$(paste -sd, <<< "$busy")" >&2 || true
-    exit 1
-  fi
-fi
-
+stop_processes "$(processes_in "$target_root")"
 refuse_if_blocked
-busy="$(processes_in "$target_root")"
-if [ -n "$busy" ]; then
-  echo "Refusé : un processus a démarré dans $target_root pendant le teardown." >&2
-  ps -o pid=,args= -p "$(paste -sd, <<< "$busy")" >&2 || true
-  exit 1
-fi
 
 [ -z "$project" ] || remove_env "$project"
 git -C "$main_root" worktree remove "$target_root"
