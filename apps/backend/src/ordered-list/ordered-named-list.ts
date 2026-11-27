@@ -63,11 +63,7 @@ export class OrderedNamedList<Item extends { id: string }> {
     });
     if (!reorderedList) return items;
     await this.list.repository.reorder(reorderedList.map((item) => item.id));
-    return items.map((item) =>
-      isInMovedList(item)
-        ? (reorderedList[movedList.indexOf(item)] ?? item)
-        : item,
-    );
+    return this.list.repository.findAll();
   }
 
   async save<Saved>(write: () => Promise<Saved>): Promise<Saved> {

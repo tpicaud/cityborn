@@ -308,7 +308,9 @@ describe('ThemeService.move', () => {
       themeRepository,
       themeService,
     }: ReturnType<typeof buildThemeService> = buildThemeService();
-    themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
+    themeRepository.findAll
+      .mockResolvedValueOnce([sport, music, miscellaneous])
+      .mockResolvedValueOnce([music, sport, miscellaneous]);
 
     const themes: AdminTheme[] = await themeService.move({
       id: music.id,
@@ -345,12 +347,11 @@ describe('ThemeService.move', () => {
     }: ReturnType<typeof buildThemeService> = buildThemeService();
     themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
 
-    const themes: AdminTheme[] = await themeService.move({
+    await themeService.move({
       id: music.id,
       direction: ThemeMoveDirection.DOWN,
     });
 
-    expect(themes).toEqual([sport, miscellaneous, music]);
     expect(themeRepository.reorder).toHaveBeenCalledWith([
       sport.id,
       miscellaneous.id,

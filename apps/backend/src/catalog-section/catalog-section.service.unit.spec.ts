@@ -205,11 +205,9 @@ describe('CatalogSectionService.move', () => {
       catalogSectionService,
     }: ReturnType<typeof buildCatalogSectionService> =
       buildCatalogSectionService();
-    catalogSectionRepository.findAll.mockResolvedValue([
-      news,
-      events,
-      classics,
-    ]);
+    catalogSectionRepository.findAll
+      .mockResolvedValueOnce([news, events, classics])
+      .mockResolvedValueOnce([events, news, classics]);
 
     const sections: CatalogSection[] = await catalogSectionService.move({
       id: events.id,
