@@ -48,7 +48,12 @@ describe('Catalog section player routes', () => {
       .expect(200);
 
     expect(CatalogSectionsSchema.parse(response.body)).toEqual([
-      { id: defaultCatalogSectionId, name: 'Catalogue', isDefault: true },
+      {
+        id: defaultCatalogSectionId,
+        name: 'Catalogue',
+        isDefault: true,
+        packIds: [],
+      },
     ]);
   });
 });

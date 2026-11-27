@@ -1,13 +1,23 @@
 import { type CatalogSection, CatalogSectionSchema } from '@cityborn/api';
-import type { CatalogSection as PrismaCatalogSection } from '@prisma/client';
+import type {
+  CatalogSection as PrismaCatalogSection,
+  CatalogSectionPack as PrismaCatalogSectionPack,
+} from '@prisma/client';
 import { defaultCatalogSectionId } from '../default-catalog-section';
 
+export type PrismaCatalogSectionWithPacks = PrismaCatalogSection & {
+  packs: Pick<PrismaCatalogSectionPack, 'packId'>[];
+};
+
 export const CatalogSectionMapper = {
-  toCatalogSection(prismaCatalogSection: PrismaCatalogSection): CatalogSection {
+  toCatalogSection(
+    prismaCatalogSection: PrismaCatalogSectionWithPacks,
+  ): CatalogSection {
     return CatalogSectionSchema.parse({
       id: prismaCatalogSection.id,
       name: prismaCatalogSection.name,
       isDefault: prismaCatalogSection.id === defaultCatalogSectionId,
+      packIds: prismaCatalogSection.packs.map(({ packId }) => packId),
     });
   },
 };
