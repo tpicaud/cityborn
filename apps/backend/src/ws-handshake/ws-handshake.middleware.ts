@@ -126,9 +126,7 @@ export class WsHandshakeMiddleware {
     accessToken: string,
   ): Promise<AuthSession | null> {
     this.assertAllowedOrigin(socket);
-    const payload: AuthTokenPayload =
-      await this.authTokenService.verifyAccessToken(accessToken);
-    return await this.authTokenService.resolveAuthSession(payload);
+    return await this.authTokenService.authenticateAccessToken(accessToken);
   }
 
   private async authenticateHandshakeAuth(
