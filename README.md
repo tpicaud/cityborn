@@ -47,11 +47,12 @@ Docker Compose lit le nom du projet, ses profils et ses ports dans `apps/backend
 Dans un worktree, `./scripts/setup-worktree.sh` prépare tout ; il est rejouable et garde le slot :
 
 - copie les `.env` manquants depuis le principal ;
-- supprime l'env des worktrees disparus ;
 - lance l'env du worktree, puis écrit son nom et ses ports dans les `.env` des apps, en gardant l'hôte des URL ;
 - lance `pnpm install`, puis migre et seede `cityborn_dev`.
 
 Dans un worktree non préparé, `pnpm env:start` échoue et renvoie à ce script.
+
+`./scripts/teardown-worktree.sh [chemin]` supprime un worktree et son env : processus lancés dans son dossier, projet Docker Compose avec ses volumes, puis dossier ; la branche locale est conservée. Il refuse le checkout principal et un worktree qui a des changements non commités. `./scripts/teardown-worktree.sh --orphans` supprime l'env des worktrees dont le dossier a disparu. Chacun déclenche ce nettoyage à la main ou depuis la configuration locale de son harness.
 
 ### Passer au nouveau modèle
 
