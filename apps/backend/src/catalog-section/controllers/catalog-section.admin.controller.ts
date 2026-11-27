@@ -46,6 +46,13 @@ export class AdminCatalogSectionController {
         status: 200,
         body: await this.catalogSectionService.removePack(params),
       }),
+      movePackInCatalogSection: async ({ params, body }) => ({
+        status: 200,
+        body: await this.catalogSectionService.movePack({
+          ...params,
+          direction: body.direction,
+        }),
+      }),
     });
   }
 }

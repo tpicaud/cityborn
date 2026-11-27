@@ -23,4 +23,9 @@ export interface CatalogSectionRepository {
     id: CatalogSectionId;
     packId: PackId;
   }): Promise<CatalogSection | null>;
+  lockPacks(id: CatalogSectionId): Promise<CatalogSection | null>;
+  reorderPacks(data: {
+    id: CatalogSectionId;
+    packIds: PackId[];
+  }): Promise<void>;
 }

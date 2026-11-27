@@ -22,6 +22,23 @@ import {
   type CatalogSectionRepository,
 } from './repositories/catalog-section.repository';
 
+function swapWithNeighbour<Item>({
+  items,
+  index,
+  direction,
+}: {
+  items: Item[];
+  index: number;
+  direction: CatalogSectionMoveDirection;
+}): Item[] | null {
+  const neighbourIndex: number =
+    direction === CatalogSectionMoveDirection.UP ? index - 1 : index + 1;
+  const item: Item | undefined = items[index];
+  const neighbour: Item | undefined = items[neighbourIndex];
+  if (item === undefined || neighbour === undefined) return null;
+  return items.with(index, neighbour).with(neighbourIndex, item);
+}
+
 @Injectable()
 export class CatalogSectionService {
   constructor(
@@ -70,15 +87,13 @@ export class CatalogSectionService {
     const sections: CatalogSection[] =
       await this.catalogSectionRepository.findAll();
     const index: number = sections.findIndex((section) => section.id === id);
-    const movedSection: CatalogSection | undefined = sections[index];
-    if (!movedSection) throw this.sectionNotFound();
-    const targetIndex: number =
-      direction === CatalogSectionMoveDirection.UP ? index - 1 : index + 1;
-    const targetSection: CatalogSection | undefined = sections[targetIndex];
-    if (!targetSection) return sections;
-    const reorderedSections: CatalogSection[] = sections
-      .with(index, targetSection)
-      .with(targetIndex, movedSection);
+    if (index === -1) throw this.sectionNotFound();
+    const reorderedSections: CatalogSection[] | null = swapWithNeighbour({
+      items: sections,
+      index,
+      direction,
+    });
+    if (!reorderedSections) return sections;
     await this.catalogSectionRepository.reorder(
       reorderedSections.map((section) => section.id),
     );
@@ -123,6 +138,39 @@ export class CatalogSectionService {
       await this.catalogSectionRepository.removePack({ id, packId });
     if (!section) throw this.sectionNotFound();
     return section;
+  }
+
+  @Transactional()
+  async movePack({
+    id,
+    packId,
+    direction,
+  }: {
+    id: CatalogSectionId;
+    packId: PackId;
+    direction: CatalogSectionMoveDirection;
+  }): Promise<CatalogSection> {
+    this.ensurePacksEditable(id);
+    const section: CatalogSection | null =
+      await this.catalogSectionRepository.lockPacks(id);
+    if (!section) throw this.sectionNotFound();
+    const index: number = section.packIds.indexOf(packId);
+    if (index === -1)
+      throw new NotFoundException({
+        code: ErrorCode.CATALOG_SECTION_PACK_NOT_FOUND,
+        message: 'Pack not found in catalog section',
+      });
+    const reorderedPackIds: PackId[] | null = swapWithNeighbour({
+      items: section.packIds,
+      index,
+      direction,
+    });
+    if (!reorderedPackIds) return section;
+    await this.catalogSectionRepository.reorderPacks({
+      id,
+      packIds: reorderedPackIds,
+    });
+    return { ...section, packIds: reorderedPackIds };
   }
 
   private ensurePacksEditable(id: CatalogSectionId): void {
